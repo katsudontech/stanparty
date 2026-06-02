@@ -1,26 +1,40 @@
 'use client';
 
 import type { RoomState } from '@/games/core/types';
-import type { FakeArtistGameState, FakeArtistPhase } from './types';
+import { type FakeArtistGameState, type FakeArtistPhase, DEFAULT_FAKE_ARTIST_STATE } from './types';
 import { GameHeader } from './components/GameHeader';
 import { GameStatus } from './components/GameStatus';
 import { Canvas } from './components/Canvas';
 import { RuleSettingPhase } from './components/RuleSettingPhase';
 import { RoleAssignmentPhase } from './components/RoleAssignmentPhase';
 import { ThemeSelectionPhase } from './components/ThemeSelectionPhase';
+import { DrawingPhase } from './components/DrawingPhase';
 import { VotingPhase } from './components/VotingPhase';
 import { GuessingPhase } from './components/GuessingPhase';
 import { ResultPhase } from './components/ResultPhase';
+import { useFakeArtistGame } from './hooks/useFakeArtistGame';
 
 interface FakeArtistGameProps {
   roomState: RoomState;
+  myUserId: string | null;
 }
 
-export function FakeArtistGame({ roomState }: FakeArtistGameProps) {
-  // DBから受け取ったJSON(game_state)をエセ芸術家用の型として扱う
-  const gameState = roomState.game_state as FakeArtistGameState | null;
-  // 何も設定されていなければ最初のフェーズとする
-  const currentPhase: FakeArtistPhase = gameState?.phase || 'rule_setting';
+export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
+  // DBからのデータが空（null）の場合でも、デフォルト値とマージして完全な状態を担保する
+  const rawState = roomState.game_state as Partial<FakeArtistGameState> | null;
+  const gameState: FakeArtistGameState = {
+    ...DEFAULT_FAKE_ARTIST_STATE,
+    ...(rawState || {})
+  };
+
+  const currentPhase: FakeArtistPhase = gameState.phase;
+
+  // ホストかどうかの判定（タイマー処理の権限用）
+  const myPlayer = roomState.players.find(p => p.userId === myUserId);
+  const isHost = myPlayer?.isHost ?? false;
+
+  // カスタムフックからゲーム進行ロジック（関数）を取得
+  const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit } = useFakeArtistGame(roomState);
 
   // ==========================================
   // ① 常に表示するヘッダー部分
@@ -31,6 +45,8 @@ export function FakeArtistGame({ roomState }: FakeArtistGameProps) {
       <GameStatus
         players={roomState.players}
         currentPhase={currentPhase}
+        gameState={gameState}
+        myUserId={myUserId}
       />
     </>
   );
@@ -41,22 +57,44 @@ export function FakeArtistGame({ roomState }: FakeArtistGameProps) {
   const renderMainContent = () => {
     switch (currentPhase) {
       case 'rule_setting':
-        return <RuleSettingPhase players={roomState.players} />;
+        return (
+          <RuleSettingPhase 
+            players={roomState.players} 
+            initialRuleSettings={gameState.ruleSettings}
+            onSaveRules={handleSaveRules}
+          />
+        );
 
       case 'role_assignment':
-        return <RoleAssignmentPhase players={roomState.players} myUserId={null} />;
+        return (
+          <RoleAssignmentPhase 
+            players={roomState.players} 
+            playerStates={gameState?.playerStates || {}}
+            myUserId={myUserId} 
+            isHost={isHost}
+            onTimeout={proceedToThemeSelection}
+            turnOrder={gameState.turnOrder || []}
+          />
+        );
 
       case 'theme_selection':
-        return <ThemeSelectionPhase players={roomState.players} />;
+        return (
+          <ThemeSelectionPhase 
+            players={roomState.players} 
+            gameState={gameState}
+            myUserId={myUserId}
+            isHost={isHost}
+            onThemeSubmit={handleThemeSubmit}
+          />
+        );
 
       case 'drawing':
         return (
-          <div className="mt-8">
-            <Canvas
-              players={roomState.players}
-              currentTurnPlayerId={gameState?.currentTurnPlayerId || roomState.players[0]?.userId || null}
-            />
-          </div>
+          <DrawingPhase 
+            players={roomState.players} 
+            gameState={gameState}
+            myUserId={myUserId}
+          />
         );
 
       case 'voting':

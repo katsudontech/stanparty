@@ -55,7 +55,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         if (roomState.game_type === 'fake-artist') {
             return (
                 <GameWrapper>
-                    <FakeArtistGame roomState={roomState} />
+                    <FakeArtistGame roomState={roomState} myUserId={myUserId} />
                 </GameWrapper>
             );
         }

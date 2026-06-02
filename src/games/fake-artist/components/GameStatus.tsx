@@ -1,26 +1,68 @@
 'use client';
 
 import type { Player } from '@/games/core/types';
-import type { FakeArtistPhase } from '../types';
+import type { FakeArtistPhase, FakeArtistGameState } from '../types';
 
 interface GameStatusProps {
   players: Player[];
   currentPhase: FakeArtistPhase;
+  gameState: FakeArtistGameState;
+  myUserId: string | null;
 }
 
-export function GameStatus({ players, currentPhase }: GameStatusProps) {
+const PHASE_LABELS: Record<FakeArtistPhase, string> = {
+  rule_setting: 'ルール設定',
+  role_assignment: '役職確認',
+  theme_selection: 'お題決定',
+  drawing: 'お絵描き',
+  voting: '投票',
+  guessing: 'エセ芸術家の予想',
+  result: '結果発表'
+};
+
+export function GameStatus({ players, currentPhase, gameState, myUserId }: GameStatusProps) {
   return (
-    <div className="grid grid-cols-2 gap-6 w-full max-w-2xl mb-8">
-      <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600">
-        <p className="text-slate-400 mb-2 font-medium">参加プレイヤー</p>
-        <p className="text-4xl font-bold text-white">
-          {players.length}<span className="text-xl text-slate-500 ml-1">人</span>
-        </p>
-      </div>
-      
-      <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600">
-        <p className="text-slate-400 mb-2 font-medium">現在のフェーズ</p>
-        <p className="text-2xl font-bold text-blue-400 mt-2">{currentPhase}</p>
+    <div className="w-full max-w-2xl mb-8 flex flex-col space-y-4">
+      {/* プレイヤー一覧 */}
+      <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600 w-full shadow-lg">
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-slate-400 font-medium text-sm">参加プレイヤー ({players.length}人)</p>
+          <p className="text-slate-400 font-medium text-sm">現在のフェーズ: <span className="text-blue-400 font-bold ml-1">{PHASE_LABELS[currentPhase] || currentPhase}</span></p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {players.map(p => {
+            const pState = gameState.playerStates[p.userId];
+            const isQuestioner = pState?.role === 'questioner';
+            const isMe = p.userId === myUserId;
+            // 未割り当ての場合はデフォルトのプレイヤーカラーを使用
+            const color = pState?.color || p.color;
+
+            return (
+              <div 
+                key={p.userId} 
+                className={`flex items-center space-x-2 bg-slate-800 px-3 py-2 rounded-lg border ${isMe ? 'border-indigo-500 shadow-indigo-500/20' : 'border-slate-600'} shadow-sm transition-all`}
+              >
+                <div 
+                  className="w-3 h-3 rounded-full shadow-inner" 
+                  style={{ backgroundColor: color }} 
+                />
+                <span className={`font-bold text-sm ${isMe ? 'text-indigo-300' : 'text-white'}`}>
+                  {p.name}
+                </span>
+                {isQuestioner && (
+                  <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">
+                    出題者
+                  </span>
+                )}
+                {isMe && (
+                  <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded">
+                    あなた
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

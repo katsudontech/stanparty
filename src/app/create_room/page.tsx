@@ -2,6 +2,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 interface MyProfile {
@@ -17,6 +18,7 @@ export default function CreateRoomPage() {
     const [loading, setLoading] = useState(false)
     const [checkingAuth, setCheckingAuth] = useState(true)
 
+    const router = useRouter()
     const supabase = createClient()
 
     // ① 画面が開いた時に、いま誰でログイン（仮）しているかを確認する
@@ -89,8 +91,8 @@ export default function CreateRoomPage() {
 
             if (data) {
                 setCreatedRoomId(data.id)
-                setRoomName('') // 入力欄をクリア
-                alert('部屋の作成に成功したよ！')
+                // 部屋作成に成功したら自動的にその部屋へ遷移する
+                router.push(`/room/${data.id}`)
             }
         } catch (err: any) {
             console.error('部屋作成エラー:', err)
