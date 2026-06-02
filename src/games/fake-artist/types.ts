@@ -51,6 +51,8 @@ export const DEFAULT_FAKE_ARTIST_STATE: FakeArtistGameState = {
 // event管理
 
 
+import type { CanvasPath } from 'react-sketch-canvas';
+
 export interface Point {
   x: number;
   y: number;
@@ -58,9 +60,7 @@ export interface Point {
 
 export interface DrawLinePayload {
   playerId: string;
-  color: string;
-  strokeWidth: number;
-  points: Point[];
+  stroke: CanvasPath;
 }
 
 export interface ChatMessagePayload {

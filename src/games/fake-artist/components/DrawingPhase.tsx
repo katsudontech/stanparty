@@ -6,12 +6,14 @@ import type { FakeArtistGameState } from '../types';
 import { Canvas } from './Canvas';
 
 interface DrawingPhaseProps {
+  roomId: string;
   players: Player[];
   gameState: FakeArtistGameState;
   myUserId: string | null;
+  onTurnEnd: () => void;
 }
 
-export function DrawingPhase({ players, gameState, myUserId }: DrawingPhaseProps) {
+export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd }: DrawingPhaseProps) {
   const { themeGenre, theme, currentTurnPlayerId, playerStates } = gameState;
   const turnPlayer = players.find(p => p.userId === currentTurnPlayerId);
   const myRole = playerStates[myUserId || '']?.role;
@@ -76,7 +78,13 @@ export function DrawingPhase({ players, gameState, myUserId }: DrawingPhaseProps
         </div>
       </div>
 
-      <Canvas players={players} currentTurnPlayerId={currentTurnPlayerId} />
+      <Canvas 
+        roomId={roomId}
+        players={players} 
+        currentTurnPlayerId={currentTurnPlayerId} 
+        myUserId={myUserId}
+        onTurnEnd={onTurnEnd}
+      />
     </div>
   );
 }

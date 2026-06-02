@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { type FakeArtistGameState, type RuleSettings, type FakeArtistPlayerState, DEFAULT_FAKE_ARTIST_STATE } from '../types';
+import { type FakeArtistGameState, type RuleSettings, type FakeArtistPlayerState, type FakeArtistPhase, DEFAULT_FAKE_ARTIST_STATE } from '../types';
 import type { Player, RoomState } from '@/games/core/types';
 
 export const THEMES = [
@@ -42,7 +42,7 @@ export function useFakeArtistGame(roomState: RoomState) {
     // プレイヤーのIDリストをシャッフル
     const shuffledIds = [...players].map(p => p.userId).sort(() => Math.random() - 0.5);
     const playerStates: Record<string, FakeArtistPlayerState> = {};
-    
+
     // 全員を一旦初期化
     players.forEach(p => {
       playerStates[p.userId] = { role: null, color: p.color, score: 0 };
@@ -97,5 +97,40 @@ export function useFakeArtistGame(roomState: RoomState) {
     });
   };
 
-  return { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, updateGameState };
+  // 4. ターン終了時の処理
+  const handleTurnEnd = async () => {
+    if (!currentGameState || currentGameState.phase !== 'drawing') return;
+
+    const { turnOrder, currentTurnPlayerId, currentLap, ruleSettings } = currentGameState;
+    const currentIndex = turnOrder.indexOf(currentTurnPlayerId || '');
+
+    if (currentIndex === -1) return;
+
+    let nextPlayerId: string | null = null;
+    let nextLap = currentLap;
+    let nextPhase: FakeArtistPhase = currentGameState.phase;
+
+    if (currentIndex + 1 < turnOrder.length) {
+      // 次のプレイヤーへ
+      nextPlayerId = turnOrder[currentIndex + 1];
+    } else {
+      // 一周終わった場合、次の周へ
+      nextLap = currentLap + 1;
+      if (nextLap > ruleSettings.roundLimit) {
+        // 設定されたラウンド数を超えたら投票フェーズへ
+        // nextPhase = 'voting';
+        // nextPlayerId = null;
+      } else {
+        nextPlayerId = turnOrder[0];
+      }
+    }
+
+    await updateGameState({
+      currentTurnPlayerId: nextPlayerId,
+      currentLap: nextLap,
+      phase: nextPhase
+    });
+  };
+
+  return { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, updateGameState };
 }
