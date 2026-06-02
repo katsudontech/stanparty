@@ -4,25 +4,27 @@ import type { Player } from '@/games/core/types';
 import { GameHeader } from './components/GameHeader';
 import { GameStatus } from './components/GameStatus';
 import { Canvas } from './components/Canvas';
+import type { RoomState } from '@/types/schemas';
 
 interface FakeArtistGameProps {
-  roomId: string;
-  players: Player[];
+  roomState: RoomState;
 }
 
-export function FakeArtistGame({ roomId, players }: FakeArtistGameProps) {
+export function FakeArtistGame({ roomState }: FakeArtistGameProps) {
+
+
   return (
     <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center text-center border border-slate-700">
-      <GameHeader roomId={roomId} />
-      
-      <GameStatus 
-        players={players} 
-        currentPhase="role_assignment" 
+      <GameHeader roomId={roomState.roomId} />
+
+      <GameStatus
+        players={roomState.players}
+        currentPhase="role_assignment"
       />
 
-      <Canvas 
-        players={players} 
-        currentTurnPlayerId={players[0]?.userId || null} 
+      <Canvas
+        players={roomState.players}
+        currentTurnPlayerId={roomState.players[0]?.userId || null}
       />
     </div>
   );
