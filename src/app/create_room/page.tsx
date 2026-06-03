@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getPlayerColor } from '@/games/core/constants'
 
 interface MyProfile {
     id: string
@@ -77,7 +78,7 @@ export default function CreateRoomPage() {
                                 name: myProfile.name,
                                 avatarUrl: myProfile.avatar,
                                 isHost: true,
-                                color: '#FF0000', // とりあえず赤
+                                color: getPlayerColor(0), // ホストは最初(インデックス0)の色
                                 isOnline: true
                             }
                         ],

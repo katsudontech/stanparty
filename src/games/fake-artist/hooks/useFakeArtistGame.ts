@@ -221,6 +221,24 @@ export function useFakeArtistGame(roomState: RoomState) {
     });
   };
 
+  const handleResetGame = async () => {
+    // 1. game_events テーブルの現在のルームのデータをすべて削除する（描画履歴や投票などをクリア）
+    const { error: eventError } = await supabase
+      .from('game_events')
+      .delete()
+      .eq('room_id', roomId);
+
+    if (eventError) {
+      console.error('イベントデータの削除に失敗しました:', eventError);
+    }
+
+    // 2. game_state を初期状態に戻す（ルール設定フェーズへ）
+    await updateGameState({
+      ...DEFAULT_FAKE_ARTIST_STATE,
+      phase: 'rule_setting'
+    });
+  };
+
   return { 
     handleSaveRules, 
     proceedToThemeSelection, 
@@ -230,6 +248,7 @@ export function useFakeArtistGame(roomState: RoomState) {
     handleVote, 
     handleAllVoted,
     handleFakeArtistGuess,
-    handleGuessJudge
+    handleGuessJudge,
+    handleResetGame
   };
 }

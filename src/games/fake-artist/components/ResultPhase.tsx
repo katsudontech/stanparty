@@ -6,9 +6,11 @@ import type { FakeArtistGameState } from '../types';
 interface ResultPhaseProps {
   players: Player[];
   gameState: FakeArtistGameState;
+  isHost: boolean;
+  onResetGame: () => void;
 }
 
-export function ResultPhase({ players, gameState }: ResultPhaseProps) {
+export function ResultPhase({ players, gameState, isHost, onResetGame }: ResultPhaseProps) {
   const winner = gameState.winner;
   
   // 勝敗に応じたメッセージと色を設定
@@ -93,6 +95,25 @@ export function ResultPhase({ players, gameState }: ResultPhaseProps) {
             );
           })}
         </div>
+      </div>
+
+      {/* リセットボタン（ホストのみ操作可能） */}
+      <div className="mt-8 w-full max-w-md border-t border-slate-600 pt-8">
+        {isHost ? (
+          <button
+            onClick={onResetGame}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            もう一度遊ぶ（ルール選択へ）
+          </button>
+        ) : (
+          <div className="bg-slate-800/80 p-4 rounded-xl text-center text-slate-400 font-bold border border-slate-600">
+            ホストが次のゲームを準備中です...
+          </div>
+        )}
       </div>
     </div>
   );

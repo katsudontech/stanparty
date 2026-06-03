@@ -100,7 +100,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
           <ReactSketchCanvas
             ref={canvasRef}
             strokeWidth={5}
-            strokeColor="#334155"
+            strokeColor={turnPlayer?.color || "#334155"}
             canvasColor="transparent"
             className="!border-none"
           />

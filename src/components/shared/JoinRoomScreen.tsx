@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Player, RoomState } from '@/games/core/types';
+import { getPlayerColor } from '@/games/core/constants';
 
 interface JoinRoomScreenProps {
   roomId: string;
@@ -23,7 +24,7 @@ export function JoinRoomScreen({ roomId, myUserId, roomState, players }: JoinRoo
             name: joinName,
             avatarUrl: '',
             isHost: players.length === 0, // 最初の1人なら自動的にホストにする
-            color: '#' + Math.floor(Math.random() * 16777215).toString(16), // ランダムな色(変更予定)
+            color: getPlayerColor(players.length), // 現在の人数 = 新しい人のインデックス
             isOnline: true
         };
 
