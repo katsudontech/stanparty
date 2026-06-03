@@ -145,10 +145,91 @@ export function useFakeArtistGame(roomState: RoomState) {
 
   };
 
+  const judgeFakeArtistVoted = async () => {
+    if (!currentGameState || currentGameState.phase !== 'voting') return;
+
+    //このvote集計処理はいつか関数化するかも
+    const { data: votes, error } = await supabase
+      .from('game_events')
+      .select('*')
+      .eq('room_id', roomId)
+      .eq('event_type', 'vote');
+
+    if (error) {
+      console.error('投票結果の取得に失敗しました:', error);
+      return;
+    }
+
+    // 1. 各プレイヤーの得票数をカウント
+    const voteCounts = (votes || []).reduce((acc, vote) => {
+      const targetId = vote.payload.votedPlayerId as string;
+      acc[targetId] = (acc[targetId] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // 2. 最大得票数を計算 (TSの型エラー回避のため明示的にアサーション、もしくは reduce を使用)
+    const maxVotes = Object.values(voteCounts).reduce<number>((max, count) => Math.max(max, Number(count)), 0);
+
+    // 3. 最大得票のプレイヤーIDを取得（同票を考慮）
+    const mostVotedIds = Object.keys(voteCounts).filter(id => voteCounts[id] === maxVotes);
+
+    console.log('投票結果:', voteCounts);
+    console.log('最多得票者:', mostVotedIds);
+
+    // 4. エセ芸術家判定
+    // currentGameState.playerStates は { fake_artist: 'user_id_a', ... } の形式
+    const fakeArtistId = Object.keys(currentGameState.playerStates).find(
+      key => currentGameState.playerStates[key]?.role === 'fake_artist'
+    );
+
+    if (!fakeArtistId) {
+      console.error('エセ芸術家のIDが見つかりません');
+      return;
+    }
+
+    // エセ芸術家が最多得票者の中に含まれているか？
+    const isFakeArtistVotedOut = mostVotedIds.includes(fakeArtistId);
+
+    console.log('エセ芸術家:', fakeArtistId, '投票結果にエセ芸術家は含まれるか:', isFakeArtistVotedOut);
+    return isFakeArtistVotedOut;
+  }
+
   const handleAllVoted = async () => {
-    // 全員の投票が終わったら結果フェーズへ
-    await updateGameState({ phase: 'result' });
+    // 全員の投票が終わったら結果を集計して結果フェーズへ
+    const isFakeArtistVotedOut = await judgeFakeArtistVoted();
+
+    // TODO: ここで isFakeArtistVotedOut を使ってスコア計算などを行い updateGameState に渡す
+    if (isFakeArtistVotedOut) {
+      await updateGameState({ phase: 'guessing' });
+      return;
+    }
+    else {
+
+      await updateGameState({ phase: 'result', winner: 'fake_artist' });
+      return;
+    }
+
+  };
+  const handleFakeArtistGuess = async (guess: string) => {
+    await updateGameState({ fakeArtistGuess: guess });
   };
 
-  return { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, updateGameState, handleVote, handleAllVoted };
+  const handleGuessJudge = async (isCorrect: boolean) => {
+    await updateGameState({
+      phase: 'result',
+      winner: isCorrect ? 'fake_artist' : 'artists'
+    });
+  };
+
+  return { 
+    handleSaveRules, 
+    proceedToThemeSelection, 
+    handleThemeSubmit, 
+    handleTurnEnd, 
+    updateGameState, 
+    handleVote, 
+    handleAllVoted,
+    handleFakeArtistGuess,
+    handleGuessJudge
+  };
 }

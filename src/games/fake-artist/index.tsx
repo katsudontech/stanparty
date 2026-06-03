@@ -34,7 +34,7 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
   const isHost = myPlayer?.isHost ?? false;
 
   // カスタムフックからゲーム進行ロジック（関数）を取得
-  const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, handleVote, handleAllVoted } = useFakeArtistGame(roomState);
+  const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, handleVote, handleAllVoted, handleFakeArtistGuess, handleGuessJudge } = useFakeArtistGame(roomState);
 
   // ==========================================
   // ① 常に表示するヘッダー部分
@@ -112,10 +112,19 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
         );
 
       case 'guessing':
-        return <GuessingPhase players={roomState.players} />;
+        return (
+          <GuessingPhase 
+            players={roomState.players} 
+            gameState={gameState} 
+            myUserId={myUserId} 
+            isHost={isHost}
+            onGuessSubmit={handleFakeArtistGuess}
+            onJudgeSubmit={handleGuessJudge}
+          />
+        );
 
       case 'result':
-        return <ResultPhase players={roomState.players} />;
+        return <ResultPhase players={roomState.players} gameState={gameState} />;
 
       default:
         return <div className="text-white mt-8">準備中...</div>;
