@@ -118,8 +118,8 @@ export function useFakeArtistGame(roomState: RoomState) {
       nextLap = currentLap + 1;
       if (nextLap > ruleSettings.roundLimit) {
         // 設定されたラウンド数を超えたら投票フェーズへ
-        // nextPhase = 'voting';
-        // nextPlayerId = null;
+        nextPhase = 'voting';
+        nextPlayerId = null;
       } else {
         nextPlayerId = turnOrder[0];
       }
@@ -132,5 +132,17 @@ export function useFakeArtistGame(roomState: RoomState) {
     });
   };
 
-  return { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, updateGameState };
+  const handleVote = async (votedPlayerId: string) => {
+    if (!currentGameState || currentGameState.phase !== 'voting') return;
+
+    await supabase
+      .from('game_events')
+      .insert({
+        room_id: roomId,
+        event_type: 'vote',
+        payload: { votedPlayerId },
+      });
+
+  };
+  return { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, updateGameState, handleVote };
 }

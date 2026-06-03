@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { ReactSketchCanvas, type ReactSketchCanvasRef, type CanvasPath } from 'react-sketch-canvas';
 import type { Player } from '@/games/core/types';
 import { useCanvasSync } from '../hooks/useCanvasSync';
@@ -15,11 +15,21 @@ interface CanvasProps {
 
 export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnEnd }: CanvasProps) {
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
+  const lastPathsLengthRef = useRef(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ターンが自分に回ってきたら送信状態をリセットする
+  useEffect(() => {
+    if (myUserId !== null && myUserId === currentTurnPlayerId) {
+      setIsSubmitting(false);
+    }
+  }, [currentTurnPlayerId, myUserId]);
 
   // 初回ロード用
   const handleInitialStrokesLoaded = useCallback((strokes: CanvasPath[]) => {
     if (canvasRef.current) {
       canvasRef.current.loadPaths(strokes);
+      lastPathsLengthRef.current = strokes.length;
     }
   }, []);
 
@@ -29,6 +39,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
     try {
       const currentPaths = await canvasRef.current.exportPaths();
       canvasRef.current.loadPaths([...currentPaths, stroke]);
+      lastPathsLengthRef.current = currentPaths.length + 1;
     } catch (err) {
       console.error('パスの結合に失敗しました:', err);
     }
@@ -49,12 +60,19 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
   const isMyTurn = myUserId !== null && myUserId === currentTurnPlayerId;
 
   const handleStroke = async () => {
-    // 自分のターンじゃない時の発火は絶対に無視する
-    if (!isMyTurn) return;
+    // 自分のターンじゃない時、または既に送信処理中の発火は無視する
+    if (!isMyTurn || isSubmitting) return;
 
     if (myUserId && canvasRef.current) {
       try {
         const allPaths = await canvasRef.current.exportPaths();
+        // パスが増えていない場合はスキップ（単なるクリックなど）
+        if (allPaths.length <= lastPathsLengthRef.current) return;
+        
+        // パスが増えていれば送信中フラグを立てる（次の描画をブロック）
+        setIsSubmitting(true);
+        lastPathsLengthRef.current = allPaths.length;
+        
         if (allPaths.length > 0) {
           const latestStroke = allPaths[allPaths.length - 1];
           insertStroke(myUserId, latestStroke);
@@ -73,16 +91,18 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
     <div className="w-full max-w-2xl flex flex-col items-center">
       <div className={`w-full aspect-[4/3] bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}>
         
-        {/* 自分のターンでない時は pointer-events-none で操作を無効化 */}
+        {/* 自分のターンでない時や送信中は pointer-events-none で操作を無効化 */}
         {/* touch-none はブラウザがスクロールと勘違いして線を切断するバグを防止します */}
-        <div className={`w-full h-full touch-none ${isMyTurn ? '' : 'pointer-events-none'}`}>
+        <div 
+          className={`w-full h-full touch-none ${isMyTurn && !isSubmitting ? '' : 'pointer-events-none'}`}
+          onPointerUp={() => setTimeout(handleStroke, 100)}
+        >
           <ReactSketchCanvas
             ref={canvasRef}
             strokeWidth={5}
             strokeColor="#334155"
             canvasColor="transparent"
             className="!border-none"
-            onStroke={handleStroke}
           />
         </div>
 

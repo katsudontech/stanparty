@@ -13,23 +13,15 @@ interface UseCanvasSyncProps {
 
 export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewStrokeReceived }: UseCanvasSyncProps) {
   const supabase = createClient();
-  const hasFetchedRef = useRef(false);
-
-  // 常に最新の値を参照するための Ref（Stale Closure 問題の解決）
-  const myUserIdRef = useRef(myUserId);
-  myUserIdRef.current = myUserId;
-  const onNewStrokeReceivedRef = useRef(onNewStrokeReceived);
-  onNewStrokeReceivedRef.current = onNewStrokeReceived;
-  const onInitialStrokesLoadedRef = useRef(onInitialStrokesLoaded);
-  onInitialStrokesLoadedRef.current = onInitialStrokesLoaded;
+  const initializedRoomIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!roomId) return;
 
     // 過去のストロークを初期ロード（1回だけ実行）
     const fetchInitialStrokes = async () => {
-      if (hasFetchedRef.current) return;
-      hasFetchedRef.current = true;
+      if (initializedRoomIdRef.current === roomId) return;
+      initializedRoomIdRef.current = roomId;
 
       const { data, error } = await supabase
         .from('game_events')
@@ -47,7 +39,7 @@ export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewS
         const strokes = data
           .map((event: GameEvent<DrawLinePayload>) => event.payload?.stroke)
           .filter(Boolean);
-        onInitialStrokesLoadedRef.current(strokes);
+        onInitialStrokesLoaded(strokes);
       }
     };
 
@@ -67,12 +59,11 @@ export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewS
         (payload) => {
           const newEvent = payload.new as GameEvent<DrawLinePayload>;
           if (newEvent.event_type === 'draw_line' && newEvent.payload?.stroke) {
-            const currentMyUserId = myUserIdRef.current;
-            // 自分自身のイベントは確実に無視する（Stale ClosureでnullにならないようにRefから取得）
-            if (currentMyUserId && newEvent.payload.playerId === currentMyUserId) {
+            // 自分自身のイベントは確実に無視する
+            if (myUserId && newEvent.payload.playerId === myUserId) {
               return;
             }
-            onNewStrokeReceivedRef.current(newEvent.payload.stroke);
+            onNewStrokeReceived(newEvent.payload.stroke);
           }
         }
       )
@@ -80,9 +71,8 @@ export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewS
 
     return () => {
       supabase.removeChannel(channel);
-      hasFetchedRef.current = false;
     };
-  }, [roomId]);
+  }, [roomId, myUserId, onInitialStrokesLoaded, onNewStrokeReceived]);
 
   // 新しいストロークをDBに保存
   const insertStroke = useCallback(async (playerId: string, stroke: CanvasPath) => {
@@ -99,7 +89,7 @@ export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewS
     if (error) {
       console.error('ストロークの保存に失敗しました:', error);
     }
-  }, [roomId, supabase]);
+  }, [roomId]);
 
   return { insertStroke };
 }

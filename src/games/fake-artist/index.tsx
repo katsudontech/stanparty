@@ -34,7 +34,7 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
   const isHost = myPlayer?.isHost ?? false;
 
   // カスタムフックからゲーム進行ロジック（関数）を取得
-  const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd } = useFakeArtistGame(roomState);
+  const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, handleVote } = useFakeArtistGame(roomState);
 
   // ==========================================
   // ① 常に表示するヘッダー部分
@@ -100,7 +100,14 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
         );
 
       case 'voting':
-        return <VotingPhase players={roomState.players} />;
+        return (
+          <VotingPhase 
+            roomId={roomState.id}
+            players={roomState.players}
+            myUserId={myUserId}
+            onVote={handleVote}
+          />
+        );
 
       case 'guessing':
         return <GuessingPhase players={roomState.players} />;
