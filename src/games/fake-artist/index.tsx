@@ -34,7 +34,7 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
   const isHost = myPlayer?.isHost ?? false;
 
   // カスタムフックからゲーム進行ロジック（関数）を取得
-  const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, handleVote } = useFakeArtistGame(roomState);
+  const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, handleVote, handleAllVoted } = useFakeArtistGame(roomState);
 
   // ==========================================
   // ① 常に表示するヘッダー部分
@@ -58,8 +58,8 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
     switch (currentPhase) {
       case 'rule_setting':
         return (
-          <RuleSettingPhase 
-            players={roomState.players} 
+          <RuleSettingPhase
+            players={roomState.players}
             initialRuleSettings={gameState.ruleSettings}
             onSaveRules={handleSaveRules}
           />
@@ -67,10 +67,10 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
 
       case 'role_assignment':
         return (
-          <RoleAssignmentPhase 
-            players={roomState.players} 
+          <RoleAssignmentPhase
+            players={roomState.players}
             playerStates={gameState?.playerStates || {}}
-            myUserId={myUserId} 
+            myUserId={myUserId}
             isHost={isHost}
             onTimeout={proceedToThemeSelection}
             turnOrder={gameState.turnOrder || []}
@@ -79,8 +79,8 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
 
       case 'theme_selection':
         return (
-          <ThemeSelectionPhase 
-            players={roomState.players} 
+          <ThemeSelectionPhase
+            players={roomState.players}
             gameState={gameState}
             myUserId={myUserId}
             isHost={isHost}
@@ -90,9 +90,9 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
 
       case 'drawing':
         return (
-          <DrawingPhase 
+          <DrawingPhase
             roomId={roomState.id}
-            players={roomState.players} 
+            players={roomState.players}
             gameState={gameState}
             myUserId={myUserId}
             onTurnEnd={handleTurnEnd}
@@ -106,6 +106,8 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
             players={roomState.players}
             myUserId={myUserId}
             onVote={handleVote}
+            isHost={isHost}
+            onAllVoted={handleAllVoted}
           />
         );
 

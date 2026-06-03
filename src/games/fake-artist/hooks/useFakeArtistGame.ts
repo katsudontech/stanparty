@@ -144,5 +144,11 @@ export function useFakeArtistGame(roomState: RoomState) {
       });
 
   };
-  return { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, updateGameState, handleVote };
+
+  const handleAllVoted = async () => {
+    // 全員の投票が終わったら結果フェーズへ
+    await updateGameState({ phase: 'result' });
+  };
+
+  return { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, updateGameState, handleVote, handleAllVoted };
 }
