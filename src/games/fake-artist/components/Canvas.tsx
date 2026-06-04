@@ -11,9 +11,10 @@ interface CanvasProps {
   currentTurnPlayerId: string | null;
   myUserId: string | null;
   onTurnEnd?: () => void;
+  isReadOnly?: boolean;
 }
 
-export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnEnd }: CanvasProps) {
+export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnEnd, isReadOnly = false }: CanvasProps) {
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const lastPathsLengthRef = useRef(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,7 +58,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
   const turnPlayerName = turnPlayer?.name || (players.length > 0 ? players[0]?.name : 'だれか');
   
   // 自分のターンかどうかを判定
-  const isMyTurn = myUserId !== null && myUserId === currentTurnPlayerId;
+  const isMyTurn = !isReadOnly && myUserId !== null && myUserId === currentTurnPlayerId;
 
   const handleStroke = async () => {
     // 自分のターンじゃない時、または既に送信処理中の発火は無視する
@@ -107,7 +108,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
         </div>
 
         <div className={`absolute bottom-4 right-4 px-3 py-1 rounded-md text-sm font-bold shadow pointer-events-none transition-colors ${isMyTurn ? 'bg-indigo-500 text-white' : 'bg-slate-100/90 text-slate-600'}`}>
-          {isMyTurn ? '✨ あなたのターンです！描いてください' : `${turnPlayerName} のターン`}
+          {isReadOnly ? '🎨 完成した絵' : (isMyTurn ? '✨ あなたのターンです！描いてください' : `${turnPlayerName} のターン`)}
         </div>
 
         {/* 自分のターンではない場合のオーバーレイ表示（任意で少し暗くするなど） */}

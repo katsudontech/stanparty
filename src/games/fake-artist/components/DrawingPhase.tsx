@@ -70,7 +70,9 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd }
         </div>
         
         <div className="bg-indigo-900/40 border border-indigo-500/30 px-6 py-4 rounded-xl text-center shadow-inner min-w-[200px] w-full sm:w-auto self-start sm:self-stretch flex flex-col justify-center">
-          <p className="text-indigo-300 text-sm font-medium mb-1">現在のターン</p>
+          <p className="text-indigo-300 text-sm font-medium mb-1">
+            現在のターン (ラウンド {gameState.currentLap}/{gameState.ruleSettings.roundLimit})
+          </p>
           <p className="text-2xl font-bold text-white break-words">
             {turnPlayer?.name || 'だれか'}
           </p>

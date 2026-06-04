@@ -17,6 +17,7 @@ export function ThemeSelectionPhase({ players, gameState, myUserId, isHost, onTh
   const { ruleSettings, playerStates } = gameState;
   const myRole = playerStates[myUserId || '']?.role;
   const isQuestioner = myRole === 'questioner';
+  const isFakeArtist = myRole === 'fake_artist';
 
   const [inputGenre, setInputGenre] = useState('');
   const [inputTheme, setInputTheme] = useState('');
@@ -60,7 +61,9 @@ export function ThemeSelectionPhase({ players, gameState, myUserId, isHost, onTh
               </div>
               <div>
                 <span className="text-sm text-slate-400 block mb-1">お題</span>
-                <span className="text-2xl font-bold text-emerald-400">{autoSelected.theme}</span>
+                <span className={`text-2xl font-bold ${isFakeArtist ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  {isFakeArtist ? '???' : autoSelected.theme}
+                </span>
               </div>
             </div>
           </div>

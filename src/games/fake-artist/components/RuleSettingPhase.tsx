@@ -1,31 +1,55 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Player } from '@/games/core/types';
 import type { RuleSettings } from '@/games/fake-artist/types';
 
 interface RuleSettingPhaseProps {
   players: Player[];
-  initialRuleSettings: RuleSettings;
+  ruleSettings: RuleSettings;
   onSaveRules: (rules: RuleSettings) => void;
+  onChangeRules: (rules: RuleSettings) => void;
+  isHost: boolean;
 }
 
-export function RuleSettingPhase({ players, initialRuleSettings, onSaveRules }: RuleSettingPhaseProps) {
-  const [ruleSettings, setRuleSettings] = useState<RuleSettings>(initialRuleSettings);
+export function RuleSettingPhase({ players, ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost }: RuleSettingPhaseProps) {
+  const [ruleSettings, setRuleSettings] = useState<RuleSettings>(propRuleSettings);
+
+  // プロパティが更新されたらローカルステートを同期する
+  useEffect(() => {
+    setRuleSettings(propRuleSettings);
+  }, [propRuleSettings]);
 
   const handleRoundLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRuleSettings({ ...ruleSettings, roundLimit: Number(e.target.value) });
+    if (!isHost) return;
+    const newSettings = { ...ruleSettings, roundLimit: Number(e.target.value) };
+    setRuleSettings(newSettings);
+    onChangeRules(newSettings);
   };
 
   const handleAutoThemeSelectionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRuleSettings({ ...ruleSettings, autoThemeSelection: e.target.checked });
+    if (!isHost) return;
+    const newSettings = { ...ruleSettings, autoThemeSelection: e.target.checked };
+    setRuleSettings(newSettings);
+    onChangeRules(newSettings);
   };
 
   const handleShowFakeThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRuleSettings({ ...ruleSettings, showFakeTheme: e.target.checked });
+    if (!isHost) return;
+    const newSettings = { ...ruleSettings, showFakeTheme: e.target.checked };
+    setRuleSettings(newSettings);
+    onChangeRules(newSettings);
+  };
+
+  const handleQuestionerDrawsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isHost) return;
+    const newSettings = { ...ruleSettings, questionerDraws: e.target.checked };
+    setRuleSettings(newSettings);
+    onChangeRules(newSettings);
   };
 
   const handleSaveRules = () => {
+    if (!isHost) return;
     onSaveRules(ruleSettings);
   };
 
@@ -43,7 +67,8 @@ export function RuleSettingPhase({ players, initialRuleSettings, onSaveRules }: 
               max="10"
               value={ruleSettings.roundLimit}
               onChange={handleRoundLimitChange}
-              className="bg-slate-800 text-white border border-slate-600 rounded px-3 py-2 w-24"
+              disabled={!isHost}
+              className={`bg-slate-800 text-white border border-slate-600 rounded px-3 py-2 w-24 ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
             <span className="text-slate-300">回答ラウンド数</span>
           </label>
@@ -55,7 +80,8 @@ export function RuleSettingPhase({ players, initialRuleSettings, onSaveRules }: 
               type="checkbox"
               checked={ruleSettings.autoThemeSelection}
               onChange={handleAutoThemeSelectionChange}
-              className="form-checkbox h-5 w-5 text-blue-600 bg-slate-800 border-slate-600 rounded"
+              disabled={!isHost}
+              className={`form-checkbox h-5 w-5 text-blue-600 bg-slate-800 border-slate-600 rounded ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
             <span className="text-slate-300">自動お題選択</span>
           </label>
@@ -67,19 +93,41 @@ export function RuleSettingPhase({ players, initialRuleSettings, onSaveRules }: 
               type="checkbox"
               checked={ruleSettings.showFakeTheme}
               onChange={handleShowFakeThemeChange}
-              className="form-checkbox h-5 w-5 text-blue-600 bg-slate-800 border-slate-600 rounded"
+              disabled={!isHost}
+              className={`form-checkbox h-5 w-5 text-blue-600 bg-slate-800 border-slate-600 rounded ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
             <span className="text-slate-300">エセ芸術家には偽のお題を表示する</span>
           </label>
         </div>
+
+        {!ruleSettings.autoThemeSelection && (
+          <div className="mb-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={ruleSettings.questionerDraws}
+                onChange={handleQuestionerDrawsChange}
+                disabled={!isHost}
+                className={`form-checkbox h-5 w-5 text-blue-600 bg-slate-800 border-slate-600 rounded ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
+              />
+              <span className="text-slate-300">出題者も絵を描く</span>
+            </label>
+          </div>
+        )}
       </div>
 
-      <button
-        onClick={handleSaveRules}
-        className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-      >
-        ルールを確定してゲーム開始
-      </button>
+      {isHost ? (
+        <button
+          onClick={handleSaveRules}
+          className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full"
+        >
+          ルールを確定してゲーム開始
+        </button>
+      ) : (
+        <div className="mt-6 text-slate-300 bg-slate-800 p-4 rounded-lg text-center">
+          ホストがルールを設定中です...
+        </div>
+      )}
     </div>
 
   );

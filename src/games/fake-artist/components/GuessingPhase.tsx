@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import type { Player } from '@/games/core/types';
 import type { FakeArtistGameState } from '../types';
+import { Canvas } from './Canvas';
 
 interface GuessingPhaseProps {
+  roomId: string;
   players: Player[];
   gameState: FakeArtistGameState;
   myUserId: string | null;
@@ -13,7 +15,7 @@ interface GuessingPhaseProps {
   onJudgeSubmit: (isCorrect: boolean) => void;
 }
 
-export function GuessingPhase({ players, gameState, myUserId, isHost, onGuessSubmit, onJudgeSubmit }: GuessingPhaseProps) {
+export function GuessingPhase({ roomId, players, gameState, myUserId, isHost, onGuessSubmit, onJudgeSubmit }: GuessingPhaseProps) {
   const [guessInput, setGuessInput] = useState('');
 
   // エセ芸術家のIDを特定
@@ -112,10 +114,28 @@ export function GuessingPhase({ players, gameState, myUserId, isHost, onGuessSub
           {!hasGuessed ? (
             <p className="text-slate-400 animate-pulse">エセ芸術家が回答を考えています...</p>
           ) : (
-            <p className="text-slate-400 animate-pulse">判定者がエセ芸術家の回答を判定しています...</p>
+            <div className="flex flex-col items-center">
+              <p className="text-lg mb-4 text-slate-300">エセ芸術家の回答はこちらです：</p>
+              <p className="text-3xl font-bold text-white mb-8 border-b-2 border-orange-500 pb-2 inline-block">
+                {gameState.fakeArtistGuess}
+              </p>
+              <p className="text-slate-400 animate-pulse">判定者がエセ芸術家の回答を判定しています...</p>
+            </div>
           )}
         </div>
       )}
+
+      {/* 完成した絵の表示 */}
+      <div className="mt-8 flex flex-col items-center w-full">
+        <h4 className="text-xl font-bold mb-4 text-slate-300">完成した絵</h4>
+        <Canvas 
+          roomId={roomId}
+          players={players}
+          currentTurnPlayerId={null}
+          myUserId={myUserId}
+          isReadOnly={true}
+        />
+      </div>
     </div>
   );
 }
