@@ -87,6 +87,7 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
             myUserId={myUserId}
             isHost={isHost}
             onThemeSubmit={handleThemeSubmit}
+            updateGameState={updateGameState}
           />
         );
 

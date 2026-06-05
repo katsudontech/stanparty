@@ -87,13 +87,20 @@ export function useFakeArtistGame(roomState: RoomState) {
       playerStates: newPlayerStates,
       turnOrder,
       currentTurnPlayerId: turnOrder[0],
-      phase: 'role_assignment' // フェーズを進行させる
+      phase: 'role_assignment', // フェーズを進行させる
+      currentLap: 1,
     });
   };
 
   // 2. 役職確認からテーマ設定フェーズへ自動で進む処理
   const proceedToThemeSelection = async () => {
-    await updateGameState({ phase: 'theme_selection' });
+    const updates: Partial<FakeArtistGameState> = { phase: 'theme_selection' };
+    if (currentGameState?.ruleSettings.autoThemeSelection) {
+      const picked = getRandomTheme();
+      updates.themeGenre = picked.genre;
+      updates.theme = picked.theme;
+    }
+    await updateGameState(updates);
   };
 
   // 3. テーマを決定して描画フェーズに進む処理
@@ -247,13 +254,13 @@ export function useFakeArtistGame(roomState: RoomState) {
     });
   };
 
-  return { 
-    handleSaveRules, 
-    proceedToThemeSelection, 
-    handleThemeSubmit, 
-    handleTurnEnd, 
-    updateGameState, 
-    handleVote, 
+  return {
+    handleSaveRules,
+    proceedToThemeSelection,
+    handleThemeSubmit,
+    handleTurnEnd,
+    updateGameState,
+    handleVote,
     handleAllVoted,
     handleFakeArtistGuess,
     handleGuessJudge,

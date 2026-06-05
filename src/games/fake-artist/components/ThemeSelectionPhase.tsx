@@ -11,9 +11,10 @@ interface ThemeSelectionPhaseProps {
   myUserId: string | null;
   isHost: boolean;
   onThemeSubmit: (themeGenre: string, theme: string) => Promise<void>;
+  updateGameState?: (updates: Partial<FakeArtistGameState>) => Promise<void>;
 }
 
-export function ThemeSelectionPhase({ players, gameState, myUserId, isHost, onThemeSubmit }: ThemeSelectionPhaseProps) {
+export function ThemeSelectionPhase({ players, gameState, myUserId, isHost, onThemeSubmit, updateGameState }: ThemeSelectionPhaseProps) {
   const { ruleSettings, playerStates } = gameState;
   const myRole = playerStates[myUserId || '']?.role;
   const isQuestioner = myRole === 'questioner';
@@ -23,65 +24,89 @@ export function ThemeSelectionPhase({ players, gameState, myUserId, isHost, onTh
   const [inputTheme, setInputTheme] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [autoSelected, setAutoSelected] = useState<{genre: string, theme: string} | null>(null);
+  const isThemeDecided = Boolean(gameState.themeGenre && gameState.theme);
 
-  // 自動テーマ選択ロジック
+  // タイマー進行のみ
   useEffect(() => {
-    if (ruleSettings.autoThemeSelection && isHost) {
-      const picked = getRandomTheme();
-      setAutoSelected(picked);
-      
+    // 進行権限：自動ならホスト、手動なら出題者
+    const hasPermission = ruleSettings.autoThemeSelection ? isHost : isQuestioner;
+
+    if (isThemeDecided && hasPermission) {
       const timer = setTimeout(() => {
-        onThemeSubmit(picked.genre, picked.theme);
+        onThemeSubmit(gameState.themeGenre!, gameState.theme!);
       }, 5000);
       
       return () => clearTimeout(timer);
     }
-  }, [ruleSettings.autoThemeSelection, isHost, onThemeSubmit]);
+  }, [ruleSettings.autoThemeSelection, isHost, isQuestioner, isThemeDecided, onThemeSubmit, gameState.themeGenre, gameState.theme]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputGenre.trim() || !inputTheme.trim() || isSubmitting) return;
     
     setIsSubmitting(true);
-    await onThemeSubmit(inputGenre, inputTheme);
+    if (updateGameState) {
+      await updateGameState({ themeGenre: inputGenre, theme: inputTheme });
+    } else {
+      await onThemeSubmit(inputGenre, inputTheme);
+    }
   };
 
-  if (ruleSettings.autoThemeSelection) {
+  // お題が決定済みの場合は全員にお題表示（5秒間）
+  if (isThemeDecided) {
     return (
       <div className="text-white mt-8 bg-slate-700/50 p-8 rounded-xl border border-slate-600 flex flex-col items-center">
-        <h3 className="text-2xl font-bold mb-6 text-indigo-400">お題決定（自動）</h3>
-        {isHost && autoSelected ? (
-          <div className="text-center animate-fade-in">
-            <p className="text-lg text-slate-300 mb-4">お題が選ばれました！5秒後にゲームを開始します...</p>
-            <div className="bg-slate-800 p-6 rounded-lg border border-slate-600 shadow-inner">
-              <div className="mb-4">
-                <span className="text-sm text-slate-400 block mb-1">ジャンル</span>
-                <span className="text-2xl font-bold text-white">{autoSelected.genre}</span>
-              </div>
-              <div>
-                <span className="text-sm text-slate-400 block mb-1">お題</span>
-                <span className={`text-2xl font-bold ${isFakeArtist ? 'text-rose-400' : 'text-emerald-400'}`}>
-                  {isFakeArtist ? '???' : autoSelected.theme}
-                </span>
-              </div>
+        <h3 className="text-2xl font-bold mb-6 text-indigo-400">
+          {ruleSettings.autoThemeSelection ? 'お題決定（自動）' : 'お題決定'}
+        </h3>
+        <div className="text-center animate-fade-in w-full">
+          <p className="text-xl text-slate-300 mb-6 font-bold">あなたのお題は...</p>
+          <div className="bg-slate-800 p-8 rounded-lg border border-slate-600 shadow-inner w-full max-w-md mx-auto">
+            <div className="mb-6">
+              <span className="text-sm text-slate-400 block mb-2">ジャンル</span>
+              <span className="text-3xl font-bold text-white">{gameState.themeGenre}</span>
+            </div>
+            <div className="bg-slate-900 py-6 px-4 rounded-xl border border-slate-700">
+              <span className="text-sm text-slate-400 block mb-2">お題</span>
+              <span className={`text-4xl font-black tracking-wider ${isFakeArtist ? 'text-rose-500' : 'text-emerald-400'}`}>
+                {isFakeArtist ? '？？？' : gameState.theme}
+              </span>
             </div>
           </div>
-        ) : (
-          <div className="text-center">
-            <p className="text-xl text-slate-300 mb-4">ホストがお題を自動選択中です...</p>
-            <div className="flex justify-center space-x-2">
-              <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce"></div>
-              <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-          </div>
-        )}
+          {isFakeArtist ? (
+            <p className="mt-6 text-rose-400 font-medium animate-pulse">※あなたはエセ芸術家です！周りに合わせましょう</p>
+          ) : (
+            <p className="mt-6 text-emerald-400 font-medium">※エセ芸術家にバレないように描き進めましょう</p>
+          )}
+          <p className="mt-8 text-sm text-slate-500 flex items-center justify-center gap-2">
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            まもなくゲームを開始します...
+          </p>
+        </div>
       </div>
     );
   }
 
-  // 手動テーマ選択（出題者）
+  // お題が未決定の場合の表示（自動モードならローディング、手動モードなら入力フォームorローディング）
+  if (ruleSettings.autoThemeSelection) {
+    return (
+      <div className="text-white mt-8 bg-slate-700/50 p-8 rounded-xl border border-slate-600 flex flex-col items-center">
+        <h3 className="text-2xl font-bold mb-6 text-indigo-400">お題決定（自動）</h3>
+        <div className="text-center py-12">
+          <p className="text-xl text-slate-300 mb-4">お題を準備中です...</p>
+          <div className="flex justify-center space-x-2">
+            <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce"></div>
+            <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="text-white mt-8 bg-slate-700/50 p-8 rounded-xl border border-slate-600">
       <h3 className="text-2xl font-bold mb-6 text-indigo-400">お題決定</h3>

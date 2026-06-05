@@ -56,7 +56,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
   // ターンプレイヤーの名前を検索
   const turnPlayer = players.find(p => p.userId === currentTurnPlayerId);
   const turnPlayerName = turnPlayer?.name || (players.length > 0 ? players[0]?.name : 'だれか');
-  
+
   // 自分のターンかどうかを判定
   const isMyTurn = !isReadOnly && myUserId !== null && myUserId === currentTurnPlayerId;
 
@@ -69,11 +69,11 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
         const allPaths = await canvasRef.current.exportPaths();
         // パスが増えていない場合はスキップ（単なるクリックなど）
         if (allPaths.length <= lastPathsLengthRef.current) return;
-        
+
         // パスが増えていれば送信中フラグを立てる（次の描画をブロック）
         setIsSubmitting(true);
         lastPathsLengthRef.current = allPaths.length;
-        
+
         if (allPaths.length > 0) {
           const latestStroke = allPaths[allPaths.length - 1];
           insertStroke(myUserId, latestStroke);
@@ -82,7 +82,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
         console.error('ストロークの保存に失敗しました:', err);
       }
     }
-    
+
     if (onTurnEnd) {
       onTurnEnd();
     }
@@ -91,10 +91,10 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
   return (
     <div className="w-full max-w-2xl flex flex-col items-center">
       <div className={`w-full aspect-[4/3] bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}>
-        
+
         {/* 自分のターンでない時や送信中は pointer-events-none で操作を無効化 */}
         {/* touch-none はブラウザがスクロールと勘違いして線を切断するバグを防止します */}
-        <div 
+        <div
           className={`w-full h-full touch-none ${isMyTurn && !isSubmitting ? '' : 'pointer-events-none'}`}
           onPointerUp={() => setTimeout(handleStroke, 100)}
         >
