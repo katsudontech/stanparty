@@ -11,8 +11,6 @@ interface CanvasProps {
   currentTurnPlayerId: string | null;
   myUserId: string | null;
   onTurnEnd?: () => void;
-  onUndoStroke?: () => void;
-  canUndo?: boolean;
   isReadOnly?: boolean;
 }
 
@@ -32,7 +30,7 @@ const scalePaths = (paths: CanvasPath[], scaleX: number, scaleY: number): Canvas
   return paths.map(p => scalePath(p, scaleX, scaleY));
 };
 
-export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnEnd, onUndoStroke, canUndo, isReadOnly = false }: CanvasProps) {
+export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnEnd, isReadOnly = false }: CanvasProps) {
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPathsLengthRef = useRef(0);
@@ -201,15 +199,6 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
             />
           )}
         </div>
-
-        {isMyTurn && canUndo && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onUndoStroke && onUndoStroke(); }}
-            className="absolute top-4 right-4 px-3 py-1 rounded-md text-sm font-bold shadow bg-rose-500 text-white hover:bg-rose-600 transition-colors z-10 pointer-events-auto"
-          >
-            ↩ やり直し
-          </button>
-        )}
 
         <div className={`absolute bottom-4 right-4 px-3 py-1 rounded-md text-sm font-bold shadow pointer-events-none transition-colors ${isMyTurn ? 'bg-indigo-500 text-white' : 'bg-slate-100/90 text-slate-600'}`}>
           {isReadOnly ? '🎨 完成した絵' : (isMyTurn ? '✨ あなたのターンです！描いてください' : `${turnPlayerName} のターン`)}
