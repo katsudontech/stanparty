@@ -254,6 +254,52 @@ export function useFakeArtistGame(roomState: RoomState) {
     });
   };
 
+  const handleUndoStroke = async () => {
+    if (!currentGameState || currentGameState.phase !== 'drawing') return;
+
+    // 1. 最新の描画イベントを取得
+    const { data, error } = await supabase
+      .from('game_events')
+      .select('id')
+      .eq('room_id', roomId)
+      .eq('event_type', 'draw_line')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error || !data || data.length === 0) return;
+
+    // 2. イベントを削除
+    const { error: deleteError } = await supabase.from('game_events').delete().eq('id', data[0].id);
+    
+    if (deleteError) {
+      console.error('ストロークの削除に失敗しました:', deleteError);
+      return;
+    }
+
+    // 3. ターンを一つ前に戻す
+    const { turnOrder, currentTurnPlayerId, currentLap } = currentGameState;
+    const currentIndex = turnOrder.indexOf(currentTurnPlayerId || '');
+
+    let prevPlayerId: string | null = null;
+    let prevLap = currentLap;
+    
+    if (currentIndex > 0) {
+      prevPlayerId = turnOrder[currentIndex - 1];
+    } else {
+      if (currentLap > 1) {
+        prevLap = currentLap - 1;
+        prevPlayerId = turnOrder[turnOrder.length - 1];
+      } else {
+        return; // nothing to undo
+      }
+    }
+
+    await updateGameState({
+      currentTurnPlayerId: prevPlayerId,
+      currentLap: prevLap,
+    });
+  };
+
   return {
     handleSaveRules,
     proceedToThemeSelection,
@@ -264,6 +310,7 @@ export function useFakeArtistGame(roomState: RoomState) {
     handleAllVoted,
     handleFakeArtistGuess,
     handleGuessJudge,
-    handleResetGame
+    handleResetGame,
+    handleUndoStroke
   };
 }

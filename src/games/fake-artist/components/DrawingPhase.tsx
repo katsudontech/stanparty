@@ -11,9 +11,10 @@ interface DrawingPhaseProps {
   gameState: FakeArtistGameState;
   myUserId: string | null;
   onTurnEnd: () => void;
+  onUndoStroke?: () => void;
 }
 
-export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd }: DrawingPhaseProps) {
+export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd, onUndoStroke }: DrawingPhaseProps) {
   const { themeGenre, theme, currentTurnPlayerId, playerStates } = gameState;
   const turnPlayer = players.find(p => p.userId === currentTurnPlayerId);
   const myRole = playerStates[myUserId || '']?.role;
@@ -86,6 +87,8 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd }
         currentTurnPlayerId={currentTurnPlayerId} 
         myUserId={myUserId}
         onTurnEnd={onTurnEnd}
+        onUndoStroke={onUndoStroke}
+        canUndo={gameState.currentLap > 1 || gameState.turnOrder.indexOf(currentTurnPlayerId || '') > 0}
       />
     </div>
   );

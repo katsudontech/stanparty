@@ -9,9 +9,10 @@ interface UseCanvasSyncProps {
   myUserId: string | null;
   onInitialStrokesLoaded: (strokes: CanvasPath[]) => void;
   onNewStrokeReceived: (stroke: CanvasPath) => void;
+  onStrokeDeleted?: () => void;
 }
 
-export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewStrokeReceived }: UseCanvasSyncProps) {
+export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewStrokeReceived, onStrokeDeleted }: UseCanvasSyncProps) {
   const supabase = createClient();
   const initializedRoomIdRef = useRef<string | null>(null);
 
@@ -51,19 +52,25 @@ export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewS
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'game_events',
           filter: `room_id=eq.${roomId}`,
         },
         (payload) => {
-          const newEvent = payload.new as GameEvent<DrawLinePayload>;
-          if (newEvent.event_type === 'draw_line' && newEvent.payload?.stroke) {
-            // 自分自身のイベントは確実に無視する
-            if (myUserId && newEvent.payload.playerId === myUserId) {
-              return;
+          if (payload.eventType === 'INSERT') {
+            const newEvent = payload.new as GameEvent<DrawLinePayload>;
+            if (newEvent.event_type === 'draw_line' && newEvent.payload?.stroke) {
+              // 自分自身のイベントは確実に無視する
+              if (myUserId && newEvent.payload.playerId === myUserId) {
+                return;
+              }
+              onNewStrokeReceived(newEvent.payload.stroke);
             }
-            onNewStrokeReceived(newEvent.payload.stroke);
+          } else if (payload.eventType === 'DELETE') {
+            if (onStrokeDeleted) {
+              onStrokeDeleted();
+            }
           }
         }
       )
