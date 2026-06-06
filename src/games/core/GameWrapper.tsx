@@ -9,7 +9,7 @@ interface GameWrapperProps {
 export function GameWrapper({ children }: GameWrapperProps) {
   return (
     <div className="min-h-screen bg-slate-900 text-white p-4 font-sans">
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full max-w-screen-2xl mx-auto">
         <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-700">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center font-bold">

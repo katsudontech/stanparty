@@ -170,7 +170,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
     : LOGICAL_STROKE_WIDTH;
 
   return (
-    <div className="w-full max-w-2xl flex flex-col items-center">
+    <div className="w-full flex flex-col items-center">
       <div className={`w-full aspect-[3/4] bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}>
 
         {/* 自分のターンでない時や送信中は pointer-events-none で操作を無効化 */}
