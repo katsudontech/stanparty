@@ -139,12 +139,14 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
   // ③ 実際の画面レイアウト（ここで①と②を合体させる）
   // ==========================================
   return (
-    <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center text-center border border-slate-700 w-full">
+    <div className="bg-slate-800 p-2 sm:p-4 rounded-2xl shadow-2xl flex flex-col items-center text-center border border-slate-700 w-full">
       {/* 上部に常にヘッダーを表示 */}
-      {renderHeader()}
+      <div className="w-full max-w-2xl mx-auto">
+        {renderHeader()}
+      </div>
 
       {/* 下部にフェーズに応じたコンテンツを表示 */}
-      <div className="w-full max-w-2xl">
+      <div className={`w-full ${['drawing', 'voting', 'guessing'].includes(currentPhase) ? '' : 'max-w-2xl mx-auto'}`}>
         {renderMainContent()}
       </div>
     </div>

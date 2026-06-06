@@ -23,7 +23,7 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd }
 
   return (
     <div className="w-full mt-8 flex flex-col space-y-6">
-      <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600 flex flex-col sm:flex-row justify-between items-start sm:items-center shadow-lg gap-6">
+      <div className="w-full max-w-2xl mx-auto bg-slate-700/50 p-6 rounded-xl border border-slate-600 flex flex-col sm:flex-row justify-between items-start sm:items-center shadow-lg gap-6">
         
         <div className="text-left w-full sm:flex-1">
           <p className="text-slate-400 text-sm font-medium mb-2">公開情報</p>
