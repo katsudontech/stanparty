@@ -14,8 +14,8 @@ interface CanvasProps {
   isReadOnly?: boolean;
 }
 
-const LOGICAL_WIDTH = 800;
-const LOGICAL_HEIGHT = 600;
+const LOGICAL_WIDTH = 600;
+const LOGICAL_HEIGHT = 800;
 const LOGICAL_STROKE_WIDTH = 6;
 
 const scalePath = (path: CanvasPath, scaleX: number, scaleY: number): CanvasPath => {
@@ -171,7 +171,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
 
   return (
     <div className="w-full max-w-2xl flex flex-col items-center">
-      <div className={`w-full aspect-[4/3] bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}>
+      <div className={`w-full aspect-[3/4] bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}>
 
         {/* 自分のターンでない時や送信中は pointer-events-none で操作を無効化 */}
         {/* touch-none はブラウザがスクロールと勘違いして線を切断するバグを防止します */}
