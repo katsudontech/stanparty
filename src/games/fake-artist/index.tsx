@@ -128,7 +128,7 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
         );
 
       case 'result':
-        return <ResultPhase players={roomState.players} gameState={gameState} isHost={isHost} onResetGame={handleResetGame} />;
+        return <ResultPhase roomId={roomState.id} myUserId={myUserId} players={roomState.players} gameState={gameState} isHost={isHost} onResetGame={handleResetGame} />;
 
       default:
         return <div className="text-white mt-8">準備中...</div>;

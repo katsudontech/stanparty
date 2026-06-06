@@ -2,15 +2,18 @@
 
 import type { Player } from '@/games/core/types';
 import type { FakeArtistGameState } from '../types';
+import { Canvas } from './Canvas';
 
 interface ResultPhaseProps {
+  roomId: string;
+  myUserId: string | null;
   players: Player[];
   gameState: FakeArtistGameState;
   isHost: boolean;
   onResetGame: () => void;
 }
 
-export function ResultPhase({ players, gameState, isHost, onResetGame }: ResultPhaseProps) {
+export function ResultPhase({ roomId, myUserId, players, gameState, isHost, onResetGame }: ResultPhaseProps) {
   const winner = gameState.winner;
   
   // 勝敗に応じたメッセージと色を設定
@@ -51,54 +54,67 @@ export function ResultPhase({ players, gameState, isHost, onResetGame }: ResultP
   };
 
   return (
-    <div className="text-white mt-8 bg-slate-700/50 p-8 rounded-xl border border-slate-600 flex flex-col items-center">
-      <h3 className={`text-4xl font-bold mb-4 ${winnerColor} animate-bounce`}>
-        {winnerText}
-      </h3>
-      <p className="text-lg text-slate-300 mb-8">{description}</p>
+    <div className="text-white mt-8">
+      <div className="max-w-2xl mx-auto bg-slate-700/50 p-6 sm:p-8 rounded-xl border border-slate-600 flex flex-col items-center mb-8">
+        <h3 className={`text-4xl font-bold mb-4 ${winnerColor} animate-bounce`}>
+          {winnerText}
+        </h3>
+        <p className="text-lg text-slate-300 mb-8">{description}</p>
 
-      {/* お題の正解発表 */}
-      <div className="bg-slate-800/80 p-6 rounded-lg border border-slate-600 w-full max-w-md mb-8 text-center">
-        <p className="text-slate-400 text-sm mb-2">本当のお題（ジャンル：{gameState.themeGenre}）</p>
-        <p className="text-3xl font-bold text-white mb-4">{gameState.theme}</p>
-        
-        {gameState.fakeArtistGuess && (
-          <div className="mt-4 pt-4 border-t border-slate-600">
-            <p className="text-slate-400 text-sm mb-1">エセ芸術家の推測</p>
-            <p className="text-xl font-bold text-orange-300">{gameState.fakeArtistGuess}</p>
+        {/* お題の正解発表 */}
+        <div className="bg-slate-800/80 p-6 rounded-lg border border-slate-600 w-full max-w-md mb-8 text-center">
+          <p className="text-slate-400 text-sm mb-2">本当のお題（ジャンル：{gameState.themeGenre}）</p>
+          <p className="text-3xl font-bold text-white mb-4">{gameState.theme}</p>
+          
+          {gameState.fakeArtistGuess && (
+            <div className="mt-4 pt-4 border-t border-slate-600">
+              <p className="text-slate-400 text-sm mb-1">エセ芸術家の推測</p>
+              <p className="text-xl font-bold text-orange-300">{gameState.fakeArtistGuess}</p>
+            </div>
+          )}
+        </div>
+
+        {/* プレイヤーの役職一覧 */}
+        <div className="w-full max-w-md">
+          <h4 className="text-xl font-bold mb-4 text-slate-200 border-b border-slate-600 pb-2">プレイヤーの役職</h4>
+          <div className="flex flex-col gap-3">
+            {players.map(player => {
+              const role = gameState.playerStates[player.userId]?.role;
+              return (
+                <div 
+                  key={player.userId}
+                  className="flex items-center justify-between bg-slate-800 p-4 rounded border border-slate-600"
+                >
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-4 h-4 rounded-full" 
+                      style={{ backgroundColor: player.color }} 
+                    />
+                    <span className="font-bold text-lg">{player.name}</span>
+                  </div>
+                  <div>
+                    {getRoleBadge(role)}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        )}
-      </div>
-
-      {/* プレイヤーの役職一覧 */}
-      <div className="w-full max-w-md">
-        <h4 className="text-xl font-bold mb-4 text-slate-200 border-b border-slate-600 pb-2">プレイヤーの役職</h4>
-        <div className="flex flex-col gap-3">
-          {players.map(player => {
-            const role = gameState.playerStates[player.userId]?.role;
-            return (
-              <div 
-                key={player.userId}
-                className="flex items-center justify-between bg-slate-800 p-4 rounded border border-slate-600"
-              >
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-4 h-4 rounded-full" 
-                    style={{ backgroundColor: player.color }} 
-                  />
-                  <span className="font-bold text-lg">{player.name}</span>
-                </div>
-                <div>
-                  {getRoleBadge(role)}
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
 
+      <div className="w-full flex flex-col items-center mb-8">
+        <h4 className="text-xl font-bold mb-4 text-slate-300">完成した絵</h4>
+        <Canvas 
+          roomId={roomId}
+          players={players}
+          currentTurnPlayerId={null}
+          myUserId={myUserId}
+          isReadOnly={true}
+        />
+      </div>
+
       {/* リセットボタン（ホストのみ操作可能） */}
-      <div className="mt-8 w-full max-w-md border-t border-slate-600 pt-8">
+      <div className="max-w-2xl mx-auto w-full border-t border-slate-600 pt-8 mt-8">
         {isHost ? (
           <button
             onClick={onResetGame}
