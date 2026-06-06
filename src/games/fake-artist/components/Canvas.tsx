@@ -170,11 +170,14 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
     : LOGICAL_STROKE_WIDTH;
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="w-full h-full flex flex-col items-center justify-center p-2">
       <div 
         className={`bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}
         style={{
-          width: 'min(100%, 672px, calc(60dvh * 4 / 3))',
+          width: '100%',
+          height: '100%',
+          maxWidth: 'calc(100vh * 4 / 3)',
+          maxHeight: 'calc(100vw * 3 / 4)',
           aspectRatio: '4 / 3'
         }}
       >

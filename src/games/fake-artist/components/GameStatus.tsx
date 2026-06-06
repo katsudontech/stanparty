@@ -22,14 +22,14 @@ const PHASE_LABELS: Record<FakeArtistPhase, string> = {
 
 export function GameStatus({ players, currentPhase, gameState, myUserId }: GameStatusProps) {
   return (
-    <div className="w-full max-w-2xl mb-8 flex flex-col space-y-4">
-      {/* プレイヤー一覧 */}
-      <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600 w-full shadow-lg">
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-slate-400 font-medium text-sm">参加プレイヤー ({players.length}人)</p>
-          <p className="text-slate-400 font-medium text-sm">現在のフェーズ: <span className="text-blue-400 font-bold ml-1">{PHASE_LABELS[currentPhase] || currentPhase}</span></p>
+    <div className="w-full flex flex-col space-y-3">
+      <div className="bg-slate-700/50 p-3 rounded-xl border border-slate-600 w-full shadow-lg">
+        <div className="mb-2">
+          <p className="text-slate-400 font-medium text-[10px]">現在のフェーズ</p>
+          <p className="text-blue-400 font-bold text-sm">{PHASE_LABELS[currentPhase] || currentPhase}</p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <p className="text-slate-400 font-medium text-[10px] mb-2 border-t border-slate-600/50 pt-2">参加プレイヤー ({players.length}人)</p>
+        <div className="flex flex-col gap-1.5">
           {players.map(p => {
             const pState = gameState.playerStates[p.userId];
             const isQuestioner = pState?.role === 'questioner';
@@ -40,25 +40,27 @@ export function GameStatus({ players, currentPhase, gameState, myUserId }: GameS
             return (
               <div 
                 key={p.userId} 
-                className={`flex items-center space-x-2 bg-slate-800 px-3 py-2 rounded-lg border ${isMe ? 'border-indigo-500 shadow-indigo-500/20' : 'border-slate-600'} shadow-sm transition-all`}
+                className={`flex items-center space-x-2 bg-slate-800 px-2 py-1.5 rounded-lg border ${isMe ? 'border-indigo-500 shadow-indigo-500/20' : 'border-slate-600'} shadow-sm transition-all`}
               >
                 <div 
-                  className="w-3 h-3 rounded-full shadow-inner" 
+                  className="w-2.5 h-2.5 rounded-full shadow-inner shrink-0" 
                   style={{ backgroundColor: color }} 
                 />
-                <span className={`font-bold text-sm ${isMe ? 'text-indigo-300' : 'text-white'}`}>
+                <span className={`font-bold text-xs truncate ${isMe ? 'text-indigo-300' : 'text-white'}`}>
                   {p.name}
                 </span>
-                {isQuestioner && (
-                  <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">
-                    出題者
-                  </span>
-                )}
-                {isMe && (
-                  <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded">
-                    あなた
-                  </span>
-                )}
+                <div className="flex gap-1 ml-auto shrink-0">
+                  {isQuestioner && (
+                    <span className="text-[9px] font-bold bg-amber-500/20 text-amber-300 px-1 py-0.5 rounded">
+                      出題
+                    </span>
+                  )}
+                  {isMe && (
+                    <span className="text-[9px] font-bold bg-indigo-500/20 text-indigo-300 px-1 py-0.5 rounded">
+                      あなた
+                    </span>
+                  )}
+                </div>
               </div>
             );
           })}
