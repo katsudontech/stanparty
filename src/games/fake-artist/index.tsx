@@ -139,7 +139,21 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
   // ③ 実際の画面レイアウト（ここで①と②を合体させる）
   // ==========================================
   return (
-    <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center text-center border border-slate-700 w-full">
+    <>
+      {/* スマホ縦画面時の警告オーバーレイ */}
+      <div className="fixed inset-0 bg-slate-900 z-[100] flex-col items-center justify-center text-white p-6 text-center hidden portrait:flex md:hidden">
+        <svg className="w-20 h-20 mb-6 animate-pulse text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8 8 8 0 018 8" strokeDasharray="4 4" className="origin-center rotate-90" />
+        </svg>
+        <h2 className="text-2xl font-bold mb-4 tracking-wider">スマホを横向きにしてください</h2>
+        <p className="text-slate-300 leading-relaxed max-w-sm">
+          キャンバスを広く使ってお絵描きをするため、<br/>
+          画面を横に傾けて（横画面で）お楽しみください🎨
+        </p>
+      </div>
+
+      <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center text-center border border-slate-700 w-full">
       {/* 上部に常にヘッダーを表示 */}
       {renderHeader()}
 
@@ -148,5 +162,6 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
         {renderMainContent()}
       </div>
     </div>
+    </>
   );
 }

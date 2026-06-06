@@ -170,8 +170,14 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
     : LOGICAL_STROKE_WIDTH;
 
   return (
-    <div className="w-full max-w-2xl flex flex-col items-center">
-      <div className={`w-full aspect-[4/3] bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}>
+    <div className="w-full flex flex-col items-center">
+      <div 
+        className={`bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}
+        style={{
+          width: 'min(100%, 672px, calc(60dvh * 4 / 3))',
+          aspectRatio: '4 / 3'
+        }}
+      >
 
         {/* 自分のターンでない時や送信中は pointer-events-none で操作を無効化 */}
         {/* touch-none はブラウザがスクロールと勘違いして線を切断するバグを防止します */}
