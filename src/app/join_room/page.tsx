@@ -32,6 +32,7 @@ export default function RoomsListPage() {
                 const { data, error } = await supabase
                     .from('rooms')
                     .select('*')
+                    .eq('is_public', true)
                     .order('created_at', { ascending: false })
 
                 if (error) throw error
@@ -52,13 +53,20 @@ export default function RoomsListPage() {
                 { event: '*', schema: 'public', table: 'rooms' },
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        setRooms((prev) => [payload.new as Room, ...prev])
+                        if (payload.new.is_public !== false) {
+                            setRooms((prev) => [payload.new as Room, ...prev])
+                        }
                     } else if (payload.eventType === 'UPDATE') {
-                        setRooms((prev) =>
-                            prev.map((room) =>
-                                room.id === payload.new.id ? (payload.new as Room) : room
+                        if (payload.new.is_public === false) {
+                            // もしプライベートに変更されたら一覧から消す
+                            setRooms((prev) => prev.filter((room) => room.id !== payload.new.id))
+                        } else {
+                            setRooms((prev) =>
+                                prev.map((room) =>
+                                    room.id === payload.new.id ? (payload.new as Room) : room
+                                )
                             )
-                        )
+                        }
                     } else if (payload.eventType === 'DELETE') {
                         setRooms((prev) => prev.filter((room) => room.id === payload.old.id))
                     }

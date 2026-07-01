@@ -11,6 +11,7 @@ import Link from 'next/link'
 export default function CreateRoomPage() {
     const [roomName, setRoomName] = useState('')
     const [hostName, setHostName] = useState('')
+    const [isPublic, setIsPublic] = useState(true)
     const [createdRoomId, setCreatedRoomId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     
@@ -65,7 +66,8 @@ export default function CreateRoomPage() {
                                 isOnline: true
                             }
                         ],
-                        room_name: roomName
+                        room_name: roomName,
+                        is_public: isPublic
                     }
                 ])
                 .select()
@@ -132,6 +134,26 @@ export default function CreateRoomPage() {
                                     required
                                     className="w-full px-4 py-4 bg-black/40 border border-white/10 rounded-2xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white placeholder-slate-600 transition-all text-lg font-bold shadow-inner"
                                 />
+                            </div>
+
+                            <div className="flex items-center gap-4 bg-black/40 border border-white/10 p-4 rounded-2xl shadow-inner cursor-pointer" onClick={() => setIsPublic(!isPublic)}>
+                                <div className="relative flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={isPublic}
+                                        onChange={(e) => setIsPublic(e.target.checked)}
+                                        className="peer relative h-6 w-6 cursor-pointer appearance-none rounded-md border border-slate-500 transition-all checked:border-indigo-500 checked:bg-indigo-500"
+                                    />
+                                    <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-white font-bold text-sm">「ルームを探す」の一覧に表示する</p>
+                                    <p className="text-slate-400 text-xs mt-0.5">オフにするとURLを知っている人だけが参加できる「プライベートルーム」になります</p>
+                                </div>
                             </div>
 
                             <button
