@@ -11,7 +11,7 @@ export interface Player {
 export interface RoomState {
   id: string;
   host_id: string;
-  game_type: 'fake-artist' | 'werewolf';
+  game_type: 'fake-artist' | 'werewolf' | 'coyote';
   status: 'waiting' | 'playing' | 'finished';
   players: Player[];
   game_state: any;

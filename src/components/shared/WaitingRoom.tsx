@@ -14,6 +14,7 @@ interface WaitingRoomProps {
 
 const AVAILABLE_GAMES = [
   { id: 'fake-artist', name: '🎨 エセ芸術家 ニューヨークへ行く' },
+  { id: 'coyote', name: '🐺 コヨーテ (おでこ)' },
   { id: 'werewolf', name: '🐺 人狼 (予定)' },
   { id: 'word-wolf', name: '🦊 ワードウルフ (予定)' },
   { id: 'ito', name: '🧵 ito (予定)' },

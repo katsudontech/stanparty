@@ -9,6 +9,7 @@ import { JoinRoomScreen } from '@/components/shared/JoinRoomScreen';
 import { WaitingRoom } from '@/components/shared/WaitingRoom';
 import { GameWrapper } from '@/games/core/GameWrapper';
 import { FakeArtistGame } from '@/games/fake-artist';
+import { CoyoteGame } from '@/games/coyote';
 import type { Player } from '@/games/core/types';
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
@@ -56,6 +57,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
             return (
                 <GameWrapper>
                     <FakeArtistGame roomState={roomState} myUserId={myUserId} />
+                </GameWrapper>
+            );
+        }
+
+        if (roomState.game_type === 'coyote') {
+            return (
+                <GameWrapper>
+                    <CoyoteGame roomState={roomState} myUserId={myUserId} />
                 </GameWrapper>
             );
         }
