@@ -1,159 +1,160 @@
-// src/app/create-room/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getPlayerColor } from '@/games/core/constants'
-
-interface MyProfile {
-    id: string
-    name: string
-    avatar: string
-}
+import { useGuestAuth } from '@/hooks/useGuestAuth'
+import { ProfileInput } from '@/components/shared/ProfileInput'
+import Link from 'next/link'
 
 export default function CreateRoomPage() {
     const [roomName, setRoomName] = useState('')
-    const [myProfile, setMyProfile] = useState<MyProfile | null>(null)
+    const [hostName, setHostName] = useState('')
     const [createdRoomId, setCreatedRoomId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
-    const [checkingAuth, setCheckingAuth] = useState(true)
+    
+    const { profile: myProfile, loading: checkingAuth } = useGuestAuth()
+
+
+    useEffect(() => {
+        if (myProfile?.name && !hostName) {
+            setHostName(myProfile.name)
+        }
+    }, [myProfile])
 
     const router = useRouter()
     const supabase = createClient()
 
-    // ① 画面が開いた時に、いま誰でログイン（仮）しているかを確認する
-    useEffect(() => {
-        const checkMyAuth = async () => {
-            try {
-                // 仮の処理！本番環境は、googleログインにするよーー
-                const savedUserId = localStorage.getItem('mock_user_id')
-                if (!savedUserId) {
-                    setCheckingAuth(false)
-                    return
-                }
-
-                // localStorageにあるIDをもとに、usersテーブルから名前とかを取ってくる
-                const { data, error } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq('id', savedUserId)
-                    .single()
-
-                if (data) {
-                    setMyProfile(data as MyProfile)
-                }
-            } catch (err) {
-                console.error('ユーザー情報の取得に失敗:', err)
-            } finally {
-                setCheckingAuth(false)
-            }
-        }
-
-        checkMyAuth()
-    }, [supabase])
-
-    // ② 「部屋を作成」ボタンを押した時の処理
     const handleCreateRoom = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!roomName.trim() || !myProfile) return
+        if (!roomName.trim() || !myProfile || !hostName.trim()) return
 
         setLoading(true)
         setCreatedRoomId(null)
 
         try {
-            // 仕様書の設計に沿って、roomsテーブルにインサートするよ
+            // 部屋を作る前に、確実にホストのユーザー情報をusersテーブルに登録（upsert）する
+            const updatedProfile = { ...myProfile, name: hostName }
+            
+            // ローカルストレージも最新状態に保つ
+            localStorage.setItem('guest_profile', JSON.stringify(updatedProfile))
+            
+            // usersテーブルに登録（すでに存在していれば名前だけ更新される）
+            const { error: upsertError } = await supabase.from('users').upsert([updatedProfile])
+            if (upsertError) {
+                console.error('ユーザー情報の登録に失敗しました:', upsertError)
+                throw upsertError // 登録に失敗した場合は部屋作成も中断する
+            }
+
+            // その後、部屋を作成する
             const { data, error } = await supabase
                 .from('rooms')
                 .insert([
                     {
                         host_id: myProfile.id,
                         game_type: 'fake-artist', // 第一弾ゲーム固定
-                        status: 'waiting',        // 待機室状態からスタート
-
-                        // 参加者リスト（仕様書通り、まずは自分をホストとして配列に入れる）
+                        status: 'waiting',
                         players: [
                             {
                                 userId: myProfile.id,
-                                name: myProfile.name,
+                                name: hostName,
                                 avatarUrl: myProfile.avatar,
                                 isHost: true,
-                                color: getPlayerColor(0), // ホストは最初(インデックス0)の色
+                                color: getPlayerColor(0),
                                 isOnline: true
                             }
                         ],
                         room_name: roomName
                     }
                 ])
-                .select() // インサートしたデータを返してもらう（IDを知るため）
+                .select()
                 .single()
 
             if (error) throw error
 
             if (data) {
                 setCreatedRoomId(data.id)
-                // 部屋作成に成功したら自動的にその部屋へ遷移する
                 router.push(`/room/${data.id}`)
             }
         } catch (err: any) {
             console.error('部屋作成エラー:', err)
-            alert(`失敗しちゃった: ${err.message}`)
+            alert(`エラーが発生しました: ${err.message}`)
         } finally {
             setLoading(false)
         }
     }
 
-    if (checkingAuth) return <div className="p-8">ログイン状態を確認中...</div>
-
-    // 仮ログインしていない場合の警告
-    if (!myProfile) {
+    if (checkingAuth) {
         return (
-            <div className="p-8 font-sans max-w-md mx-auto text-center">
-                <p className="text-red-500 font-bold mb-4">⚠️ 仮ログインされていません</p>
-                <p className="text-gray-600 text-sm mb-4">先にテストページ（/test）で操作するユーザーを選んできてね！</p>
+            <div className="min-h-screen flex items-center justify-center bg-slate-950">
+                <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
         )
     }
 
     return (
-        <div className="p-8 font-sans max-w-md mx-auto">
-            <h1 className="text-2xl font-bold mb-2">🎮 ルーム作成（システム試作）</h1>
-            <p className="text-sm text-gray-500 mb-6">操作中: <span className="font-bold text-gray-800">{myProfile.name}</span></p>
+        <div className="min-h-screen bg-slate-950 text-slate-200 p-6 flex flex-col items-center selection:bg-indigo-500/30">
+            <div className="w-full max-w-md pt-12">
+                <Link href="/" className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 font-bold mb-8 transition-colors group">
+                    <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    ホームに戻る
+                </Link>
 
-            <form onSubmit={handleCreateRoom} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        ルーム名
-                    </label>
-                    <input
-                        type="text"
-                        value={roomName}
-                        onChange={(e) => setRoomName(e.target.value)}
-                        placeholder="みんなでワイワイ部屋、など"
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
+                <div className="bg-slate-900/50 border border-white/10 p-8 rounded-[2rem] backdrop-blur-xl shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-fuchsia-500/10 rounded-full blur-3xl"></div>
+                    
+                    <div className="relative z-10">
+                        <h1 className="text-3xl font-black text-white mb-2 tracking-tight">部屋を作成</h1>
+                        <p className="text-slate-400 mb-8 font-medium">友達を招待してゲームを始めよう！</p>
 
-                <button
-                    type="submit"
-                    disabled={loading || !roomName.trim()}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-300 transition-colors"
-                >
-                    {loading ? '作成中...' : '部屋を作成する'}
-                </button>
-            </form>
+                        <div className="mb-8">
+                            <ProfileInput
+                                name={hostName}
+                                onChangeName={setHostName}
+                                avatarUrl={myProfile?.avatar}
+                                label="あなたの名前 (ホスト)"
+                                variant="horizontal"
+                            />
+                        </div>
 
-            {/* 作成に成功したらIDを表示するシステム */}
-            {createdRoomId && (
-                <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-xl font-mono text-xs">
-                    <p className="text-green-700 font-bold mb-1 text-sm font-sans">🎉 部屋が作られたよ！</p>
-                    <p className="text-gray-500 mb-2">本来ならここからこのURLに遷移します：</p>
-                    <div className="p-2 bg-white rounded border border-gray-100 font-bold text-blue-600">
-                        /room/{createdRoomId}
+                        <form onSubmit={handleCreateRoom} className="space-y-6">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
+                                    ルーム名
+                                </label>
+                                <input
+                                    type="text"
+                                    value={roomName}
+                                    onChange={(e) => setRoomName(e.target.value)}
+                                    placeholder="例: ユニバ待ち時間部屋"
+                                    required
+                                    className="w-full px-4 py-4 bg-black/40 border border-white/10 rounded-2xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-white placeholder-slate-600 transition-all text-lg font-bold shadow-inner"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading || !roomName.trim()}
+                                className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-lg font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all overflow-hidden shadow-[0_0_20px_-5px_rgba(79,70,229,0.5)]"
+                            >
+                                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                                <span className="relative flex items-center gap-2">
+                                    {loading ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            作成中...
+                                        </>
+                                    ) : (
+                                        '部屋を作成する'
+                                    )}
+                                </span>
+                            </button>
+                        </form>
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     )
 }
