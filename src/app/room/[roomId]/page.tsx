@@ -10,6 +10,7 @@ import { WaitingRoom } from '@/components/shared/WaitingRoom';
 import { GameWrapper } from '@/games/core/GameWrapper';
 import { FakeArtistGame } from '@/games/fake-artist';
 import { CoyoteGame } from '@/games/coyote';
+import { OneNightWerewolfGame } from '@/games/one-night-werewolf';
 import type { Player } from '@/games/core/types';
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
@@ -70,6 +71,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
 
         // TODO: 他のゲームの場合（人狼など）
+
+        if (roomState.game_type === 'one-night-werewolf') {
+            return (
+                <GameWrapper>
+                    <OneNightWerewolfGame roomState={roomState} myUserId={myUserId} />
+                </GameWrapper>
+            );
+        }
     }
 
     return <div>ゲームが終了しました</div>;
