@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { getPlayerColor } from '@/games/core/constants'
 import { saveGuestDisplayProfile, useGuestAuth } from '@/hooks/useGuestAuth'
 import { ProfileInput } from '@/components/shared/ProfileInput'
 import Link from 'next/link'
@@ -47,34 +46,17 @@ export default function CreateRoomPage() {
             }
 
             // その後、部屋を作成する
-            const { data, error } = await supabase
-                .from('rooms')
-                .insert([
-                    {
-                        host_id: myProfile.id,
-                        game_type: 'fake-artist', // 第一弾ゲーム固定
-                        status: 'waiting',
-                        players: [
-                            {
-                                userId: myProfile.id,
-                                name: normalizedHostName,
-                                avatarUrl: myProfile.avatar,
-                                isHost: true,
-                                color: getPlayerColor(0),
-                                isOnline: true
-                            }
-                        ],
-                        room_name: roomName,
-                        is_public: isPublic
-                    }
-                ])
-                .select()
-                .single()
+            const { data: createdRoomId, error } = await supabase.rpc('create_room', {
+                p_room_name: roomName.trim(),
+                p_host_name: normalizedHostName,
+                p_avatar_url: myProfile.avatar,
+                p_is_public: isPublic
+            })
 
             if (error) throw error
 
-            if (data) {
-                router.push(`/room/${data.id}`)
+            if (createdRoomId) {
+                router.push(`/room/${createdRoomId}`)
             }
         } catch (err: unknown) {
             const errorMessage =
