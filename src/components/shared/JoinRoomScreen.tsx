@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Player, RoomState } from '@/games/core/types';
 import { getPlayerColor } from '@/games/core/constants';
-import { useGuestAuth } from '@/hooks/useGuestAuth';
+import { saveGuestDisplayProfile, useGuestAuth } from '@/hooks/useGuestAuth';
 import { ProfileInput } from '@/components/shared/ProfileInput';
 
 interface JoinRoomScreenProps {
@@ -16,35 +16,38 @@ interface JoinRoomScreenProps {
 
 export function JoinRoomScreen({ roomId, myUserId, roomState, players }: JoinRoomScreenProps) {
     const { profile } = useGuestAuth();
-    const [joinName, setJoinName] = useState('');
+    const [joinName, setJoinName] = useState<string | null>(null);
+    const resolvedJoinName = joinName ?? profile?.name ?? '';
     const [isJoining, setIsJoining] = useState(false);
 
-    useEffect(() => {
-        if (profile?.name && !joinName) {
-            setJoinName(profile.name);
-        }
-    }, [profile]);
 
     const handleJoin = async () => {
-        if (!joinName.trim() || isJoining) return;
+        if (!resolvedJoinName.trim() || isJoining) return;
         setIsJoining(true);
 
         const supabase = createClient();
         
         // 部屋に参加する前に、確実にユーザー情報をusersテーブルに登録（upsert）する
         if (profile) {
-            const updatedProfile = { ...profile, name: joinName };
-            localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
+            const updatedProfile = { ...profile, name: resolvedJoinName.trim() };
+            saveGuestDisplayProfile({
+                name: updatedProfile.name,
+                avatar: updatedProfile.avatar
+            });
             try {
-                await supabase.from('users').upsert([updatedProfile]);
+                const { error: profileError } = await supabase.from('users').upsert([updatedProfile]);
+                if (profileError) throw profileError;
             } catch (err) {
                 console.warn('DBのユーザー登録に失敗しました:', err);
+                alert('\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u306e\u767b\u9332\u306b\u5931\u6557\u3057\u307e\u3057\u305f');
+                setIsJoining(false);
+                return;
             }
         }
 
         const newPlayer: Player = {
             userId: myUserId,
-            name: joinName,
+            name: resolvedJoinName.trim(),
             avatarUrl: profile?.avatar || '',
             isHost: players.length === 0,
             color: getPlayerColor(players.length),
@@ -75,7 +78,7 @@ export function JoinRoomScreen({ roomId, myUserId, roomState, players }: JoinRoo
                 
                 <div className="mb-6">
                     <ProfileInput
-                        name={joinName}
+                        name={resolvedJoinName}
                         onChangeName={setJoinName}
                         avatarUrl={profile?.avatar}
                         label="参加する名前を入力してください"
@@ -87,7 +90,7 @@ export function JoinRoomScreen({ roomId, myUserId, roomState, players }: JoinRoo
                 <button 
                     className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all overflow-hidden shadow-[0_0_20px_-5px_rgba(79,70,229,0.5)]"
                     onClick={handleJoin}
-                    disabled={!joinName.trim() || isJoining}
+                    disabled={!resolvedJoinName.trim() || isJoining}
                 >
                     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                     <span className="relative flex items-center gap-2">

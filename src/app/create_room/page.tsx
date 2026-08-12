@@ -1,45 +1,45 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getPlayerColor } from '@/games/core/constants'
-import { useGuestAuth } from '@/hooks/useGuestAuth'
+import { saveGuestDisplayProfile, useGuestAuth } from '@/hooks/useGuestAuth'
 import { ProfileInput } from '@/components/shared/ProfileInput'
 import Link from 'next/link'
 
 export default function CreateRoomPage() {
     const [roomName, setRoomName] = useState('')
-    const [hostName, setHostName] = useState('')
+    const [hostName, setHostName] = useState<string | null>(null)
     const [isPublic, setIsPublic] = useState(true)
     const [createdRoomId, setCreatedRoomId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     
     const { profile: myProfile, loading: checkingAuth } = useGuestAuth()
+    const resolvedHostName = hostName ?? myProfile?.name ?? ''
 
 
-    useEffect(() => {
-        if (myProfile?.name && !hostName) {
-            setHostName(myProfile.name)
-        }
-    }, [myProfile])
 
     const router = useRouter()
     const supabase = createClient()
 
     const handleCreateRoom = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!roomName.trim() || !myProfile || !hostName.trim()) return
+        if (!roomName.trim() || !myProfile || !resolvedHostName.trim()) return
 
         setLoading(true)
         setCreatedRoomId(null)
 
         try {
             // 部屋を作る前に、確実にホストのユーザー情報をusersテーブルに登録（upsert）する
-            const updatedProfile = { ...myProfile, name: hostName }
+            const normalizedHostName = resolvedHostName.trim()
+            const updatedProfile = { ...myProfile, name: normalizedHostName }
             
             // ローカルストレージも最新状態に保つ
-            localStorage.setItem('guest_profile', JSON.stringify(updatedProfile))
+            saveGuestDisplayProfile({
+                name: updatedProfile.name,
+                avatar: updatedProfile.avatar
+            })
             
             // usersテーブルに登録（すでに存在していれば名前だけ更新される）
             const { error: upsertError } = await supabase.from('users').upsert([updatedProfile])
@@ -59,7 +59,7 @@ export default function CreateRoomPage() {
                         players: [
                             {
                                 userId: myProfile.id,
-                                name: hostName,
+                                name: normalizedHostName,
                                 avatarUrl: myProfile.avatar,
                                 isHost: true,
                                 color: getPlayerColor(0),
@@ -79,9 +79,13 @@ export default function CreateRoomPage() {
                 setCreatedRoomId(data.id)
                 router.push(`/room/${data.id}`)
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const errorMessage =
+                typeof err === 'object' && err !== null && 'message' in err
+                    ? String(err.message)
+                    : '不明なエラー'
             console.error('部屋作成エラー:', err)
-            alert(`エラーが発生しました: ${err.message}`)
+            alert(`エラーが発生しました: ${errorMessage}`)
         } finally {
             setLoading(false)
         }
@@ -113,7 +117,7 @@ export default function CreateRoomPage() {
 
                         <div className="mb-8">
                             <ProfileInput
-                                name={hostName}
+                                name={resolvedHostName}
                                 onChangeName={setHostName}
                                 avatarUrl={myProfile?.avatar}
                                 label="あなたの名前 (ホスト)"

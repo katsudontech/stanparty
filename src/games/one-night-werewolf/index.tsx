@@ -48,6 +48,7 @@ export function OneNightWerewolfGame({ roomState, myUserId }: OneNightWerewolfGa
                 return (
                     <RuleSettingPhase
                         ruleSettings={gameState.ruleSettings}
+                        players={roomState.players}
                         onSaveRules={handleSaveRule}
                         isHost={isHost}
                         onChangeRules={(rules) => handleSaveRule(rules)}

@@ -1,70 +1,121 @@
 import { useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 
-export interface GuestProfile {
-    id: string;
+export interface GuestDisplayProfile {
     name: string;
     avatar: string;
+}
+
+export interface GuestProfile extends GuestDisplayProfile {
+    id: string;
+}
+
+const GUEST_PROFILE_STORAGE_KEY = 'guest_profile';
+let authenticatedUserPromise: Promise<User> | null = null;
+
+function readGuestDisplayProfile(): GuestDisplayProfile | null {
+    const storedProfile = localStorage.getItem(GUEST_PROFILE_STORAGE_KEY);
+    if (!storedProfile) return null;
+
+    try {
+        const parsedProfile: unknown = JSON.parse(storedProfile);
+        if (
+            typeof parsedProfile === 'object' &&
+            parsedProfile !== null &&
+            'name' in parsedProfile &&
+            typeof parsedProfile.name === 'string' &&
+            'avatar' in parsedProfile &&
+            typeof parsedProfile.avatar === 'string'
+        ) {
+            return {
+                name: parsedProfile.name,
+                avatar: parsedProfile.avatar
+            };
+        }
+    } catch {
+        // Invalid legacy data is replaced with a new display profile below.
+    }
+
+    return null;
+}
+
+export function saveGuestDisplayProfile(profile: GuestDisplayProfile) {
+    localStorage.setItem(
+        GUEST_PROFILE_STORAGE_KEY,
+        JSON.stringify({ name: profile.name, avatar: profile.avatar })
+    );
+}
+
+async function initializeAuthenticatedUser(): Promise<User> {
+    const supabase = createClient();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError) throw sessionError;
+    if (sessionData.session?.user) return sessionData.session.user;
+
+    const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously();
+    if (anonymousError) throw anonymousError;
+    if (!anonymousData.user) throw new Error('Anonymous authentication did not return a user.');
+
+    return anonymousData.user;
+}
+
+function getAuthenticatedUser(): Promise<User> {
+    if (!authenticatedUserPromise) {
+        authenticatedUserPromise = initializeAuthenticatedUser().catch((error: unknown) => {
+            authenticatedUserPromise = null;
+            throw error;
+        });
+    }
+
+    return authenticatedUserPromise;
 }
 
 export function useGuestAuth() {
     const [profile, setProfile] = useState<GuestProfile | null>(null);
     const [loading, setLoading] = useState(true);
-    const supabase = createClient();
+    const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         const initAuth = async () => {
             try {
-                // Check if we already have a profile
-                const storedStr = localStorage.getItem('guest_profile');
-                if (storedStr) {
-                    const parsed = JSON.parse(storedStr);
-                    setProfile(parsed);
-                    setLoading(false);
-                    return;
+                const authenticatedUser = await getAuthenticatedUser();
+                const storedProfile = readGuestDisplayProfile();
+                const displayProfile = storedProfile ?? {
+                    name: `Guest_${Math.floor(1000 + Math.random() * 9000)}`,
+                    avatar: `https://api.dicebear.com/7.x/adventurer/svg?seed=${authenticatedUser.id}`
+                };
+                const authenticatedProfile = {
+                    id: authenticatedUser.id,
+                    ...displayProfile
+                };
+
+                // Remove the old impersonation key and rewrite legacy profiles without their UUID.
+                localStorage.removeItem('mock_user_id');
+                saveGuestDisplayProfile(displayProfile);
+
+                const supabase = createClient();
+                const { error: profileError } = await supabase
+                    .from('users')
+                    .upsert([authenticatedProfile]);
+
+                if (profileError) {
+                    console.warn('Could not synchronize guest profile:', profileError);
                 }
 
-                // Fallback to legacy mock_user_id to migrate existing test users if they have one
-                const legacyId = localStorage.getItem('mock_user_id');
-                if (legacyId) {
-                    const { data } = await supabase.from('users').select('*').eq('id', legacyId).single();
-                    if (data) {
-                        const legacyProfile = { id: data.id, name: data.name, avatar: data.avatar };
-                        localStorage.setItem('guest_profile', JSON.stringify(legacyProfile));
-                        setProfile(legacyProfile);
-                        setLoading(false);
-                        return;
-                    }
-                }
-
-                // Create new guest profile
-                const newId = crypto.randomUUID();
-                const newName = `Guest_${Math.floor(1000 + Math.random() * 9000)}`;
-                const newAvatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${newId}`;
-
-                const newProfile = { id: newId, name: newName, avatar: newAvatar };
-
-                try {
-                    // Try to insert into users table just in case it's required for foreign keys
-                    const { error } = await supabase.from('users').insert([newProfile]);
-                    if (error) {
-                        console.warn('Could not insert guest into users table:', error);
-                    }
-                } catch (insertError) {
-                    console.warn('Network error or Supabase unavailable, continuing with local guest profile:', insertError);
-                }
-
-                localStorage.setItem('guest_profile', JSON.stringify(newProfile));
-                setProfile(newProfile);
+                setProfile(authenticatedProfile);
+                setError(null);
             } catch (err) {
                 console.error('Failed to init guest auth', err);
+                setError(err instanceof Error ? err : new Error('Failed to initialize guest authentication.'));
             } finally {
                 setLoading(false);
             }
         };
 
         initAuth();
-    }, [supabase]);
+    }, []);
 
-    return { profile, loading };
+    return { profile, loading, error };
 }
