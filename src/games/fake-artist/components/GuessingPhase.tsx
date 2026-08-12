@@ -10,12 +10,12 @@ interface GuessingPhaseProps {
   players: Player[];
   gameState: FakeArtistGameState;
   myUserId: string | null;
-  isHost: boolean;
+  hostId: string;
   onGuessSubmit: (guess: string) => void;
   onJudgeSubmit: (isCorrect: boolean) => void;
 }
 
-export function GuessingPhase({ roomId, players, gameState, myUserId, isHost, onGuessSubmit, onJudgeSubmit }: GuessingPhaseProps) {
+export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, onGuessSubmit, onJudgeSubmit }: GuessingPhaseProps) {
   const [guessInput, setGuessInput] = useState('');
 
   // エセ芸術家のIDを特定
@@ -24,8 +24,7 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, isHost, on
   );
 
   // 判定者のIDを特定（基本はホスト、ホストがエセ芸術家なら他の誰か）
-  const hostPlayer = players.find(p => p.isHost);
-  let judgeId = hostPlayer?.userId;
+  let judgeId = hostId;
   if (judgeId === fakeArtistId) {
     judgeId = gameState.turnOrder.find(id => id !== fakeArtistId) || players[0]?.userId;
   }

@@ -5,38 +5,35 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useGuestAuth } from '@/hooks/useGuestAuth'
 
-interface Room {
+interface RoomDirectoryEntry {
     id: string
-    host_id: string
+    room_name: string | null
     game_type: string
     status: string
-    players: any[]
-    room_name?: string
-    game_state: {
-        roomName?: string
-        [key: string]: any
-    }
+    player_count: number
     created_at: string
 }
 
 export default function RoomsListPage() {
-    const [rooms, setRooms] = useState<Room[]>([])
+    const [rooms, setRooms] = useState<RoomDirectoryEntry[]>([])
     const [loading, setLoading] = useState(true)
-    const supabase = createClient()
     const { profile, loading: authLoading } = useGuestAuth()
 
     useEffect(() => {
+        if (authLoading) return
+
+        const supabase = createClient()
+
         const fetchRooms = async () => {
             try {
                 setLoading(true)
                 const { data, error } = await supabase
-                    .from('rooms')
-                    .select('*')
-                    .eq('is_public', true)
+                    .from('room_directory')
+                    .select('id, room_name, game_type, status, player_count, created_at')
                     .order('created_at', { ascending: false })
 
                 if (error) throw error
-                if (data) setRooms(data as Room[])
+                if (data) setRooms(data as RoomDirectoryEntry[])
             } catch (err) {
                 console.error('ルーム一覧の取得に失敗:', err)
             } finally {
@@ -44,40 +41,41 @@ export default function RoomsListPage() {
             }
         }
 
-        fetchRooms()
+        void fetchRooms()
 
         const channel = supabase
             .channel('rooms_list_realtime')
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'rooms' },
+                { event: '*', schema: 'public', table: 'room_directory' },
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        if (payload.new.is_public !== false) {
-                            setRooms((prev) => [payload.new as Room, ...prev])
-                        }
+                        const newRoom = payload.new as RoomDirectoryEntry
+                        setRooms((previousRooms) => [
+                            newRoom,
+                            ...previousRooms.filter((room) => room.id !== newRoom.id)
+                        ])
                     } else if (payload.eventType === 'UPDATE') {
-                        if (payload.new.is_public === false) {
-                            // もしプライベートに変更されたら一覧から消す
-                            setRooms((prev) => prev.filter((room) => room.id !== payload.new.id))
-                        } else {
-                            setRooms((prev) =>
-                                prev.map((room) =>
-                                    room.id === payload.new.id ? (payload.new as Room) : room
-                                )
+                        const updatedRoom = payload.new as RoomDirectoryEntry
+                        setRooms((previousRooms) =>
+                            previousRooms.map((room) =>
+                                room.id === updatedRoom.id ? updatedRoom : room
                             )
-                        }
+                        )
                     } else if (payload.eventType === 'DELETE') {
-                        setRooms((prev) => prev.filter((room) => room.id === payload.old.id))
+                        const deletedRoom = payload.old as { id?: string }
+                        setRooms((previousRooms) =>
+                            previousRooms.filter((room) => room.id !== deletedRoom.id)
+                        )
                     }
                 }
             )
             .subscribe()
 
         return () => {
-            supabase.removeChannel(channel)
+            void supabase.removeChannel(channel)
         }
-    }, [supabase])
+    }, [authLoading])
 
     if (authLoading) {
         return (
@@ -139,8 +137,8 @@ export default function RoomsListPage() {
                 ) : (
                     <div className="grid gap-5">
                         {rooms.map((room) => {
-                            const roomName = room.room_name || room.game_state?.roomName || '無名のルーム'
-                            const playerCount = room.players?.length || 0
+                            const roomName = room.room_name || '無名のルーム'
+                            const playerCount = room.player_count
                             const isWaiting = room.status === 'waiting'
 
                             return (

@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from "react";
-import type { RoomState, Player } from '@/games/core/types';
+import { useEffect, useState } from "react";
+import type { RoomState } from '@/games/core/types';
 import { type CoyoteGameState, DEFAULT_COYOTE_STATE } from './types';
 import { useCoyoteGame } from './hooks/useCoyoteGame';
 import { Dead } from './components/Dead';
@@ -32,8 +32,7 @@ export function CoyoteGame({ roomState, myUserId }: CoyoteGameProps) {
     const { startGame, handleCoyote, handleNextGame, backToLobby } = useCoyoteGame(roomState);
 
     const players = roomState.players;
-    const myPlayer = players.find(p => p.userId === myUserId);
-    const isHost = myPlayer?.isHost ?? false;
+    const isHost = Boolean(myUserId && roomState.host_id === myUserId);
 
     const myCoyoteState = myUserId ? gameState.coyotePlayers[myUserId] : undefined;
     const isDead = myCoyoteState ? myCoyoteState.hp <= 0 : false;
@@ -56,7 +55,7 @@ export function CoyoteGame({ roomState, myUserId }: CoyoteGameProps) {
 
         let sentinel: WakeLockSentinelLike | null = null;
         const request = async () => {
-            try { sentinel = await nav.wakeLock!.request("screen"); } catch (e) {}
+            try { sentinel = await nav.wakeLock!.request("screen"); } catch {}
         };
         const onVisibilityChange = () => {
             if (document.visibilityState === "visible") request();

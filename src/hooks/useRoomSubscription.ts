@@ -1,95 +1,167 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 import type { RoomState, Player } from '@/games/core/types';
+
+function toError(value: unknown, fallbackMessage: string): Error {
+  if (value instanceof Error) return value;
+  if (typeof value === 'object' && value !== null && 'message' in value) {
+    return new Error(String(value.message));
+  }
+  return new Error(fallbackMessage);
+}
+
+async function loadRoom(roomId: string): Promise<RoomState | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('rooms')
+    .select('*')
+    .eq('id', roomId)
+    .maybeSingle();
+
+  if (error) throw toError(error, 'ルームの取得に失敗しました');
+  return data as RoomState | null;
+}
 
 export function useRoomSubscription(roomId: string, myUserId?: string | null) {
   const [roomState, setRoomState] = useState<RoomState | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const refreshRoom = useCallback(async () => {
+    try {
+      const nextRoom = await loadRoom(roomId);
+      setRoomState(nextRoom);
+      setPlayers(nextRoom?.players ?? []);
+      setError(null);
+    } catch (roomError) {
+      setError(toError(roomError, 'ルームの取得に失敗しました'));
+    } finally {
+      setLoading(false);
+    }
+  }, [roomId]);
+
   useEffect(() => {
-    // クライアントインスタンスを作成（コンポーネントマウント時に実行）
     const supabase = createClient();
     let isMounted = true;
 
-    // 1. 初回のルームデータを取得する関数
     const fetchInitialRoom = async () => {
-      const { data, error } = await supabase
-        .from('rooms')
-        .select('*')
-        .eq('id', roomId)
-        .single();
+      try {
+        const nextRoom = await loadRoom(roomId);
+        if (!isMounted) return;
 
-      if (error) {
-        console.error('ルームの取得に失敗しました:', error);
-        if (isMounted) setError(error as any);
-        return;
-      }
-
-      if (isMounted && data) {
-        setRoomState(data as RoomState);
-        setPlayers((data.players as Player[]) || []);
+        setRoomState(nextRoom);
+        setPlayers(nextRoom?.players ?? []);
+        setError(null);
+      } catch (roomError) {
+        if (isMounted) {
+          setError(toError(roomError, 'ルームの取得に失敗しました'));
+        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
 
-    fetchInitialRoom();
+    void fetchInitialRoom();
 
-    // 2. Supabase Realtimeでルームの変更を購読（サブスクライブ）
-    const channel = supabase
-      .channel(`room_updates_${roomId}`) // チャンネル名は一意にする
+    const roomChannel = supabase
+      .channel(`room_updates_${roomId}`)
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE', // 更新イベントのみ監視（削除も監視する場合は '*'）
+          event: '*',
           schema: 'public',
           table: 'rooms',
-          filter: `id=eq.${roomId}`, // このルームIDの行だけを監視
+          filter: `id=eq.${roomId}`
         },
         (payload) => {
-          // 変更があったら、新しいデータ(payload.new)をStateに反映する
-          if (isMounted) {
-            const newData = payload.new as RoomState;
-            setRoomState(newData);
-            setPlayers(newData.players || []);
+          if (!isMounted) return;
+
+          if (payload.eventType === 'DELETE') {
+            setRoomState(null);
+            setPlayers([]);
+            return;
           }
+
+          const nextRoom = payload.new as RoomState;
+          setRoomState(nextRoom);
+          setPlayers(nextRoom.players ?? []);
         }
       )
       .subscribe();
 
-    // 3. Presence機能でオンラインユーザーを監視
-    const presenceChannel = supabase.channel(`room_presence_${roomId}`);
-    
-    presenceChannel
-      .on('presence', { event: 'sync' }, () => {
-        if (isMounted) {
-          const state = presenceChannel.presenceState();
-          // state は { [key: string]: [{ user_id: '...' }] } の構造
-          const onlineIds = Object.values(state).flatMap(presences => 
-            presences.map((p: any) => p.user_id)
-          );
-          setOnlineUserIds(Array.from(new Set(onlineIds)));
+    return () => {
+      isMounted = false;
+      void supabase.removeChannel(roomChannel);
+    };
+  }, [roomId]);
+
+  const isRoomMember = Boolean(
+    myUserId &&
+    roomState &&
+    (
+      roomState.host_id === myUserId ||
+      roomState.players.some((player) => player.userId === myUserId)
+    )
+  );
+
+  useEffect(() => {
+    if (!myUserId || !isRoomMember) return;
+
+    const supabase = createClient();
+    let isMounted = true;
+
+    const presenceChannel = supabase
+      .channel(`room:${roomId}:presence`, {
+        config: {
+          private: true,
+          presence: { key: myUserId }
         }
       })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED' && myUserId) {
-          // 自分が参加中であることをPresenceに登録（ハートビート開始）
+      .on('presence', { event: 'sync' }, () => {
+        if (!isMounted) return;
+
+        const presenceState = presenceChannel.presenceState();
+        const onlineIds = Object.values(presenceState).flatMap((presences) =>
+          presences.flatMap((presence) => {
+            const userId = (presence as { user_id?: unknown }).user_id;
+            return typeof userId === 'string' ? [userId] : [];
+          })
+        );
+
+        setOnlineUserIds(Array.from(new Set(onlineIds)));
+      });
+
+    const subscribeToPresence = async () => {
+      await supabase.realtime.setAuth();
+      if (!isMounted) return;
+
+      presenceChannel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED' && isMounted) {
           await presenceChannel.track({ user_id: myUserId });
         }
       });
+    };
 
-    // 4. クリーンアップ関数
+    void subscribeToPresence().catch((presenceError: unknown) => {
+      console.error('Presenceへの接続に失敗しました:', presenceError);
+    });
+
     return () => {
       isMounted = false;
-      supabase.removeChannel(channel);
-      // Untrack は removeChannel で自動的に行われることが多いですが、念のため
-      if (myUserId) {
-        presenceChannel.untrack().catch(() => {});
-      }
-      supabase.removeChannel(presenceChannel);
+      presenceChannel.untrack().catch(() => {});
+      void supabase.removeChannel(presenceChannel);
     };
-  }, [roomId, myUserId]);
+  }, [isRoomMember, myUserId, roomId]);
 
-  return { roomState, players, onlineUserIds, error };
+  return {
+    roomState,
+    players,
+    onlineUserIds,
+    loading,
+    error,
+    refreshRoom
+  };
 }

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { type CoyoteGameState, type CoyotePlayerState, type CoyotePhase, DEFAULT_COYOTE_STATE } from '../types';
+import { type CoyoteGameState, type CoyotePlayerState, DEFAULT_COYOTE_STATE } from '../types';
 import type { RoomState } from '@/games/core/types';
 
 export const CARDS = [
@@ -64,40 +64,6 @@ export function useCoyoteGame(roomState: RoomState) {
             coyoteTotalValue: undefined,
             questionRevealedCard: undefined,
             winnerId: undefined,
-        });
-    };
-
-    const continueGame = async () => {
-        if (!currentGameState) return;
-        let deck = [...currentGameState.currentDeck];
-        const currentCoyotePlayers = { ...currentGameState.coyotePlayers };
-
-        // deckが空、または r0 がない場合はリシャッフル
-        if (!deck.includes("r0") || deck.length < players.length) {
-            deck = [...CARDS];
-        }
-
-        // 生存者のみにカードを配布
-        players.forEach(p => {
-            const playerState = currentCoyotePlayers[p.userId];
-            if (playerState && playerState.hp > 0) {
-                const randomIndex = Math.floor(Math.random() * deck.length);
-                const card = deck[randomIndex];
-                deck.splice(randomIndex, 1);
-                currentCoyotePlayers[p.userId] = {
-                    ...playerState,
-                    currentCard: card
-                };
-            }
-        });
-
-        await updateGameState({
-            phase: 'playing',
-            coyotePlayers: currentCoyotePlayers,
-            currentDeck: deck,
-            coyoteCallerId: undefined,
-            coyoteTotalValue: undefined,
-            questionRevealedCard: undefined,
         });
     };
 
@@ -180,28 +146,53 @@ export function useCoyoteGame(roomState: RoomState) {
 
     const handleNextGame = async (loserId: string) => {
         if (!currentGameState) return;
-        const currentCoyotePlayers = { ...currentGameState.coyotePlayers };
 
-        // 敗者のHPを1減らす
-        if (currentCoyotePlayers[loserId]) {
-            currentCoyotePlayers[loserId].hp = Math.max(0, currentCoyotePlayers[loserId].hp - 1);
-        }
+        const currentCoyotePlayers = Object.fromEntries(
+            Object.entries(currentGameState.coyotePlayers).map(([userId, state]) => [
+                userId,
+                { ...state }
+            ])
+        );
 
-        const alivePlayers = Object.entries(currentCoyotePlayers).filter(([_, state]) => state.hp > 0);
+        const loserState = currentCoyotePlayers[loserId];
+        if (!loserState || loserState.hp <= 0) return;
+
+        loserState.hp = Math.max(0, loserState.hp - 1);
+
+        const alivePlayers = Object.entries(currentCoyotePlayers).filter(([, state]) => state.hp > 0);
 
         if (alivePlayers.length <= 1) {
-            const winnerId = alivePlayers[0]?.[0] ?? "";
             await updateGameState({
                 phase: 'result',
                 coyotePlayers: currentCoyotePlayers,
-                winnerId: winnerId,
+                winnerId: alivePlayers[0]?.[0] ?? "",
             });
-            // 部屋の状態自体はポータルへ戻るボタン等で制御
-        } else {
-            // HPを更新して次へ進む
-            await updateGameState({ coyotePlayers: currentCoyotePlayers });
-            await continueGame();
+            return;
         }
+
+        let deck = [...currentGameState.currentDeck];
+        if (!deck.includes("r0") || deck.length < alivePlayers.length) {
+            deck = [...CARDS];
+        }
+
+        players.forEach((player) => {
+            const playerState = currentCoyotePlayers[player.userId];
+            if (!playerState || playerState.hp <= 0) return;
+
+            const randomIndex = Math.floor(Math.random() * deck.length);
+            playerState.currentCard = deck[randomIndex];
+            deck.splice(randomIndex, 1);
+        });
+
+        // HP減少と次ラウンド配布を1回の更新にまとめ、古いstateによる上書きを防ぐ。
+        await updateGameState({
+            phase: 'playing',
+            coyotePlayers: currentCoyotePlayers,
+            currentDeck: deck,
+            coyoteCallerId: undefined,
+            coyoteTotalValue: undefined,
+            questionRevealedCard: undefined,
+        });
     };
 
     const backToLobby = async () => {

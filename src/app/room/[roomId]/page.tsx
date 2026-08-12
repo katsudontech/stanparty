@@ -11,35 +11,42 @@ import { GameWrapper } from '@/games/core/GameWrapper';
 import { FakeArtistGame } from '@/games/fake-artist';
 import { CoyoteGame } from '@/games/coyote';
 import { OneNightWerewolfGame } from '@/games/one-night-werewolf';
-import type { Player } from '@/games/core/types';
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
     const { roomId } = use(params);
     const myUserId = useUserId();
 
-    // 1. データベースから現在のルームの状態とPresenceをリアルタイム取得
-    const { roomState, players, onlineUserIds } = useRoomSubscription(roomId, myUserId);
+    const {
+        roomState,
+        players,
+        onlineUserIds,
+        loading,
+        error,
+        refreshRoom
+    } = useRoomSubscription(roomId, myUserId);
 
-    // 2. ホスト用コントロール操作のフック
     const { handleChangeGame, handleStartGame } = useRoomControls(roomId);
 
-    // 自分のプレイヤー情報の取得とホスト権限の確認
-    const myPlayer = roomState?.players.find((p: Player) => p.userId === myUserId);
-    const isJoined = !!myPlayer;
-    const isHost = myPlayer?.isHost ?? false;
+    const myPlayer = roomState?.players.find((player) => player.userId === myUserId);
+    const isJoined = Boolean(
+        roomState && myUserId && (roomState.host_id === myUserId || myPlayer)
+    );
+    const isHost = Boolean(roomState && myUserId && roomState.host_id === myUserId);
 
-    // 3. ホスト用の切断者監視・自動キック処理（内部で権限判定しているため常に呼び出してOK）
     useHostAutoKick(roomId, isHost, roomState, players, onlineUserIds, myUserId);
 
-    // データロード中
-    if (!roomState || !myUserId) return <div>読み込み中...</div>;
-
-    // 画面1: 未参加なら参加画面を表示
-    if (!isJoined) {
-        return <JoinRoomScreen roomId={roomId} myUserId={myUserId} roomState={roomState} players={players} />;
+    if (!myUserId || loading) {
+        return <div>読み込み中...</div>;
     }
 
-    // 画面2: 状態が 'waiting'（待機中）なら、待機所コンポーネントを表示
+    if (error) {
+        return <div>ルームの読み込みに失敗しました: {error.message}</div>;
+    }
+
+    if (!roomState || !isJoined) {
+        return <JoinRoomScreen roomId={roomId} onJoined={refreshRoom} />;
+    }
+
     if (roomState.status === 'waiting') {
         return (
             <WaitingRoom
@@ -52,7 +59,6 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         );
     }
 
-    // 画面3: 状態が 'playing'（プレイ中）なら、選ばれたゲームのコンポーネントを表示
     if (roomState.status === 'playing') {
         if (roomState.game_type === 'fake-artist') {
             return (
@@ -69,8 +75,6 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
                 </GameWrapper>
             );
         }
-
-        // TODO: 他のゲームの場合（人狼など）
 
         if (roomState.game_type === 'one-night-werewolf') {
             return (

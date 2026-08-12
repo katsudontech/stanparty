@@ -1,7 +1,6 @@
 import type { RoomState } from "@/games/core/types";
-import type { OneNightPhase, OneNightRuleSettings, OneNightGameState, OneNightPlayerState, ROLE_DATA } from "./types";
+import type { OneNightPhase, OneNightGameState } from "./types";
 import { DEFAULT_ONE_NIGHT_STATE } from "./types";
-import { useState } from "react";
 import { RuleSettingPhase } from "./components/RuleSettingPhase";
 import { NightPhase } from "./components/NightPhase";
 import { DayPhase } from "./components/DayPhase";
@@ -23,8 +22,7 @@ export function OneNightWerewolfGame({ roomState, myUserId }: OneNightWerewolfGa
     };
 
     // ホストかどうかの判定（タイマー処理の権限用）
-    const myPlayer = roomState.players.find(p => p.userId === myUserId);
-    const isHost = myPlayer?.isHost ?? false;
+    const isHost = Boolean(myUserId && roomState.host_id === myUserId);
 
     const { handleSaveRule } = useOneNightGame(roomState);
     const renderPhaseHeader = (phase: OneNightPhase) => {
@@ -48,7 +46,6 @@ export function OneNightWerewolfGame({ roomState, myUserId }: OneNightWerewolfGa
                 return (
                     <RuleSettingPhase
                         ruleSettings={gameState.ruleSettings}
-                        players={roomState.players}
                         onSaveRules={handleSaveRule}
                         isHost={isHost}
                         onChangeRules={(rules) => handleSaveRule(rules)}

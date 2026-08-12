@@ -4,7 +4,6 @@ import type { RoomState } from '@/games/core/types';
 import { type FakeArtistGameState, type FakeArtistPhase, DEFAULT_FAKE_ARTIST_STATE } from './types';
 import { GameHeader } from './components/GameHeader';
 import { GameStatus } from './components/GameStatus';
-import { Canvas } from './components/Canvas';
 import { RuleSettingPhase } from './components/RuleSettingPhase';
 import { RoleAssignmentPhase } from './components/RoleAssignmentPhase';
 import { ThemeSelectionPhase } from './components/ThemeSelectionPhase';
@@ -30,8 +29,7 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
   const currentPhase: FakeArtistPhase = gameState.phase;
 
   // ホストかどうかの判定（タイマー処理の権限用）
-  const myPlayer = roomState.players.find(p => p.userId === myUserId);
-  const isHost = myPlayer?.isHost ?? false;
+  const isHost = Boolean(myUserId && roomState.host_id === myUserId);
 
   // カスタムフックからゲーム進行ロジック（関数）を取得
   const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, handleUndoStroke, handleVote, handleAllVoted, handleFakeArtistGuess, handleGuessJudge, handleResetGame, updateGameState } = useFakeArtistGame(roomState);
@@ -122,7 +120,7 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
             players={roomState.players} 
             gameState={gameState} 
             myUserId={myUserId} 
-            isHost={isHost}
+            hostId={roomState.host_id}
             onGuessSubmit={handleFakeArtistGuess}
             onJudgeSubmit={handleGuessJudge}
           />

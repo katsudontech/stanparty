@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/client';
 import { type FakeArtistGameState, type RuleSettings, type FakeArtistPlayerState, type FakeArtistPhase, DEFAULT_FAKE_ARTIST_STATE } from '../types';
-import type { Player, RoomState } from '@/games/core/types';
+import type { RoomState } from '@/games/core/types';
 
 export const THEMES = [
   { genre: '動物', themes: ['犬', '猫', 'ライオン', 'ゾウ', 'キリン', 'パンダ', 'コアラ', 'ゴリラ', 'ウサギ', 'サル', 'トラ', 'イルカ', 'ペンギン', 'カンガルー', 'カエル', 'ヘビ', 'ワニ', 'カバ', 'サイ', 'ラクダ'] },
@@ -257,22 +257,13 @@ export function useFakeArtistGame(roomState: RoomState) {
   const handleUndoStroke = async () => {
     if (!currentGameState || currentGameState.phase !== 'drawing') return;
 
-    // 1. 最新の描画イベントを取得
-    const { data, error } = await supabase
-      .from('game_events')
-      .select('id')
-      .eq('room_id', roomId)
-      .eq('event_type', 'draw_line')
-      .order('created_at', { ascending: false })
-      .limit(1);
+    // DB側でも「現在の手番プレイヤー」だけが最新の線を戻せるようにする。
+    const { data: wasDeleted, error: undoError } = await supabase.rpc('undo_latest_stroke', {
+      p_room_id: roomId
+    });
 
-    if (error || !data || data.length === 0) return;
-
-    // 2. イベントを削除
-    const { error: deleteError } = await supabase.from('game_events').delete().eq('id', data[0].id);
-    
-    if (deleteError) {
-      console.error('ストロークの削除に失敗しました:', deleteError);
+    if (undoError || !wasDeleted) {
+      if (undoError) console.error('ストロークの削除に失敗しました:', undoError);
       return;
     }
 
