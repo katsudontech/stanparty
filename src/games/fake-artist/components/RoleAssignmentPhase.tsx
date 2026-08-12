@@ -1,9 +1,7 @@
 import { useEffect } from 'react';
-import type { Player } from '@/games/core/types';
 import type { FakeArtistPlayerState } from '../types';
 
 interface RoleAssignmentPhaseProps {
-  players: Player[];
   playerStates: Record<string, FakeArtistPlayerState>;
   myUserId: string | null;
   isHost: boolean;
@@ -11,7 +9,7 @@ interface RoleAssignmentPhaseProps {
   turnOrder: string[];
 }
 
-export function RoleAssignmentPhase({ players, playerStates, myUserId, isHost, onTimeout, turnOrder }: RoleAssignmentPhaseProps) {
+export function RoleAssignmentPhase({ playerStates, myUserId, isHost, onTimeout, turnOrder }: RoleAssignmentPhaseProps) {
 
   // myUserIdをキーにして、playerStatesから自分の役職を取り出す
   const myState = myUserId ? playerStates[myUserId] : null;

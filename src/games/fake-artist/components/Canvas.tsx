@@ -9,6 +9,7 @@ interface CanvasProps {
   roomId: string;
   players: Player[];
   currentTurnPlayerId: string | null;
+  turnKey?: string;
   myUserId: string | null;
   onTurnEnd?: () => void;
   isReadOnly?: boolean;
@@ -30,11 +31,13 @@ const scalePaths = (paths: CanvasPath[], scaleX: number, scaleY: number): Canvas
   return paths.map(p => scalePath(p, scaleX, scaleY));
 };
 
-export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnEnd, isReadOnly = false }: CanvasProps) {
+export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId, onTurnEnd, isReadOnly = false }: CanvasProps) {
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPathsLengthRef = useRef(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedTurnKey, setSubmittedTurnKey] = useState<string | null>(null);
+  const activeTurnKey = turnKey ?? currentTurnPlayerId;
+  const isSubmitting = activeTurnKey !== null && submittedTurnKey === activeTurnKey;
   
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasSizeRef = useRef({ width: 0, height: 0 });
@@ -55,13 +58,6 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
-
-  // ターンが自分に回ってきたら送信状態をリセットする
-  useEffect(() => {
-    if (myUserId !== null && myUserId === currentTurnPlayerId) {
-      setIsSubmitting(false);
-    }
-  }, [currentTurnPlayerId, myUserId]);
 
   // 初回ロード用
   const handleInitialStrokesLoaded = useCallback((strokes: CanvasPath[]) => {
@@ -144,7 +140,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, myUserId, onTurnE
         if (allPaths.length <= lastPathsLengthRef.current) return;
 
         // パスが増えていれば送信中フラグを立てる（次の描画をブロック）
-        setIsSubmitting(true);
+        setSubmittedTurnKey(activeTurnKey);
         lastPathsLengthRef.current = allPaths.length;
 
         if (allPaths.length > 0) {

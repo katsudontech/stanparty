@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import type { OneNightRuleSettings, OneNightRole, ROLE_DATA } from "../types";
+import { useState } from "react";
+import type { OneNightRuleSettings } from "../types";
 
 
 
@@ -14,22 +14,12 @@ interface RuleSettingPhaseProps {
 
 export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost }: RuleSettingPhaseProps) {
 
-    const [ruleSettings, setRuleSettings] = useState<OneNightRuleSettings>(propRuleSettings);
-
-    useEffect(() => {
-        setRuleSettings(propRuleSettings);
-    }, [propRuleSettings]);
+    const [hostRuleSettings, setRuleSettings] = useState<OneNightRuleSettings>(propRuleSettings);
+    const ruleSettings = isHost ? hostRuleSettings : propRuleSettings;
 
     const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!isHost) return;
         const newSettings = { ...ruleSettings, timeLimit: Number(e.target.value) };
-        setRuleSettings(newSettings);
-        onChangeRules(newSettings);
-    };
-
-    const handleRoleChange = (role: OneNightRole) => {
-        if (!isHost) return;
-        const newSettings = { ...ruleSettings, roles: [...ruleSettings.roles, role] };
         setRuleSettings(newSettings);
         onChangeRules(newSettings);
     };

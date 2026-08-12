@@ -12,7 +12,6 @@ export default function CreateRoomPage() {
     const [roomName, setRoomName] = useState('')
     const [hostName, setHostName] = useState<string | null>(null)
     const [isPublic, setIsPublic] = useState(true)
-    const [createdRoomId, setCreatedRoomId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     
     const { profile: myProfile, loading: checkingAuth } = useGuestAuth()
@@ -28,7 +27,6 @@ export default function CreateRoomPage() {
         if (!roomName.trim() || !myProfile || !resolvedHostName.trim()) return
 
         setLoading(true)
-        setCreatedRoomId(null)
 
         try {
             // 部屋を作る前に、確実にホストのユーザー情報をusersテーブルに登録（upsert）する
@@ -76,7 +74,6 @@ export default function CreateRoomPage() {
             if (error) throw error
 
             if (data) {
-                setCreatedRoomId(data.id)
                 router.push(`/room/${data.id}`)
             }
         } catch (err: unknown) {

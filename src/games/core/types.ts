@@ -14,11 +14,11 @@ export interface RoomState {
   game_type: 'fake-artist' | 'werewolf' | 'coyote' | 'word-wolf' | 'ito' | 'blocks' | 'one-night-werewolf';
   status: 'waiting' | 'playing' | 'finished';
   players: Player[];
-  game_state: any;
+  game_state: unknown;
   created_at: string;
 }
 
-export interface GameEvent<T = any> {
+export interface GameEvent<T = unknown> {
   id: string;
   room_id: string;
   event_type: string;

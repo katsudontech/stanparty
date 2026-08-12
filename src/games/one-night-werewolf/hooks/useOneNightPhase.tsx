@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { type OneNightGameState, type OneNightPhase, type OneNightPlayerState, DEFAULT_ONE_NIGHT_STATE, type OneNightRuleSettings } from "../types";
+import { type OneNightGameState, DEFAULT_ONE_NIGHT_STATE, type OneNightRuleSettings } from "../types";
 import { type RoomState } from "@/games/core/types";
 
 export function useOneNightGame(roomState: RoomState) {
@@ -22,15 +22,7 @@ export function useOneNightGame(roomState: RoomState) {
     };
 
     const handleSaveRule = async (rules: OneNightRuleSettings) => {
-        const newPlayerStates: Record<string, OneNightPlayerState> = {};
-        let roles =
-            roomState.players.forEach(player => {
-                // プレイヤーごとに初期ロールと現在のロールを定義する
-                newPlayerStates[player.userId] = {
-                    initialRole: 'villager',
-                    currentRole: 'villager'
-                };
-            });
+        void rules;
     };
 
     return {

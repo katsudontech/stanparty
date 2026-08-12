@@ -1,24 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import type { Player } from '@/games/core/types';
+import { useState } from 'react';
 import type { RuleSettings } from '@/games/fake-artist/types';
 
 interface RuleSettingPhaseProps {
-  players: Player[];
   ruleSettings: RuleSettings;
   onSaveRules: (rules: RuleSettings) => void;
   onChangeRules: (rules: RuleSettings) => void;
   isHost: boolean;
 }
 
-export function RuleSettingPhase({ players, ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost }: RuleSettingPhaseProps) {
-  const [ruleSettings, setRuleSettings] = useState<RuleSettings>(propRuleSettings);
-
-  // プロパティが更新されたらローカルステートを同期する
-  useEffect(() => {
-    setRuleSettings(propRuleSettings);
-  }, [propRuleSettings]);
+export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost }: RuleSettingPhaseProps) {
+  const [hostRuleSettings, setRuleSettings] = useState<RuleSettings>(propRuleSettings);
+  const ruleSettings = isHost ? hostRuleSettings : propRuleSettings;
 
   const handleRoundLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isHost) return;

@@ -102,6 +102,7 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd, 
         roomId={roomId}
         players={players} 
         currentTurnPlayerId={currentTurnPlayerId} 
+        turnKey={`${gameState.currentLap}:${currentTurnPlayerId ?? ''}`}
         myUserId={myUserId}
         onTurnEnd={onTurnEnd}
       />

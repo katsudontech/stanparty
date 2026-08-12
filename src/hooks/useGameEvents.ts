@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/client';
 
 import type { GameEvent } from '@/games/core/types';
 
-export function useGameEvents<T = any>(roomId: string, eventType?: string) {
+export function useGameEvents<T = unknown>(roomId: string, eventType?: string) {
   const [events, setEvents] = useState<GameEvent<T>[]>([]);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function useGameEvents<T = any>(roomId: string, eventType?: string) {
   }, [roomId, eventType]);
 
   // ちなみに、イベントを「送信」する関数もここに用意しておくと、各ゲーム側から使いやすくなります
-  const sendEvent = async (type: string, payload: any) => {
+  const sendEvent = async (type: string, payload: T) => {
     const supabase = createClient();
     const { error } = await supabase.from('game_events').insert({
       room_id: roomId,

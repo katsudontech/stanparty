@@ -1,12 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Player } from '@/games/core/types';
 import type { FakeArtistGameState } from '../types';
-import { getRandomTheme } from '../hooks/useFakeArtistGame';
 
 interface ThemeSelectionPhaseProps {
-  players: Player[];
   gameState: FakeArtistGameState;
   myUserId: string | null;
   isHost: boolean;
@@ -14,7 +11,7 @@ interface ThemeSelectionPhaseProps {
   updateGameState?: (updates: Partial<FakeArtistGameState>) => Promise<void>;
 }
 
-export function ThemeSelectionPhase({ players, gameState, myUserId, isHost, onThemeSubmit, updateGameState }: ThemeSelectionPhaseProps) {
+export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit, updateGameState }: ThemeSelectionPhaseProps) {
   const { ruleSettings, playerStates } = gameState;
   const myRole = playerStates[myUserId || '']?.role;
   const isQuestioner = myRole === 'questioner';

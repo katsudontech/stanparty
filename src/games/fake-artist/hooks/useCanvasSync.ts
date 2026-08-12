@@ -13,11 +13,11 @@ interface UseCanvasSyncProps {
 }
 
 export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewStrokeReceived, onStrokeDeleted }: UseCanvasSyncProps) {
-  const supabase = createClient();
   const initializedRoomIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!roomId) return;
+    const supabase = createClient();
 
     // 過去のストロークを初期ロード（1回だけ実行）
     const fetchInitialStrokes = async () => {
@@ -79,11 +79,12 @@ export function useCanvasSync({ roomId, myUserId, onInitialStrokesLoaded, onNewS
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, myUserId, onInitialStrokesLoaded, onNewStrokeReceived]);
+  }, [roomId, myUserId, onInitialStrokesLoaded, onNewStrokeReceived, onStrokeDeleted]);
 
   // 新しいストロークをDBに保存
   const insertStroke = useCallback(async (playerId: string, stroke: CanvasPath) => {
     const payload: DrawLinePayload = { playerId, stroke };
+    const supabase = createClient();
     
     const { error } = await supabase
       .from('game_events')

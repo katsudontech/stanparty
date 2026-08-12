@@ -57,7 +57,6 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
       case 'rule_setting':
         return (
           <RuleSettingPhase
-            players={roomState.players}
             ruleSettings={gameState.ruleSettings}
             onSaveRules={handleSaveRules}
             onChangeRules={(newRules) => updateGameState({ ruleSettings: newRules })}
@@ -68,7 +67,6 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
       case 'role_assignment':
         return (
           <RoleAssignmentPhase
-            players={roomState.players}
             playerStates={gameState?.playerStates || {}}
             myUserId={myUserId}
             isHost={isHost}
@@ -80,7 +78,6 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
       case 'theme_selection':
         return (
           <ThemeSelectionPhase
-            players={roomState.players}
             gameState={gameState}
             myUserId={myUserId}
             isHost={isHost}
