@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { authenticateRealtime } from '@/lib/supabase/realtime';
 
 import type { RoomState, Player } from '@/games/core/types';
 
@@ -44,8 +45,12 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
   }, [roomId]);
 
   useEffect(() => {
+    if (!myUserId) return;
+
     const supabase = createClient();
     let isMounted = true;
+    let initialLoadComplete = false;
+    let roomChannel: ReturnType<typeof supabase.channel> | null = null;
 
     const fetchInitialRoom = async () => {
       try {
@@ -64,39 +69,59 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
       }
     };
 
-    void fetchInitialRoom();
+    const connectToRoom = async () => {
+      await authenticateRealtime(supabase, myUserId);
+      if (!isMounted) return;
 
-    const roomChannel = supabase
-      .channel(`room_updates_${roomId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'rooms',
-          filter: `id=eq.${roomId}`
-        },
-        (payload) => {
+      roomChannel = supabase
+        .channel(`room_updates_${roomId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'rooms',
+            filter: `id=eq.${roomId}`
+          },
+          (payload) => {
+            if (!isMounted) return;
+
+            if (payload.eventType === 'DELETE') {
+              setRoomState(null);
+              setPlayers([]);
+              return;
+            }
+
+            const nextRoom = payload.new as RoomState;
+            setRoomState(nextRoom);
+            setPlayers(nextRoom.players ?? []);
+          }
+        )
+        .subscribe((status) => {
           if (!isMounted) return;
 
-          if (payload.eventType === 'DELETE') {
-            setRoomState(null);
-            setPlayers([]);
-            return;
+          if (status === 'SUBSCRIBED' && initialLoadComplete) {
+            void fetchInitialRoom();
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error(`ルームのRealtime購読に失敗しました: ${status}`);
           }
+        });
 
-          const nextRoom = payload.new as RoomState;
-          setRoomState(nextRoom);
-          setPlayers(nextRoom.players ?? []);
-        }
-      )
-      .subscribe();
+      await fetchInitialRoom();
+      initialLoadComplete = true;
+    };
+
+    void connectToRoom().catch((connectionError: unknown) => {
+      if (!isMounted) return;
+      setError(toError(connectionError, 'ルームのRealtime接続に失敗しました'));
+      setLoading(false);
+    });
 
     return () => {
       isMounted = false;
-      void supabase.removeChannel(roomChannel);
+      if (roomChannel) void supabase.removeChannel(roomChannel);
     };
-  }, [roomId]);
+  }, [myUserId, roomId]);
 
   const isRoomMember = Boolean(
     myUserId &&
@@ -135,7 +160,7 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
       });
 
     const subscribeToPresence = async () => {
-      await supabase.realtime.setAuth();
+      await authenticateRealtime(supabase, myUserId);
       if (!isMounted) return;
 
       presenceChannel.subscribe(async (status) => {
