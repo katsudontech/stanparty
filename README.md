@@ -1,36 +1,229 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StanParty
 
-## Getting Started
+> テーマパークなどの長い待ち時間を、友人と楽しめる時間に変えるスマートフォン向けパーティーゲームサービスです。ルームへ参加するだけで、複数のゲームをリアルタイムで遊べます。
 
-First, run the development server:
+**デモ:** [https://stanparty.katsudon.app](https://stanparty.katsudon.app)\
+**ステータス:** 公開中\
+**開発体制:** 個人開発
+
+## 概要
+
+### 解決したかった課題
+
+テーマパークなどの長い待ち時間に、友人とスマートフォンで遊べるゲームを探しても、手軽に始められる選択肢はワードウルフなどの一部のゲームに限られていました。
+
+専用の道具を持ち歩かなくても、その場にいる全員のスマートフォンだけで、より多様なゲームを楽しめるサービスを作りたいと考えました。
+
+### 解決方法
+
+StanPartyでは、一人がルームを作成し、ほかの参加者がURLから参加することで、複数のパーティーゲームをリアルタイムで遊べるようにしました。アカウント登録は不要で、名前を設定するだけで参加できます。
+
+ルームの作成やメンバー管理などの共通機能と、各ゲーム固有の進行処理を分離しています。そのため、同じルーム基盤を利用しながら複数のゲームを提供でき、今後も共通の仕組みを利用して新しいゲームを追加できます。
+
+## 主な機能
+
+- **ルームの作成・参加**\
+  名前とルーム名を入力してルームを作成できます。ほかの参加者は、公開ルームの一覧または共有されたURLから参加できます。
+
+- **公開・非公開ルームの設定**\
+  ルームを一覧に表示する公開ルームと、共有URLを知っている利用者だけが参加できる非公開ルームを選択できます。
+
+- **リアルタイムなゲーム進行**\
+  Supabase Realtimeを利用し、参加者、ゲームの状態、描画内容、投票などを参加者間で同期します。
+
+- **エセ芸術家 ニューヨークへ行く**\
+  出題者、芸術家、エセ芸術家に役割を分け、一人一筆ずつ絵を描いてエセ芸術家を見つけるゲームです。役割分担、お題選択、描画、投票、結果発表までアプリ上で進行できます。
+
+- **Coyote Online Forehead**\
+  各自のスマートフォンを額に掲げ、ほかの参加者のカードだけを見ながら場の合計値を予想するゲームです。カード配布、コヨーテ宣言、勝敗判定、ライフ管理までリアルタイムで進行します。
+
+- **待機ルームでのゲーム選択**\
+  参加者の接続状況を確認しながら、ホストが遊ぶゲームを選択して開始できます。
+
+## 技術スタック
+
+| 分類                 | 技術                                     | 用途                                             |
+| -------------------- | ---------------------------------------- | ------------------------------------------------ |
+| フロントエンド       | Next.js 16.2 / React 19.2 / TypeScript 5 | 画面表示、ルーティング、ルーム・ゲーム状態の管理 |
+| スタイリング         | Tailwind CSS 4                           | スマートフォン向けUIの構築                       |
+| データベース         | Supabase PostgreSQL                      | ルーム、参加者、ゲーム状態、ゲームイベントの保存 |
+| 認証                 | Supabase Anonymous Sign-Ins              | アカウント登録を必要としない参加者の識別         |
+| リアルタイム通信     | Supabase Realtime                        | 参加者、ゲーム状態、描画、投票などの同期         |
+| DB処理・アクセス制御 | PostgreSQL RPC / RLS                     | ルーム操作、ゲーム操作の検証とアクセス制御       |
+| 描画                 | react-sketch-canvas                      | エセ芸術家の描画画面                             |
+| ブラウザAPI          | Screen Wake Lock API / localStorage      | ゲーム中の画面消灯防止、名前などの端末内保存     |
+| テスト               | Vitest                                   | Coyoteの合計値計算とラウンド進行の単体テスト     |
+| インフラ             | Vercel                                   | Webアプリのホスティングとデプロイ                |
+| 品質管理             | ESLint / TypeScript                      | 静的解析と型チェック                             |
+
+## 技術的な工夫・苦労した点
+
+### 1. 複数のゲームを追加できる共通基盤
+
+**課題:**\
+ゲームごとにルーム作成、参加者管理、待機画面、リアルタイム通信などを個別実装すると、重複する処理が増え、新しいゲームを追加するたびに同じ機能を作り直す必要があります。一方、ゲームのルールや画面遷移まで共通化すると、それぞれのゲーム固有の処理を扱いにくくなります。
+
+**対応:**\
+ルーム、参加者、待機画面、ゲーム選択、接続状態の管理を共通機能として実装し、各ゲームの型定義、状態管理、ルール、画面コンポーネントを`src/games`以下に分離しました。
+
+ルームには現在選択されているゲームとゲーム状態を保存し、共通のルーム画面から対応するゲームコンポーネントを表示する構成にしています。
+
+**結果:**\
+共通機能を再利用しながら、ゲーム固有のルールや画面を独立して実装できるようになりました。同じルーム基盤の上へ、新しいゲームを追加しやすい構成になりました。
+
+### 2. ゲーム状態と操作イベントのリアルタイム同期
+
+**課題:**\
+ゲームの進行段階や設定などの現在状態に加え、エセ芸術家の描画や投票のように、参加者の操作を順番に蓄積するデータもリアルタイムで同期する必要がありました。
+
+すべての情報を一つのデータとして毎回更新すると、同時操作による競合や、必要以上に大きなデータの更新が発生する可能性があります。
+
+**対応:**\
+現在のフェーズや役割など、ゲーム全体の状態は`rooms.game_state`へ保存し、描画や投票などの操作は`game_events`へイベントとして記録する構成にしました。
+
+Supabase Realtimeでルームとイベントの変更を購読し、自分の操作によって発生したイベントは重複して反映しないように制御しています。
+
+**結果:**\
+ゲーム全体の状態と、描画・投票などの連続した操作を用途に応じて分けながら、複数端末へリアルタイムに反映できるようになりました。
+
+### 3. Coyote Online Foreheadの共通基盤への移植
+
+**課題:**\
+Coyote Online Foreheadは、もともと[別のリポジトリ](https://github.com/katsudontech/coyote-online-forehead)で単独のWebアプリとして開発していました。
+
+StanPartyへ追加するには、専用のルーム、参加者テーブル、ゲーム進行処理をそのまま持ち込むのではなく、StanPartyの共通ルーム、匿名認証、ゲーム状態、Realtime通信へ適合させる必要がありました。
+
+**対応:**\
+ゲーム固有の画面とルールを`src/games/coyote`へ移し、参加者情報とゲーム状態をStanPartyの共通データ構造へ統合しました。
+
+移植にあわせて、カードの合計値計算やラウンドの勝敗判定をUIから独立した純粋関数へ分離し、Vitestによる単体テストを追加しました。また、スマートフォンを額に掲げて遊ぶ操作、誤操作を防ぐダブルタップでのコヨーテ宣言、ゲーム中の画面消灯防止といった元アプリの特徴も引き継いでいます。
+
+**結果:**\
+単独で動作していたゲームを、StanPartyのゲームの一つとして共通のルームから遊べるようになりました。ルール処理をUIから分離したことで、動作を確認しやすくなり、今後の変更にも対応しやすくなりました。
+
+### 4. 匿名参加とゲーム操作の権限制御
+
+**課題:**\
+待ち時間にすぐ遊べることを優先すると、メールアドレスなどを使ったアカウント登録は参加の負担になります。一方、利用者を識別しなければ、ルーム外の第三者による操作や、参加者による不正なゲーム進行を防ぐことができません。
+
+**対応:**\
+Supabaseの匿名認証を利用し、アカウント登録画面を設けずに、それぞれの参加者へ認証済みのユーザーIDを割り当てています。
+
+データベースではRLSとPostgreSQL RPCを利用し、ルームへの参加、メンバーの削除、設定変更、描画、投票、コヨーテ宣言などの操作について、ルームへの所属、ホスト権限、現在のフェーズ、手番を検証しています。
+
+また、公開ルームの一覧にはゲーム状態や参加者情報を直接公開せず、一覧表示に必要な情報だけを持つデータを参照しています。
+
+**結果:**\
+利用者は名前を入力するだけで参加できる一方、認証された参加者とホストだけが、それぞれ許可された範囲の操作を実行できるようになりました。
+
+## 品質・セキュリティ
+
+### 品質
+
+- TypeScriptによる型チェックと、ESLintによる静的解析を実施しています。
+- Coyoteのカード合計値計算とラウンド進行をUIから分離し、Vitestによる単体テストを実装しています。
+- ゲーム全体の状態と、描画・投票などのイベントを分けて保存し、リアルタイム更新時の責務を明確にしています。
+- ルームや参加者に関する共通処理と、ゲーム固有の処理をディレクトリ単位で分離しています。
+- Vercelへのデプロイ時にNext.jsの本番ビルドを実行しています。
+
+### セキュリティ
+
+- Supabaseの匿名認証を利用し、アカウント登録なしでも参加者ごとに認証済みのユーザーIDを割り当てています。
+- RLSを有効にし、ルーム情報とゲームイベントを所属メンバーだけが取得できるようにしています。
+- ルーム設定や参加者の削除など、管理に関する操作をホストだけに制限しています。
+- 描画、投票、コヨーテ宣言、ラウンドの勝敗処理について、現在のフェーズ、手番、役割などをデータベース側でも検証しています。
+- 公開ルームの一覧には、ルーム名、ゲーム、参加人数など、一覧表示に必要な情報だけを公開しています。参加者情報やゲームの内部状態は含めていません。
+- Realtime Presenceのチャンネルを非公開にし、ルームの参加者だけが接続状態を共有できるようにしています。
+- Supabaseの公開用anon keyのみをクライアントで使用し、強い権限を持つservice role keyは使用していません。
+
+## 開発体制・担当範囲
+
+個人開発として、企画、要件定義、UI設計、共通ルーム基盤の設計、データベース設計、各ゲームの実装、リアルタイム通信、アクセス制御、テスト、デプロイまでを担当しました。
+
+Coyote Online Foreheadについては、以前に開発した[単独版のリポジトリ](https://github.com/katsudontech/coyote-online-forehead)から移植しました。単純にコードを複製するのではなく、StanPartyの共通ルーム、匿名認証、Realtime通信、ゲーム状態の管理方法に合わせて再設計しています。
+
+### 生成AIの利用
+
+生成AIを、設計案の比較、コードのたたき台、デバッグ、リファクタリング、セキュリティ上の問題点の洗い出し、コードレビューに利用しました。
+
+要件と仕様の決定、提案を採用するかの判断、各ゲームのルール設計、生成内容の検証、既存コードとの統合、変更差分の確認、最終的な動作確認は自分で行っています。
+
+## ローカルでの起動方法
+
+### 必要な環境
+
+- Node.js 20.9以上
+- npm
+- Supabaseプロジェクト
+- Supabase Anonymous Sign-Ins
+- Supabase Realtime
+
+### セットアップ
+
+リポジトリを複製し、依存パッケージをインストールします。
+
+```bash
+git clone https://github.com/katsudontech/stanparty.git
+cd stanparty
+npm install
+```
+
+プロジェクト直下に`.env.local`を作成し、SupabaseのProject URLと公開用anon keyを設定します。
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+Supabaseでは匿名認証を有効にし、ルーム、ユーザー、ゲームイベントを保存するデータベースを用意します。
+
+リポジトリ内の次のマイグレーションを、ファイル名の順番で適用します。
+
+```text
+supabase/migrations/20260812000000_anonymous_auth_rls.sql
+supabase/migrations/20260812010000_game_action_permissions.sql
+supabase/migrations/20260812020000_harden_coyote_player_keys.sql
+supabase/migrations/20260812030000_create_room_rpc.sql
+```
+
+開発サーバーを起動します。
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで[http://localhost:3000](http://localhost:3000)を開きます。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 確認コマンド
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
 
-## Learn More
+## 制約・今後の改善
 
-To learn more about Next.js, take a look at the following resources:
+### 現在の制約
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 現在遊べるゲームは「エセ芸術家 ニューヨークへ行く」と「Coyote Online Forehead」の2種類です。
+- ワンナイト人狼は基本的な画面構成のみ実装しており、ゲームとして遊べる状態にはなっていません。
+- ゲーム画面からルームを退出する操作は、まだ完全には実装していません。
+- 匿名認証のユーザー情報はブラウザのセッションに依存するため、別の端末やブラウザから同じ利用者として再参加することはできません。
+- Coyoteのルール処理には単体テストがありますが、エセ芸術家や共通ルーム機能の自動テストは未導入です。
+- GitHub ActionsによるCIは未導入です。
+- 新しいSupabase環境をゼロから構築するための初期テーブル定義が、マイグレーションとして整備されていません。
+- `.env.example`はまだ用意していません。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 今後の改善
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] ワンナイト人狼を完成させる
+- [ ] 新しいパーティーゲームを追加する
+- [ ] ゲーム画面からの退出と、ホスト退出時のルーム終了処理を整備する
+- [ ] 通信切断後の再接続とゲーム復帰処理を改善する
+- [ ] 初期テーブル、RLS、Realtime設定、DB関数を含むマイグレーションを整備する
+- [ ] `.env.example`を追加し、ローカル環境を再現しやすくする
+- [ ] エセ芸術家と共通ルーム機能の単体テストを追加する
+- [ ] ルーム作成からゲーム終了までのE2Eテストを追加する
+- [ ] GitHub Actionsでlint、型チェック、テスト、ビルドを自動実行する
