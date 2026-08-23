@@ -93,7 +93,6 @@ export function ItoGame({ roomState, myUserId }: ItoGameProps) {
             players={roomState.players}
             isHost={isHost}
             onResetGame={handleResetGame}
-            onBackToLobby={handleBackToLobby}
           />
         );
     }

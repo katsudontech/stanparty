@@ -12,7 +12,6 @@ interface ResultPhaseProps {
   players: Player[];
   isHost: boolean;
   onResetGame: () => Promise<void>;
-  onBackToLobby: () => Promise<void>;
 }
 
 export function ResultPhase({
@@ -20,7 +19,6 @@ export function ResultPhase({
   players,
   isHost,
   onResetGame,
-  onBackToLobby,
 }: ResultPhaseProps) {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -92,24 +90,14 @@ export function ResultPhase({
       </div>
 
       {isHost ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => runAction(onResetGame)}
-            disabled={submitting}
-            className="rounded-2xl bg-cyan-500 px-5 py-4 font-black text-slate-950 hover:bg-cyan-400 disabled:opacity-40"
-          >
-            もう一度遊ぶ
-          </button>
-          <button
-            type="button"
-            onClick={() => runAction(onBackToLobby)}
-            disabled={submitting}
-            className="rounded-2xl border border-white/10 bg-slate-800 px-5 py-4 font-black text-white hover:bg-slate-700 disabled:opacity-40"
-          >
-            ロビーへ戻る
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => runAction(onResetGame)}
+          disabled={submitting}
+          className="w-full rounded-2xl bg-cyan-500 px-5 py-4 font-black text-slate-950 hover:bg-cyan-400 disabled:opacity-40"
+        >
+          itoのルール設定に戻る
+        </button>
       ) : (
         <p className="rounded-2xl bg-slate-900 p-4 font-bold text-slate-400">
           ホストが次のゲームを準備しています...
