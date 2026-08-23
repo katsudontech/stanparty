@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
+import { getDefaultAvatarUrl } from '@/lib/avatarTemplates';
 
 export interface GuestDisplayProfile {
     name: string;
@@ -84,7 +85,7 @@ export function useGuestAuth() {
                 const storedProfile = readGuestDisplayProfile();
                 const displayProfile = storedProfile ?? {
                     name: `Guest_${Math.floor(1000 + Math.random() * 9000)}`,
-                    avatar: `https://api.dicebear.com/7.x/adventurer/svg?seed=${authenticatedUser.id}`
+                    avatar: getDefaultAvatarUrl(authenticatedUser.id)
                 };
                 const authenticatedProfile = {
                     id: authenticatedUser.id,

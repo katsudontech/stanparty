@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Avatar } from '@/components/shared/Avatar';
 
 import type { RoomState, Player } from '@/games/core/types';
 
@@ -66,12 +67,13 @@ export function WaitingRoom({ roomState, players, isHost, onStartGame, onChangeG
           <ul className="space-y-3">
             {players.map((player, index) => (
               <li key={player.userId || index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm"
-                  style={{ backgroundColor: player.color || '#3B82F6' }}
-                >
-                  {player.name ? player.name.charAt(0).toUpperCase() : '?'}
-                </div>
+                <Avatar
+                  avatarUrl={player.avatarUrl}
+                  name={player.name || '名無し'}
+                  color={player.color || '#3B82F6'}
+                  size="lg"
+                  decorative
+                />
                 <div className="flex flex-col flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-gray-800">{player.name || '名無し'}</span>

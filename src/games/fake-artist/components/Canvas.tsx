@@ -3,6 +3,7 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { ReactSketchCanvas, type ReactSketchCanvasRef, type CanvasPath } from 'react-sketch-canvas';
 import type { Player } from '@/games/core/types';
+import { Avatar } from '@/components/shared/Avatar';
 import { useCanvasSync } from '../hooks/useCanvasSync';
 
 interface CanvasProps {
@@ -197,7 +198,25 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
         </div>
 
         <div className={`absolute bottom-4 right-4 px-3 py-1 rounded-md text-sm font-bold shadow pointer-events-none transition-colors ${isMyTurn ? 'bg-indigo-500 text-white' : 'bg-slate-100/90 text-slate-600'}`}>
-          {isReadOnly ? '🎨 完成した絵' : (isMyTurn ? '✨ あなたのターンです！描いてください' : `${turnPlayerName} のターン`)}
+          {isReadOnly ? (
+            '🎨 完成した絵'
+          ) : isMyTurn ? (
+            '✨ あなたのターンです！描いてください'
+          ) : (
+            <span className="flex items-center gap-2">
+              {turnPlayer && (
+                <Avatar
+                  avatarUrl={turnPlayer.avatarUrl}
+                  name={turnPlayer.name}
+                  color={turnPlayer.color}
+                  size="xs"
+                  decorative
+                />
+              )}
+              <span style={{ color: turnPlayer?.color }}>{turnPlayerName}</span>
+              <span>のターン</span>
+            </span>
+          )}
         </div>
 
         {/* 自分のターンではない場合のオーバーレイ表示（任意で少し暗くするなど） */}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useGuestAuth } from '@/hooks/useGuestAuth'
+import { Avatar } from '@/components/shared/Avatar'
 
 interface RoomDirectoryEntry {
     id: string
@@ -112,7 +113,7 @@ export default function RoomsListPage() {
 
                 {/* Profile Banner */}
                 <div className="flex items-center gap-4 px-6 py-4 mb-10 bg-white/5 border border-white/10 rounded-[2rem] backdrop-blur-md shadow-lg">
-                    <img src={profile?.avatar} alt="Avatar" className="w-12 h-12 rounded-full bg-white ring-2 ring-fuchsia-500/50" />
+                    <Avatar avatarUrl={profile?.avatar} name={profile?.name ?? 'ゲスト'} size="lg" />
                     <div>
                         <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">あなたのプロフィール</div>
                         <div className="font-bold text-white text-lg">{profile?.name}</div>

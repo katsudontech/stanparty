@@ -7,6 +7,7 @@ import { useCoyoteGame } from './hooks/useCoyoteGame';
 import { Dead } from './components/Dead';
 import { End } from './components/End';
 import { RuleSettingPhase } from './components/RuleSettingPhase';
+import { Avatar } from '@/components/shared/Avatar';
 
 interface CoyoteGameProps {
     roomState: RoomState;
@@ -202,15 +203,11 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                                         className="hidden"
                                     />
                                     <div className="flex-1 flex justify-between items-center">
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="font-bold text-slate-200 truncate flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white" style={{ backgroundColor: p.color }}>
-                                                    {p.name.charAt(0)}
-                                                </div>
-                                                {p.name}
+                                        <div className="flex min-w-0 items-center gap-2 font-bold text-slate-200">
+                                                <Avatar avatarUrl={p.avatarUrl} name={p.name} color={p.color} size="sm" decorative />
+                                                <span className="truncate">{p.name}</span>
                                                 {p.userId === myUserId && <span className="text-xs text-emerald-400 font-bold">(あなた)</span>}
                                                 {p.userId === gameState.coyoteCallerId && <span className="text-xs text-red-400 font-bold">(宣言者)</span>}
-                                            </span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-slate-300 font-bold text-xs bg-slate-950/50 px-3 py-1.5 rounded-full border border-slate-700">

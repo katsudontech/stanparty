@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Player } from "@/games/core/types";
+import { Avatar } from "@/components/shared/Avatar";
 
 interface RuleSettingPhaseProps {
     players: Player[];
@@ -26,9 +27,7 @@ export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp, o
                     {players.map((p) => (
                         <li key={p.userId} className="p-3 rounded-xl flex justify-between items-center bg-slate-800/50 border border-slate-700">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-sm" style={{ backgroundColor: p.color }}>
-                                    {p.name.charAt(0)}
-                                </div>
+                                <Avatar avatarUrl={p.avatarUrl} name={p.name} color={p.color} size="sm" decorative />
                                 <span className="font-bold text-slate-200">{p.name}</span>
                             </div>
                             {p.isHost && (

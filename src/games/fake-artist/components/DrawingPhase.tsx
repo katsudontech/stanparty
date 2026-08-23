@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Player } from '@/games/core/types';
+import { Avatar } from '@/components/shared/Avatar';
 import type { FakeArtistGameState } from '../types';
 import { Canvas } from './Canvas';
 
@@ -91,9 +92,22 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd, 
           <p className="text-indigo-300 text-sm font-medium mb-1">
             現在のターン (ラウンド {gameState.currentLap}/{gameState.ruleSettings.roundLimit})
           </p>
-          <p className="text-2xl font-bold text-white break-words">
-            {turnPlayer?.name || 'だれか'}
-          </p>
+          {turnPlayer ? (
+            <div className="flex items-center justify-center gap-3">
+              <Avatar
+                avatarUrl={turnPlayer.avatarUrl}
+                name={turnPlayer.name}
+                color={turnPlayer.color}
+                size="md"
+                decorative
+              />
+              <p className="break-words text-2xl font-black" style={{ color: turnPlayer.color }}>
+                {turnPlayer.name}
+              </p>
+            </div>
+          ) : (
+            <p className="text-2xl font-bold text-white">だれか</p>
+          )}
           <p className="text-sm text-indigo-200 mt-1">の番です</p>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type { Player } from "@/games/core/types";
+import { Avatar } from "@/components/shared/Avatar";
 
 type EndProps = {
     playerId: string;
@@ -13,7 +14,7 @@ type EndProps = {
 
 export function End({ playerId, isHost, winnerId, players, onBackToLobby }: EndProps) {
     const isWinner = playerId === winnerId;
-    const winnerName = players.find(p => p.userId === winnerId)?.name;
+    const winner = players.find(p => p.userId === winnerId);
 
     const title = useMemo(() => {
         if (isWinner) return "勝利！";
@@ -27,9 +28,11 @@ export function End({ playerId, isHost, winnerId, players, onBackToLobby }: EndP
             </h1>
 
             <div className="bg-slate-900/80 p-6 rounded-2xl shadow-xl w-full border border-slate-700 text-center backdrop-blur">
-                <p className="text-slate-300 mb-2 font-bold text-xl">
-                    勝者: <span className="text-indigo-400">{winnerId === playerId ? "あなた" : (winnerName || winnerId)}</span>
-                </p>
+                <div className="mb-2 flex items-center justify-center gap-3 text-xl font-bold text-slate-300">
+                    <span>勝者:</span>
+                    {winner && <Avatar avatarUrl={winner.avatarUrl} name={winner.name} color={winner.color} size="md" decorative />}
+                    <span className="text-indigo-400">{winnerId === playerId ? "あなた" : (winner?.name || winnerId)}</span>
+                </div>
                 {!isWinner && <p className="text-slate-500 mb-6 font-bold">次は勝てる！</p>}
 
                 {isHost ? (

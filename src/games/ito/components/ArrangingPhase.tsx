@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import type { Player } from '@/games/core/types';
+import { Avatar } from '@/components/shared/Avatar';
 
 import { moveCardInOrder } from '../rules';
 import type { ItoCard, ItoGameState } from '../types';
@@ -250,12 +251,13 @@ export function ArrangingPhase({
                     className={`w-full rounded-2xl border p-4 text-left transition ${selectedCardId === card.id ? 'border-cyan-300 bg-cyan-400/15' : 'border-white/10 bg-slate-950 hover:border-white/20'}`}
                   >
                     <div className="flex items-center gap-3">
-                      <span
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-black text-white"
-                        style={{ backgroundColor: owner?.color ?? '#475569' }}
-                      >
-                        {owner?.name?.charAt(0) ?? '?'}
-                      </span>
+                      <Avatar
+                        avatarUrl={owner?.avatarUrl}
+                        name={owner?.name ?? '退出したプレイヤー'}
+                        color={owner?.color}
+                        size="md"
+                        decorative
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-black text-white">
                           {owner?.name ?? '退出したプレイヤー'}・カード{card.ownerCardNumber}
@@ -289,8 +291,9 @@ export function ArrangingPhase({
             return (
               <span
                 key={playerId}
-                className={`rounded-full px-3 py-1 text-xs font-black ${ready ? 'bg-emerald-400/15 text-emerald-300' : 'bg-slate-800 text-slate-500'}`}
+                className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs font-black ${ready ? 'bg-emerald-400/15 text-emerald-300' : 'bg-slate-800 text-slate-500'}`}
               >
+                {player && <Avatar avatarUrl={player.avatarUrl} name={player.name} color={player.color} size="xs" decorative />}
                 {ready ? '✓ ' : ''}{player?.name ?? '退出済み'}
               </span>
             );

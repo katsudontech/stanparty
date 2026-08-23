@@ -63,7 +63,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     if (roomState.status === 'playing') {
         if (roomState.game_type === 'fake-artist') {
             return (
-                <GameWrapper>
+                <GameWrapper players={players} myUserId={myUserId} showPlayerBar={false}>
                     <FakeArtistGame
                         roomState={roomState}
                         myUserId={myUserId}
@@ -75,7 +75,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
         if (roomState.game_type === 'coyote') {
             return (
-                <GameWrapper>
+                <GameWrapper players={players} myUserId={myUserId}>
                     <CoyoteGame
                         roomState={roomState}
                         myUserId={myUserId}
@@ -87,7 +87,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
         if (roomState.game_type === 'one-night-werewolf') {
             return (
-                <GameWrapper>
+                <GameWrapper players={players} myUserId={myUserId}>
                     <OneNightWerewolfGame
                         roomState={roomState}
                         myUserId={myUserId}
@@ -99,7 +99,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
         if (roomState.game_type === 'ito') {
             return (
-                <GameWrapper>
+                <GameWrapper players={players} myUserId={myUserId}>
                     <ItoGame
                         roomState={roomState}
                         myUserId={myUserId}

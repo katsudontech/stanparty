@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import type { Player } from '@/games/core/types';
+import { Avatar } from '@/components/shared/Avatar';
 
 import { getIncorrectItoCardIds, getOrderedItoCards } from '../rules';
 import type { ItoGameState } from '../types';
@@ -66,12 +67,13 @@ export function ShowdownPhase({
               className={`rounded-2xl border p-4 transition-all duration-500 ${isIncorrect ? 'border-rose-400 bg-rose-400/15' : isRevealed ? 'border-cyan-300/40 bg-cyan-400/10' : 'border-white/10 bg-slate-950'}`}
             >
               <div className="flex items-center gap-3">
-                <span
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-black text-white"
-                  style={{ backgroundColor: owner?.color ?? '#475569' }}
-                >
-                  {owner?.name?.charAt(0) ?? '?'}
-                </span>
+                <Avatar
+                  avatarUrl={owner?.avatarUrl}
+                  name={owner?.name ?? '退出したプレイヤー'}
+                  color={owner?.color}
+                  size="md"
+                  decorative
+                />
                 <div className="min-w-0 flex-1 text-left">
                   <p className="truncate font-black text-white">
                     {owner?.name ?? '退出したプレイヤー'}・カード{card.ownerCardNumber}

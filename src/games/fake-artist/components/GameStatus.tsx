@@ -1,6 +1,7 @@
 'use client';
 
 import type { Player } from '@/games/core/types';
+import { Avatar } from '@/components/shared/Avatar';
 import type { FakeArtistPhase, FakeArtistGameState } from '../types';
 
 interface GameStatusProps {
@@ -42,11 +43,19 @@ export function GameStatus({ players, currentPhase, gameState, myUserId }: GameS
                 key={p.userId} 
                 className={`flex items-center space-x-2 bg-slate-800 px-3 py-2 rounded-lg border ${isMe ? 'border-indigo-500 shadow-indigo-500/20' : 'border-slate-600'} shadow-sm transition-all`}
               >
-                <div 
-                  className="w-3 h-3 rounded-full shadow-inner" 
-                  style={{ backgroundColor: color }} 
+                <Avatar
+                  avatarUrl={p.avatarUrl}
+                  name={p.name}
+                  color={color}
+                  size="sm"
+                  decorative
                 />
-                <span className={`font-bold text-sm ${isMe ? 'text-indigo-300' : 'text-white'}`}>
+                <div
+                  className="h-3 w-3 rounded-full shadow-inner"
+                  style={{ backgroundColor: color }}
+                  aria-hidden="true"
+                />
+                <span className="text-sm font-black" style={{ color }}>
                   {p.name}
                 </span>
                 {isQuestioner && (

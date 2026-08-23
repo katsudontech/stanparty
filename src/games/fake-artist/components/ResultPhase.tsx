@@ -1,6 +1,7 @@
 'use client';
 
 import type { Player } from '@/games/core/types';
+import { Avatar } from '@/components/shared/Avatar';
 import type { FakeArtistGameState } from '../types';
 import { Canvas } from './Canvas';
 
@@ -80,17 +81,22 @@ export function ResultPhase({ roomId, myUserId, players, gameState, isHost, onRe
           <div className="flex flex-col gap-3">
             {players.map(player => {
               const role = gameState.playerStates[player.userId]?.role;
+              const playerColor = gameState.playerStates[player.userId]?.color || player.color;
               return (
                 <div 
                   key={player.userId}
                   className="flex items-center justify-between bg-slate-800 p-4 rounded border border-slate-600"
                 >
                   <div className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: player.color }} 
+                    <Avatar
+                      avatarUrl={player.avatarUrl}
+                      name={player.name}
+                      color={playerColor}
+                      size="md"
+                      decorative
                     />
-                    <span className="font-bold text-lg">{player.name}</span>
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: playerColor }} aria-hidden="true" />
+                    <span className="text-lg font-black" style={{ color: playerColor }}>{player.name}</span>
                   </div>
                   <div>
                     {getRoleBadge(role)}

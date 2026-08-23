@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Player } from '@/games/core/types';
+import { Avatar } from '@/components/shared/Avatar';
 import { Canvas } from './Canvas';
 import { useVotingSync } from '../hooks/useVotingSync';
 
@@ -65,12 +66,19 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
                 key={player.userId}
                 disabled={myUserId === player.userId || hasVoted}
                 onClick={() => setSelectedPlayerId(player.userId)}
-                className={`px-6 py-3 rounded-md transition-all border-2 font-bold ${isSelected
+                className={`flex items-center gap-3 px-5 py-3 rounded-md transition-all border-2 font-bold ${isSelected
                     ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/50 scale-105'
                     : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600 hover:border-slate-500'
                   } ${myUserId === player.userId ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {player.name}
+                <Avatar
+                  avatarUrl={player.avatarUrl}
+                  name={player.name}
+                  color={player.color}
+                  size="sm"
+                  decorative
+                />
+                <span className="font-black" style={{ color: player.color }}>{player.name}</span>
               </button>
             );
           })}

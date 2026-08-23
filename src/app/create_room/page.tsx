@@ -10,11 +10,13 @@ import Link from 'next/link'
 export default function CreateRoomPage() {
     const [roomName, setRoomName] = useState('')
     const [hostName, setHostName] = useState<string | null>(null)
+    const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null)
     const [isPublic, setIsPublic] = useState(true)
     const [loading, setLoading] = useState(false)
     
     const { profile: myProfile, loading: checkingAuth } = useGuestAuth()
     const resolvedHostName = hostName ?? myProfile?.name ?? ''
+    const resolvedAvatarUrl = selectedAvatarUrl ?? myProfile?.avatar ?? ''
 
 
 
@@ -30,7 +32,11 @@ export default function CreateRoomPage() {
         try {
             // 部屋を作る前に、確実にホストのユーザー情報をusersテーブルに登録（upsert）する
             const normalizedHostName = resolvedHostName.trim()
-            const updatedProfile = { ...myProfile, name: normalizedHostName }
+            const updatedProfile = {
+                ...myProfile,
+                name: normalizedHostName,
+                avatar: resolvedAvatarUrl
+            }
             
             // ローカルストレージも最新状態に保つ
             saveGuestDisplayProfile({
@@ -49,7 +55,7 @@ export default function CreateRoomPage() {
             const { data: createdRoomId, error } = await supabase.rpc('create_room', {
                 p_room_name: roomName.trim(),
                 p_host_name: normalizedHostName,
-                p_avatar_url: myProfile.avatar,
+                p_avatar_url: updatedProfile.avatar,
                 p_is_public: isPublic
             })
 
@@ -98,7 +104,8 @@ export default function CreateRoomPage() {
                             <ProfileInput
                                 name={resolvedHostName}
                                 onChangeName={setHostName}
-                                avatarUrl={myProfile?.avatar}
+                                avatarUrl={resolvedAvatarUrl}
+                                onChangeAvatar={setSelectedAvatarUrl}
                                 label="あなたの名前 (ホスト)"
                                 variant="horizontal"
                             />

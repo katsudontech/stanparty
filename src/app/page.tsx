@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useGuestAuth } from '@/hooks/useGuestAuth';
+import { Avatar } from '@/components/shared/Avatar';
 
 export default function Home() {
   const { profile, loading } = useGuestAuth();
@@ -56,7 +57,7 @@ export default function Home() {
             {loading ? (
               <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse" />
             ) : (
-              <img src={profile?.avatar} alt="Avatar" className="w-10 h-10 rounded-full bg-white ring-2 ring-indigo-500/50" />
+              <Avatar avatarUrl={profile?.avatar} name={profile?.name ?? 'ゲスト'} size="md" />
             )}
             <div className="text-left pr-2">
               <div className="text-sm font-bold text-white">{loading ? '読み込み中...' : profile?.name}</div>

@@ -13,7 +13,9 @@ interface JoinRoomScreenProps {
 export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
     const { profile } = useGuestAuth();
     const [joinName, setJoinName] = useState<string | null>(null);
+    const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null);
     const resolvedJoinName = joinName ?? profile?.name ?? '';
+    const resolvedAvatarUrl = selectedAvatarUrl ?? profile?.avatar ?? '';
     const [isJoining, setIsJoining] = useState(false);
 
     const handleJoin = async () => {
@@ -21,7 +23,11 @@ export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
         setIsJoining(true);
 
         const supabase = createClient();
-        const updatedProfile = { ...profile, name: resolvedJoinName.trim() };
+        const updatedProfile = {
+            ...profile,
+            name: resolvedJoinName.trim(),
+            avatar: resolvedAvatarUrl
+        };
 
         saveGuestDisplayProfile({
             name: updatedProfile.name,
@@ -70,7 +76,8 @@ export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
                     <ProfileInput
                         name={resolvedJoinName}
                         onChangeName={setJoinName}
-                        avatarUrl={profile?.avatar}
+                        avatarUrl={resolvedAvatarUrl}
+                        onChangeAvatar={setSelectedAvatarUrl}
                         label="参加する名前を入力してください"
                         variant="vertical"
                         onEnter={handleJoin}
