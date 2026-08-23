@@ -11,6 +11,7 @@ import { GameWrapper } from '@/games/core/GameWrapper';
 import { FakeArtistGame } from '@/games/fake-artist';
 import { CoyoteGame } from '@/games/coyote';
 import { OneNightWerewolfGame } from '@/games/one-night-werewolf';
+import { ItoGame } from '@/games/ito';
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
     const { roomId } = use(params);
@@ -80,6 +81,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
             return (
                 <GameWrapper>
                     <OneNightWerewolfGame roomState={roomState} myUserId={myUserId} />
+                </GameWrapper>
+            );
+        }
+
+        if (roomState.game_type === 'ito') {
+            return (
+                <GameWrapper>
+                    <ItoGame roomState={roomState} myUserId={myUserId} />
                 </GameWrapper>
             );
         }
