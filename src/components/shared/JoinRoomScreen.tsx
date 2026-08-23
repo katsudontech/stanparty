@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { saveGuestDisplayProfile, useGuestAuth } from '@/hooks/useGuestAuth';
 import { ProfileInput } from '@/components/shared/ProfileInput';
+import { SiteHeader } from '@/components/site/SiteHeader';
 
 interface JoinRoomScreenProps {
   roomId: string;
@@ -63,14 +64,13 @@ export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 selection:bg-indigo-500/30">
-            <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
-                <div className="absolute top-1/4 left-1/4 w-[30%] h-[30%] rounded-full bg-indigo-600/20 blur-[100px] animate-pulse" style={{ animationDuration: '4s' }} />
-                <div className="absolute bottom-1/4 right-1/4 w-[30%] h-[30%] rounded-full bg-fuchsia-600/20 blur-[100px] animate-pulse" style={{ animationDuration: '6s' }} />
-            </div>
-
-            <div className="bg-slate-900/50 border border-white/10 p-8 rounded-3xl backdrop-blur-xl shadow-2xl w-full max-w-sm text-center relative z-10">
-                <h2 className="text-2xl font-black mb-6 text-white tracking-tight">ルームに参加</h2>
+        <div className="site-shell">
+            <SiteHeader compact />
+            <main className="site-container grid min-h-[calc(100vh-72px)] place-items-center py-12">
+            <div className="paper-card w-full max-w-md p-6 text-center sm:p-9">
+                <p className="section-kicker">Invitation</p>
+                <h2 className="mb-3 mt-3 text-3xl font-black tracking-[-.05em]">ルームに参加</h2>
+                <p className="mb-7 text-sm leading-6 text-[var(--muted)]">表示する名前とアイコンを確認してください。</p>
                 
                 <div className="mb-6">
                     <ProfileInput
@@ -85,12 +85,11 @@ export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
                 </div>
 
                 <button 
-                    className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all overflow-hidden shadow-[0_0_20px_-5px_rgba(79,70,229,0.5)]"
+                    className="button-primary w-full text-lg"
                     onClick={handleJoin}
                     disabled={!profile || !resolvedJoinName.trim() || isJoining}
                 >
-                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                    <span className="relative flex items-center gap-2">
+                    <span className="flex items-center gap-2">
                         {isJoining ? (
                             <>
                                 <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -102,6 +101,7 @@ export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
                     </span>
                 </button>
             </div>
+            </main>
         </div>
     );
 }

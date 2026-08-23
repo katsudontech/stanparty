@@ -22,28 +22,28 @@ export function End({ playerId, isHost, winnerId, players, onBackToLobby }: EndP
     }, [isWinner]);
 
     return (
-        <div className="mx-auto w-full max-w-md select-none mt-8">
-            <h1 className={"text-4xl font-black mb-4 text-center " + (isWinner ? "text-emerald-500" : "text-white")}>
+        <div className="mx-auto mt-8 w-full max-w-md select-none">
+            <h1 className={"mb-4 text-center text-4xl font-black tracking-[-.05em] " + (isWinner ? "text-[var(--green)]" : "text-[var(--ink)]")}>
                 {title}
             </h1>
 
-            <div className="bg-slate-900/80 p-6 rounded-2xl shadow-xl w-full border border-slate-700 text-center backdrop-blur">
-                <div className="mb-2 flex items-center justify-center gap-3 text-xl font-bold text-slate-300">
+            <div className="paper-card w-full p-6 text-center">
+                <div className="mb-2 flex items-center justify-center gap-3 text-xl font-black">
                     <span>勝者:</span>
                     {winner && <Avatar avatarUrl={winner.avatarUrl} name={winner.name} color={winner.color} size="md" decorative />}
-                    <span className="text-indigo-400">{winnerId === playerId ? "あなた" : (winner?.name || winnerId)}</span>
+                    <span className="text-[#a96f0d]">{winnerId === playerId ? "あなた" : (winner?.name || winnerId)}</span>
                 </div>
-                {!isWinner && <p className="text-slate-500 mb-6 font-bold">次は勝てる！</p>}
+                {!isWinner && <p className="mb-6 font-bold text-[var(--muted)]">次は勝てる！</p>}
 
                 {isHost ? (
                     <button
                         onClick={onBackToLobby}
-                        className="w-full py-3 rounded-xl font-bold text-lg transition bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_-5px_rgba(79,70,229,0.5)]"
+                        className="button-primary w-full text-lg"
                     >
                         ロビーに戻る
                     </button>
                 ) : (
-                    <div className="text-center text-slate-400 mt-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <div className="mt-2 border-2 border-dashed border-[#b9b5a8] bg-[var(--paper-deep)] p-3 text-center text-[var(--muted)]">
                         ホストがロビーに戻るのを待っています...
                     </div>
                 )}

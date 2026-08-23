@@ -16,22 +16,23 @@ export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp, o
     const [maxHp, setMaxHp] = useState(initialMaxHp);
 
     return (
-        <div className="mx-auto w-full max-w-md mt-4 select-none">
-            <h1 className="text-3xl font-black tracking-tight text-white mb-6 text-center">ルーム設定</h1>
+        <div className="mx-auto mt-4 w-full max-w-md select-none">
+            <p className="text-center text-xs font-black tracking-[.14em] text-[#a96f0d]">COYOTE · GAME SETTING</p>
+            <h1 className="mb-6 mt-2 text-center text-3xl font-black tracking-[-.05em]">ルール設定</h1>
             
-            <div className="rounded-2xl border border-slate-700 bg-slate-900/80 p-6 shadow-xl backdrop-blur">
-                <h2 className="text-lg mb-4 font-bold border-b border-slate-700 pb-2 text-slate-200">
+            <div className="paper-card p-6">
+                <h2 className="mb-4 border-b-2 border-[var(--line)] pb-2 text-lg font-black">
                     参加プレイヤー ({players.length}人)
                 </h2>
                 <ul className="space-y-3 text-left mb-8">
                     {players.map((p) => (
-                        <li key={p.userId} className="p-3 rounded-xl flex justify-between items-center bg-slate-800/50 border border-slate-700">
+                        <li key={p.userId} className="flex items-center justify-between border-b border-[#c8c6b9] p-3 last:border-0">
                             <div className="flex items-center gap-3">
                                 <Avatar avatarUrl={p.avatarUrl} name={p.name} color={p.color} size="sm" decorative />
-                                <span className="font-bold text-slate-200">{p.name}</span>
+                                <span className="font-black">{p.name}</span>
                             </div>
                             {p.isHost && (
-                                <span className="text-[10px] px-2 py-1 rounded-md font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                <span className="border border-[var(--line)] bg-[var(--yellow)] px-2 py-1 text-[10px] font-black">
                                     ホスト
                                 </span>
                             )}
@@ -39,10 +40,10 @@ export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp, o
                     ))}
                 </ul>
 
-                <h2 className="text-lg mb-4 font-bold border-b border-slate-700 pb-2 text-slate-200">ゲーム設定</h2>
+                <h2 className="mb-4 border-b-2 border-[var(--line)] pb-2 text-lg font-black">ゲーム設定</h2>
                 
-                <div className="flex items-center justify-between gap-3 mb-6 bg-slate-800/30 p-4 rounded-xl border border-slate-700">
-                    <label htmlFor="max-hp" className="text-slate-300 font-bold">
+                <div className="mb-6 flex items-center justify-between gap-3 border-2 border-[var(--line)] bg-[var(--paper-deep)] p-4">
+                    <label htmlFor="max-hp" className="font-black">
                         最大ライフ (HP)
                     </label>
                     <input
@@ -55,7 +56,7 @@ export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp, o
                             const v = Number(e.target.value);
                             setMaxHp(Number.isFinite(v) && v > 0 ? v : 3);
                         }}
-                        className="w-24 text-center rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 disabled:opacity-50 font-bold"
+                        className="w-24 border-2 border-[var(--line)] bg-white px-3 py-2 text-center font-black outline-none focus:ring-2 focus:ring-[var(--yellow)] disabled:opacity-50"
                         disabled={!isHost}
                     />
                 </div>
@@ -64,20 +65,20 @@ export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp, o
                     <div className="space-y-3">
                         <button
                             onClick={() => onStartGame(maxHp)}
-                            className="w-full bg-indigo-600 hover:bg-indigo-500 transition text-white py-4 px-4 rounded-xl font-bold shadow-[0_0_20px_-5px_rgba(79,70,229,0.5)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="button-primary w-full"
                         >
                             設定を完了して開始
                         </button>
                         <button
                             type="button"
                             onClick={() => void onBackToLobby()}
-                            className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 font-bold text-slate-200 transition hover:bg-slate-700"
+                            className="button-secondary w-full"
                         >
                             ロビーへ戻る
                         </button>
                     </div>
                 ) : (
-                    <div className="text-center text-slate-400 font-bold p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                    <div className="border-2 border-dashed border-[#b9b5a8] bg-[var(--paper-deep)] p-4 text-center font-bold text-[var(--muted)]">
                         ホストがルールを設定しています...
                     </div>
                 )}

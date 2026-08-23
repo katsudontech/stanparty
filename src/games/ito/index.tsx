@@ -99,15 +99,15 @@ export function ItoGame({ roomState, myUserId, onBackToLobby }: ItoGameProps) {
   };
 
   return (
-    <div className="mx-auto min-h-[calc(100vh-5rem)] w-full max-w-3xl rounded-3xl border border-white/10 bg-slate-800/70 p-3 shadow-2xl sm:p-6">
-      <header className="mb-7 flex items-center justify-between gap-4 border-b border-white/10 pb-5">
+    <div className="paper-game ito-game mx-auto min-h-[calc(100vh-6rem)] w-full max-w-3xl border-2 border-[var(--line)] bg-[var(--surface)] p-3 shadow-[5px_5px_0_var(--line)] sm:p-6">
+      <header className="mb-7 flex items-center justify-between gap-4 border-b-2 border-[var(--line)] pb-5">
         <div className="text-left">
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-cyan-300">StanParty</p>
-          <h1 className="mt-1 text-2xl font-black text-white">🧵 ito</h1>
+          <p className="text-xs font-black tracking-[0.2em] text-[var(--blue)]">COOPERATIVE GAME</p>
+          <h1 className="mt-1 text-3xl font-black tracking-[-.05em]">ito</h1>
         </div>
         <div className="text-right">
-          <p className="text-xs font-bold text-slate-500">現在のフェーズ</p>
-          <p className="font-black text-slate-200">{PHASE_LABELS[gameState.phase]}</p>
+          <p className="text-xs font-bold text-[var(--muted)]">現在のフェーズ</p>
+          <p className="font-black">{PHASE_LABELS[gameState.phase]}</p>
         </div>
       </header>
 

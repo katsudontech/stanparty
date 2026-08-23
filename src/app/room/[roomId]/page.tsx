@@ -37,11 +37,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     useHostAutoKick(roomId, isHost, roomState, players, onlineUserIds, myUserId);
 
     if (!myUserId || loading) {
-        return <div>読み込み中...</div>;
+        return <div className="site-shell flex min-h-screen flex-col items-center justify-center gap-4"><div className="h-9 w-9 animate-spin rounded-full border-4 border-[var(--paper-deep)] border-t-[var(--orange)]" /><p className="font-black text-[var(--muted)]">ルームを読み込んでいます…</p></div>;
     }
 
     if (error) {
-        return <div>ルームの読み込みに失敗しました: {error.message}</div>;
+        return <div className="site-shell flex min-h-screen items-center justify-center p-5"><div className="paper-card max-w-lg p-8"><p className="section-kicker">Error</p><h1 className="mt-3 text-2xl font-black">ルームを読み込めませんでした</h1><p className="mt-3 text-sm text-[var(--muted)]">{error.message}</p></div></div>;
     }
 
     if (!roomState || !isJoined) {
@@ -110,5 +110,5 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
     }
 
-    return <div>ゲームが終了しました</div>;
+    return <div className="site-shell flex min-h-screen items-center justify-center"><p className="text-xl font-black">ゲームは終了しました。</p></div>;
 }

@@ -157,26 +157,27 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
         const activePlayers = players.filter(p => (gameState.coyotePlayers[p.userId]?.hp ?? 0) > 0 || gameState.coyoteCallerId === p.userId);
 
         return (
-            <div className="mx-auto w-full max-w-2xl select-none mt-4">
-                <h1 className="text-4xl font-black text-red-500 mb-6 text-center animate-bounce">コヨーテ！</h1>
+            <div className="mx-auto mt-4 w-full max-w-2xl select-none">
+                <p className="text-center text-xs font-black tracking-[.16em] text-[var(--orange)]">CALL!</p>
+                <h1 className="mb-6 mt-2 text-center text-5xl font-black tracking-[-.06em] text-[var(--ink)]">コヨーテ！</h1>
 
-                <div className="bg-slate-900/80 p-6 rounded-2xl shadow-xl w-full border border-slate-700 backdrop-blur">
+                <div className="paper-card w-full p-5 sm:p-6">
                     <div className="flex flex-row justify-center gap-12 mb-8">
                         <div>
-                            <h2 className="text-sm font-bold text-slate-400 mb-2 text-center">全員の合計</h2>
-                            <div className="text-7xl font-black text-center text-white drop-shadow-md">
+                            <h2 className="mb-2 text-center text-sm font-bold text-[var(--muted)]">全員の合計</h2>
+                            <div className="text-center text-7xl font-black">
                                 {gameState.coyoteTotalValue !== undefined ? gameState.coyoteTotalValue : "-"}
                             </div>
                         </div>
                         <div>
-                            <h2 className="text-sm font-bold text-slate-400 mb-2 text-center">自分のカード</h2>
-                            <div className="text-7xl font-black text-center text-white drop-shadow-md">
+                            <h2 className="mb-2 text-center text-sm font-bold text-[var(--muted)]">自分のカード</h2>
+                            <div className="text-center text-7xl font-black">
                                 {formatCardForCoyoteResult(myCard, gameState.questionRevealedCard)}
                             </div>
                         </div>
                     </div>
 
-                    <h3 className="text-lg font-bold text-slate-200 mb-4 border-b border-slate-700 pb-2">生存プレイヤー一覧</h3>
+                    <h3 className="mb-4 border-b-2 border-[var(--line)] pb-2 text-lg font-black">生存プレイヤー一覧</h3>
                     <div className="flex flex-col gap-3 mb-6">
                         {activePlayers.map(p => {
                             const pState = gameState.coyotePlayers[p.userId];
@@ -187,10 +188,10 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                                     key={p.userId}
                                     className={
                                         "flex items-center p-4 rounded-xl border transition " +
-                                        (isCoyoteCaller && isAlive ? "cursor-pointer hover:bg-slate-800 " : "cursor-default ") +
+                                        (isCoyoteCaller && isAlive ? "cursor-pointer hover:bg-[var(--paper-deep)] " : "cursor-default ") +
                                         (selectedLoser === p.userId
-                                            ? "bg-red-500/20 border-red-500/50"
-                                            : "bg-slate-800/50 border-slate-700")
+                                            ? "bg-[#f6d7c8] border-[var(--orange)]"
+                                            : "bg-white border-[#b9b5a8]")
                                     }
                                 >
                                     <input
@@ -203,17 +204,17 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                                         className="hidden"
                                     />
                                     <div className="flex-1 flex justify-between items-center">
-                                        <div className="flex min-w-0 items-center gap-2 font-bold text-slate-200">
+                                        <div className="flex min-w-0 items-center gap-2 font-black">
                                                 <Avatar avatarUrl={p.avatarUrl} name={p.name} color={p.color} size="sm" decorative />
                                                 <span className="truncate">{p.name}</span>
-                                                {p.userId === myUserId && <span className="text-xs text-emerald-400 font-bold">(あなた)</span>}
-                                                {p.userId === gameState.coyoteCallerId && <span className="text-xs text-red-400 font-bold">(宣言者)</span>}
+                                                {p.userId === myUserId && <span className="text-xs font-bold text-[var(--green)]">(あなた)</span>}
+                                                {p.userId === gameState.coyoteCallerId && <span className="text-xs font-bold text-[var(--orange)]">(宣言者)</span>}
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-slate-300 font-bold text-xs bg-slate-950/50 px-3 py-1.5 rounded-full border border-slate-700">
+                                            <span className="border border-[var(--line)] bg-[var(--paper-deep)] px-3 py-1.5 text-xs font-bold">
                                                 HP: {hp}
                                             </span>
-                                            <span className="text-slate-300 font-bold text-xs bg-slate-950/50 px-3 py-1.5 rounded-full border border-slate-700">
+                                            <span className="border border-[var(--line)] bg-[var(--paper-deep)] px-3 py-1.5 text-xs font-bold">
                                                 {formatCardForCoyoteResult(pState?.currentCard, gameState.questionRevealedCard)}
                                             </span>
                                         </div>
@@ -230,14 +231,14 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                             className={
                                 "w-full py-4 rounded-xl font-bold text-lg transition focus:outline-none focus:ring-2 focus:ring-indigo-500 " +
                                 (canDecideLoser
-                                    ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_-5px_rgba(79,70,229,0.5)]"
-                                    : "bg-slate-800 text-slate-500 cursor-not-allowed")
+                                    ? "bg-[var(--orange)] hover:bg-[#d94f33] text-white border-2 border-[var(--line)] shadow-[4px_4px_0_var(--line)]"
+                                    : "bg-[var(--paper-deep)] text-[var(--muted)] cursor-not-allowed border-2 border-[#b9b5a8]")
                             }
                         >
                             敗者を決定する
                         </button>
                     ) : (
-                        <div className="text-center text-slate-400 font-bold mt-4 p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                        <div className="mt-4 border-2 border-dashed border-[#b9b5a8] bg-[var(--paper-deep)] p-4 text-center font-bold text-[var(--muted)]">
                             コヨーテ宣言者が敗者を決定しています...
                         </div>
                     )}
@@ -248,31 +249,30 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
 
     return (
         <div 
-            className="p-4 flex flex-col items-center justify-center min-h-[70vh] select-none"
+            className="coyote-playfield flex min-h-[72vh] flex-col items-center justify-center border-2 border-[var(--line)] bg-[var(--ink)] p-4 text-white shadow-[5px_5px_0_#d79a24] select-none"
             onDoubleClick={handleDoubleClick}
         >
-            <h1 className="text-2xl font-black text-white mb-2">コヨーテ</h1>
+            <h1 className="mb-2 text-2xl font-black tracking-[-.04em] text-white">Coyote</h1>
             
             {/* カウントダウン表示 */}
             {countdown !== null && countdown > 0 && (
                 <div className="text-center animate-[fadeIn_0.5s_ease-out]">
-                    <p className="text-lg font-bold text-indigo-300 mt-8 mb-8">他の人に見えるように、おでこにスマホを掲げて！</p>
-                    <p className="text-[12rem] font-black text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">{countdown}</p>
+                    <p className="mb-8 mt-8 text-lg font-bold text-[#f2dfa8]">他の人に見えるように、おでこにスマホを掲げて！</p>
+                    <p className="text-[12rem] font-black text-white">{countdown}</p>
                 </div>
             )}
 
             {/* 5秒経過後にドーンと数字を表示 */}
             {showCard && (
                 <div className="text-center animate-[popIn_0.3s_ease-out]">
-                    <p className="text-sm font-bold text-slate-400 mt-4 mb-4 uppercase tracking-widest">あなたのおでこの数字</p>
-                    <div className="bg-slate-900 border-[12px] border-indigo-500/30 rounded-[3rem] w-72 h-96 flex items-center justify-center shadow-[0_0_50px_-10px_rgba(79,70,229,0.5)] relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-fuchsia-500/10 pointer-events-none"></div>
-                        <span className="text-[10rem] font-black text-white drop-shadow-lg relative z-10">
+                    <p className="mb-4 mt-4 text-sm font-bold uppercase tracking-widest text-[#d7d0c0]">あなたのおでこの数字</p>
+                    <div className="relative flex h-96 w-72 items-center justify-center overflow-hidden border-[12px] border-[#d79a24] bg-[#fffaf0] shadow-[8px_8px_0_#d79a24]">
+                        <span className="relative z-10 text-[10rem] font-black text-[var(--ink)]">
                             {formatCardForCoyoteResult(myCard)}
                         </span>
                     </div>
-                    <div className="mt-8 px-6 py-3 bg-indigo-500/20 border border-indigo-500/30 rounded-full inline-block backdrop-blur-md">
-                        <p className="text-indigo-200 font-bold text-sm flex items-center gap-2">
+                    <div className="mt-8 inline-block border-2 border-[#d79a24] bg-[#f2dfa8] px-6 py-3 text-[var(--ink)]">
+                        <p className="flex items-center gap-2 text-sm font-black">
                             <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" /></svg>
                             画面をダブルタップでコヨーテ宣言！
                         </p>
@@ -282,8 +282,8 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
 
             {!showCard && countdown === null && (
                 <div className="mt-16 flex flex-col items-center gap-4">
-                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-slate-400 font-bold">カードの配布を待っています...</p>
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#d79a24] border-t-transparent" />
+                    <p className="font-bold text-[#d7d0c0]">カードの配布を待っています…</p>
                 </div>
             )}
         </div>

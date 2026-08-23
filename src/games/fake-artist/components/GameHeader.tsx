@@ -6,13 +6,10 @@ interface GameHeaderProps {
 
 export function GameHeader({ roomId }: GameHeaderProps) {
   return (
-    <>
-      <h2 className="text-4xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-        エセ芸術家 ニューヨークへ行く
-      </h2>
-      <p className="text-slate-400 mb-8 text-lg">
-        ゲーム画面のひな形です。 (Room: {roomId})
-      </p>
-    </>
+    <header className="mb-6 border-b-2 border-[var(--line)] py-5 text-left">
+      <p className="text-xs font-black tracking-[.14em] text-[var(--orange)]">DRAWING &amp; DEDUCTION · {roomId.slice(0, 6)}</p>
+      <h2 className="mt-2 text-3xl font-black tracking-[-.055em] sm:text-4xl">エセ芸術家</h2>
+      <p className="mt-2 text-sm font-bold text-[var(--muted)]">一筆ずつ描いて、お題を知らない人を見破ろう。</p>
+    </header>
   );
 }

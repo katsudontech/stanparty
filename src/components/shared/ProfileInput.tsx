@@ -32,11 +32,11 @@ export function ProfileInput({
 
     if (variant === 'horizontal') {
         return (
-            <div className="flex flex-col gap-4 rounded-2xl border border-white/5 bg-black/40 p-4 shadow-inner">
+            <div className="flex flex-col gap-4 border-y-2 border-[var(--line)] py-5">
                 <div className="flex items-center gap-4">
                     {avatarUrl && <Avatar avatarUrl={avatarUrl} name={name || 'プレイヤー'} size="lg" />}
                     <div className="flex-1">
-                        <label className="block text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">{label}</label>
+                        <label className="form-label">{label}</label>
                         <input
                             type="text"
                             value={name}
@@ -44,7 +44,7 @@ export function ProfileInput({
                             onKeyDown={handleKeyDown}
                             placeholder={placeholder}
                             required
-                            className="w-full bg-transparent border-b border-white/20 pb-1 focus:outline-none focus:border-indigo-500 text-white font-bold text-lg transition-colors placeholder-slate-600"
+                            className="w-full border-0 border-b-2 border-[var(--line)] bg-transparent pb-2 text-lg font-black text-[var(--ink)] outline-none placeholder:text-[#a39f92] focus:border-[var(--orange)]"
                         />
                     </div>
                 </div>
@@ -64,7 +64,7 @@ export function ProfileInput({
                 </div>
             )}
             {label && (
-                <p className="text-sm text-slate-400 mb-6 font-medium text-center">{label}</p>
+                <p className="mb-5 text-center text-sm font-bold text-[var(--muted)]">{label}</p>
             )}
             <input 
                 type="text"
@@ -73,7 +73,7 @@ export function ProfileInput({
                 onChange={(e) => onChangeName(e.target.value)}
                 onKeyDown={handleKeyDown}
                 required
-                className="w-full bg-black/40 border border-white/10 p-4 rounded-xl mb-6 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-white text-center text-lg font-bold transition-all shadow-inner"
+                className="form-input mb-6 text-center text-lg"
             />
             {avatarUrl && onChangeAvatar && (
                 <AvatarPicker value={avatarUrl} onChange={onChangeAvatar} />

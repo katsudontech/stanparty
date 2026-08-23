@@ -129,7 +129,7 @@ export function FakeArtistGame({ roomState, myUserId, onBackToLobby }: FakeArtis
         return <ResultPhase roomId={roomState.id} myUserId={myUserId} players={roomState.players} gameState={gameState} isHost={isHost} onResetGame={handleResetGame} />;
 
       default:
-        return <div className="text-white mt-8">準備中...</div>;
+        return <div className="mt-8 font-black">準備中...</div>;
     }
   };
 
@@ -137,7 +137,7 @@ export function FakeArtistGame({ roomState, myUserId, onBackToLobby }: FakeArtis
   // ③ 実際の画面レイアウト（ここで①と②を合体させる）
   // ==========================================
   return (
-    <div className="bg-slate-800 p-2 sm:p-4 rounded-2xl shadow-2xl flex flex-col items-center text-center border border-slate-700 w-full">
+    <div className="paper-game fake-artist-game flex w-full flex-col items-center border-2 border-[var(--line)] bg-[var(--surface)] p-2 text-center shadow-[5px_5px_0_var(--line)] sm:p-5">
       {/* 上部に常にヘッダーを表示 */}
       <div className="w-full max-w-2xl mx-auto">
         {renderHeader()}

@@ -1,0 +1,244 @@
+:root {
+  --paper: #f4f0e6;
+  --paper-deep: #e9e2d3;
+  --surface: #fffaf0;
+  --ink: #17231d;
+  --muted: #657068;
+  --line: #26372e;
+  --orange: #e85d3f;
+  --blue: #3978a8;
+  --yellow: #f3c85b;
+  --green: #3f765b;
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  margin: 0;
+}
+
+button, input, select, textarea { font: inherit; }
+
+::selection { background: #f3c85b; color: #17231d; }
+
+.site-shell {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.site-container {
+  width: min(1120px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.site-header {
+  width: min(1120px, calc(100% - 32px));
+  min-height: 88px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 2px solid var(--line);
+}
+
+.site-header--compact { min-height: 72px; }
+
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-weight: 900;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.site-brand__mark {
+  width: 38px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: var(--surface);
+  background: var(--ink);
+  border-radius: 3px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  box-shadow: 3px 3px 0 var(--orange);
+  transform: rotate(-2deg);
+}
+
+.site-nav { display: flex; align-items: center; gap: 26px; }
+.site-nav a {
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
+.site-nav a:hover { color: var(--orange); }
+
+.paper-card {
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 5px 5px 0 var(--line);
+}
+
+.button-primary,
+.button-secondary {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 24px;
+  border: 2px solid var(--line);
+  border-radius: 9px;
+  font-weight: 900;
+  text-decoration: none;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.button-primary { color: white; background: var(--orange); box-shadow: 4px 4px 0 var(--line); }
+.button-secondary { color: var(--ink); background: var(--surface); box-shadow: 4px 4px 0 var(--line); }
+.button-primary:hover, .button-secondary:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--line); }
+.button-primary:disabled, .button-secondary:disabled { cursor: not-allowed; opacity: .45; transform: none; box-shadow: none; }
+
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--orange);
+  font-size: .75rem;
+  font-weight: 900;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.section-kicker::before { content: ""; width: 24px; border-top: 3px solid currentColor; }
+
+.section-heading {
+  margin-top: 12px;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 950;
+  line-height: 1.08;
+  letter-spacing: -.055em;
+}
+
+.game-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 5px 5px 0 var(--line);
+}
+.game-card:nth-child(even) { transform: translateY(14px); }
+.game-card__topline {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--line);
+  color: var(--ink);
+  background: var(--game-soft);
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.game-card__art { width: 100%; height: 175px; padding: 14px 24px 4px; color: var(--ink); background: var(--game-soft); }
+.game-card__body { display: flex; flex: 1; flex-direction: column; align-items: flex-start; padding: 22px; }
+.game-card__mood { margin: 0 0 6px; color: var(--game-accent); font-size: .75rem; font-weight: 900; }
+.game-card h3 { margin: 0; font-size: 1.5rem; font-weight: 950; letter-spacing: -.04em; }
+.game-card__body > p:not(.game-card__mood) { margin: 13px 0 18px; color: var(--muted); font-size: .9rem; line-height: 1.75; }
+.game-facts { width: 100%; display: grid; grid-template-columns: 1fr 1fr; margin: auto 0 18px; border-block: 1px solid #b8b9ac; }
+.game-facts div { padding: 10px 0; }
+.game-facts div + div { padding-left: 14px; border-left: 1px solid #b8b9ac; }
+.game-facts dt { color: var(--muted); font-size: .67rem; font-weight: 800; }
+.game-facts dd { margin: 2px 0 0; color: var(--ink); font-size: .82rem; font-weight: 900; }
+.text-link { color: var(--ink); font-size: .86rem; font-weight: 900; text-decoration: underline; text-decoration-color: var(--game-accent, var(--orange)); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.text-link:hover { color: var(--game-accent, var(--orange)); }
+
+.form-label { display: block; margin-bottom: 8px; color: var(--ink); font-size: .78rem; font-weight: 900; }
+.form-input, .form-select {
+  width: 100%; min-height: 52px; padding: 12px 14px; color: var(--ink); background: #fffdf7;
+  border: 2px solid var(--line); border-radius: 8px; outline: none; font-weight: 800;
+}
+.form-input:focus, .form-select:focus { box-shadow: 0 0 0 3px #f3c85b; }
+.form-hint { margin-top: 7px; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+
+/* In-game paper adapter. Existing phase components keep their layout and
+   interaction logic while sharing the portal's flat, printed visual language. */
+.paper-game [class*="bg-slate-"] { background-color: var(--surface) !important; }
+.paper-game [class*="bg-black"] { background-color: var(--paper-deep) !important; }
+.paper-game [class*="text-slate-1"],
+.paper-game [class*="text-slate-2"],
+.paper-game .text-white { color: var(--ink) !important; }
+.paper-game [class*="text-slate-3"],
+.paper-game [class*="text-slate-4"],
+.paper-game [class*="text-slate-5"],
+.paper-game [class*="text-slate-6"] { color: var(--muted) !important; }
+.paper-game [class*="text-emerald-"] { color: var(--green) !important; }
+.paper-game [class*="text-rose-"] { color: #a43d36 !important; }
+.paper-game [class*="text-cyan-"] { color: var(--blue) !important; }
+.paper-game [class*="text-fuchsia-"] { color: #87558c !important; }
+.paper-game [class*="text-amber-"] { color: #986712 !important; }
+.paper-game [class*="border-slate-"],
+.paper-game [class*="border-white"] { border-color: var(--line) !important; }
+.paper-game [class*="shadow-"] { box-shadow: none !important; }
+.paper-game [class*="backdrop-blur"] { backdrop-filter: none !important; }
+.paper-game [class*="rounded-3xl"] { border-radius: 14px !important; }
+.paper-game [class*="rounded-2xl"] { border-radius: 10px !important; }
+.paper-game [class*="rounded-xl"] { border-radius: 8px !important; }
+.ito-game { --game-accent: var(--blue); }
+.fake-artist-game { --game-accent: var(--orange); }
+.ito-game input,
+.ito-game textarea,
+.fake-artist-game input,
+.fake-artist-game textarea,
+.fake-artist-game select { color: var(--ink); background: #fffdf7; border: 2px solid var(--line); }
+
+@media (max-width: 800px) {
+  .game-grid { grid-template-columns: 1fr; gap: 20px; }
+  .game-card:nth-child(even) { transform: none; }
+  .game-card { display: grid; grid-template-columns: 36% 64%; }
+  .game-card__topline { grid-column: 1 / -1; }
+  .game-card__art { height: 100%; min-height: 220px; padding: 16px 8px; }
+}
+
+@media (max-width: 560px) {
+  .site-container, .site-header { width: min(100% - 24px, 1120px); }
+  .site-header { min-height: 68px; }
+  .site-nav { gap: 14px; }
+  .site-nav a { font-size: .75rem; }
+  .site-nav a:last-child { display: none; }
+  .game-card { display: flex; }
+  .game-card__art { height: 165px; min-height: 0; }
+  .button-primary, .button-secondary { width: 100%; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+

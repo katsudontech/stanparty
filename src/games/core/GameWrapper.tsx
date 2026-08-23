@@ -13,18 +13,18 @@ interface GameWrapperProps {
 
 export function GameWrapper({ children, players, myUserId, showPlayerBar = true }: GameWrapperProps) {
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-1 sm:p-2 font-sans overflow-x-hidden">
-      <div className="w-full mx-auto">
-        <header className="flex justify-between items-center mb-2 pb-2 sm:mb-4 sm:pb-4 border-b border-slate-700 px-1">
+    <div className="party-game min-h-screen overflow-x-hidden bg-[var(--paper)] p-2 text-[var(--ink)] sm:p-4">
+      <div className="mx-auto w-full max-w-6xl">
+        <header className="mb-3 flex items-center justify-between border-b-2 border-[var(--line)] px-1 pb-3 sm:mb-5 sm:pb-4">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center font-bold">
+            <div className="site-brand__mark">
               SP
             </div>
-            <h1 className="text-xl font-bold tracking-wider">STANPARTY</h1>
+            <h1 className="text-base font-black tracking-[-.03em] sm:text-lg">StanParty</h1>
           </div>
           
           <button 
-            className="text-sm font-medium bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors border border-slate-700"
+            className="border-2 border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-xs font-black transition hover:bg-[var(--paper-deep)] sm:px-4 sm:text-sm"
             onClick={() => alert('TODO: 退室処理')}
           >
             退出する
@@ -32,7 +32,7 @@ export function GameWrapper({ children, players, myUserId, showPlayerBar = true 
         </header>
 
         {showPlayerBar && (
-          <section className="mb-4 rounded-2xl border border-slate-700 bg-slate-800/80 p-3" aria-label="参加プレイヤー">
+          <section className="mb-4 border-y-2 border-[var(--line)] py-3" aria-label="参加プレイヤー">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {players.map((player) => {
                 const isMe = player.userId === myUserId;
@@ -40,10 +40,10 @@ export function GameWrapper({ children, players, myUserId, showPlayerBar = true 
                 return (
                   <div
                     key={player.userId}
-                    className={`flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 ${
+                    className={`flex shrink-0 items-center gap-2 border px-3 py-2 ${
                       isMe
-                        ? 'border-indigo-400/70 bg-indigo-500/15'
-                        : 'border-slate-700 bg-slate-900/70'
+                        ? 'border-[var(--line)] bg-[var(--yellow)]'
+                        : 'border-[#b7b3a7] bg-[var(--surface)]'
                     }`}
                   >
                     <Avatar
@@ -53,10 +53,10 @@ export function GameWrapper({ children, players, myUserId, showPlayerBar = true 
                       size="sm"
                       decorative
                     />
-                    <span className="max-w-28 truncate text-sm font-bold text-slate-100">
+                    <span className="max-w-28 truncate text-sm font-black">
                       {player.name}
                     </span>
-                    {isMe && <span className="text-[10px] font-black text-indigo-300">あなた</span>}
+                    {isMe && <span className="text-[10px] font-black">あなた</span>}
                   </div>
                 );
               })}
@@ -64,7 +64,7 @@ export function GameWrapper({ children, players, myUserId, showPlayerBar = true 
           </section>
         )}
         
-        <main className="animate-in fade-in duration-500">
+        <main>
           {children}
         </main>
       </div>

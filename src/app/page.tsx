@@ -1,72 +1,127 @@
 'use client';
 
 import Link from 'next/link';
-import { useGuestAuth } from '@/hooks/useGuestAuth';
 import { Avatar } from '@/components/shared/Avatar';
+import { GameArtwork } from '@/components/site/GameArtwork';
+import { GameCard } from '@/components/site/GameCard';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { GAME_CATALOG } from '@/games/catalog';
+import { useGuestAuth } from '@/hooks/useGuestAuth';
 
 export default function Home() {
   const { profile, loading } = useGuestAuth();
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-slate-950 font-sans selection:bg-indigo-500/30">
-      {/* Dynamic Background Elements */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/30 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-fuchsia-600/20 blur-[120px] animate-pulse" style={{ animationDuration: '6s' }} />
-      </div>
+    <div className="site-shell">
+      <SiteHeader />
 
-      <main className="relative z-10 flex flex-col items-center text-center px-6 max-w-4xl w-full">
-        <div className="mb-8 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-          </span>
-          <span className="text-xs font-semibold tracking-wider text-slate-300 uppercase">StanParty is Live</span>
-        </div>
+      <main>
+        <section className="site-container grid min-h-[650px] items-center gap-12 py-16 lg:grid-cols-[1.05fr_.95fr] lg:py-20">
+          <div>
+            <p className="section-kicker">Party games in your pocket</p>
+            <h1 className="mt-5 max-w-3xl text-[clamp(2.7rem,11vw,4.3rem)] font-black leading-[.98] tracking-[-.07em]">
+              待ってる時間が、<br />いちばん盛り上がる。
+            </h1>
+            <p className="mt-7 max-w-xl text-base font-medium leading-8 text-[var(--muted)] sm:text-lg">
+              道具もアカウント登録もいりません。誰かが部屋をつくってURLを送れば、みんなのスマホですぐ遊べます。
+            </p>
+            <div className="mt-9 flex flex-col gap-4 sm:flex-row">
+              <Link href="/create_room" className="button-primary">
+                部屋をつくる <span aria-hidden="true">＋</span>
+              </Link>
+              <Link href="/join_room" className="button-secondary">
+                開いている部屋を探す <span aria-hidden="true">→</span>
+              </Link>
+            </div>
 
-        <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-indigo-200 to-fuchsia-400 mb-6 tracking-tight drop-shadow-sm pb-2">
-          待ち時間も<br className="md:hidden" />パーティに変えよう
-        </h1>
-        
-        <p className="text-lg md:text-xl text-slate-400 mb-12 max-w-2xl leading-relaxed font-medium">
-          テーマパークの長い待ち時間。スマホひとつで友達と一緒にサクッと遊べる、リアルタイムのマルチプレイパーティゲーム。
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-5 w-full justify-center">
-          <Link
-            href="/create_room"
-            className="group relative flex items-center justify-center gap-3 w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-lg transition-all duration-300 shadow-[0_0_40px_-10px_rgba(79,70,229,0.5)] hover:shadow-[0_0_60px_-15px_rgba(79,70,229,0.7)] hover:-translate-y-1"
-          >
-            <span>部屋を作成する</span>
-            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          </Link>
-          
-          <Link
-            href="/join_room"
-            className="group relative flex items-center justify-center gap-3 w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-2xl font-bold text-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-1"
-          >
-            <span>部屋に参加する</span>
-            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-          </Link>
-        </div>
-
-        {/* Profile Card */}
-        <div className="mt-24 flex flex-col items-center opacity-0 animate-[fadeIn_1s_ease-out_0.5s_forwards]">
-          <p className="text-xs text-slate-500 mb-4 font-bold tracking-widest uppercase">現在のプレイヤー</p>
-          <div className="flex items-center gap-4 px-6 py-3 bg-white/5 border border-white/10 rounded-full backdrop-blur-md shadow-xl transition-transform hover:scale-105">
-            {loading ? (
-              <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse" />
-            ) : (
-              <Avatar avatarUrl={profile?.avatar} name={profile?.name ?? 'ゲスト'} size="md" />
-            )}
-            <div className="text-left pr-2">
-              <div className="text-sm font-bold text-white">{loading ? '読み込み中...' : profile?.name}</div>
-              <div className="text-xs text-indigo-400 font-semibold">Guest Profile</div>
+            <div className="mt-10 flex items-center gap-3 border-t border-[var(--line)] pt-5 sm:max-w-md">
+              {loading ? (
+                <span className="h-10 w-10 animate-pulse rounded-full bg-[var(--paper-deep)]" />
+              ) : (
+                <Avatar avatarUrl={profile?.avatar} name={profile?.name ?? 'ゲスト'} size="md" />
+              )}
+              <div>
+                <p className="text-[.68rem] font-black tracking-[.12em] text-[var(--muted)]">この端末のプレイヤー</p>
+                <p className="font-black">{loading ? '読み込み中…' : profile?.name || 'ゲスト'}</p>
+              </div>
             </div>
           </div>
-        </div>
+
+          <div className="relative mx-auto hidden w-full max-w-[500px] lg:block" aria-hidden="true">
+            <div className="paper-card relative ml-auto w-[82%] rotate-[2deg] overflow-hidden bg-[#c8e1e7] p-5">
+              <div className="flex items-center justify-between border-b-2 border-[var(--line)] pb-3 text-xs font-black">
+                <span>GAME 03</span><span>協力</span>
+              </div>
+              <GameArtwork gameId="ito" className="h-56 w-full" />
+              <p className="text-3xl font-black tracking-[-.05em]">ito</p>
+            </div>
+            <div className="paper-card absolute -left-4 top-16 w-[68%] -rotate-[5deg] overflow-hidden bg-[#f2dfa8] p-5">
+              <div className="flex items-center justify-between border-b-2 border-[var(--line)] pb-3 text-xs font-black">
+                <span>GAME 02</span><span>駆け引き</span>
+              </div>
+              <GameArtwork gameId="coyote" className="h-48 w-full" />
+              <p className="text-3xl font-black tracking-[-.05em]">Coyote</p>
+            </div>
+            <div className="absolute -bottom-8 right-0 rotate-[4deg] border-2 border-[var(--line)] bg-[var(--orange)] px-6 py-4 text-lg font-black text-white shadow-[4px_4px_0_var(--line)]">
+              3 GAMES<br /><span className="text-xs">いま遊べます</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="games" className="border-y-2 border-[var(--line)] bg-[var(--paper-deep)] py-20 sm:py-24">
+          <div className="site-container">
+            <div className="mb-12 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">
+              <div>
+                <p className="section-kicker">Games</p>
+                <h2 className="section-heading">今日は、なにして遊ぶ？</h2>
+              </div>
+              <Link href="/games" className="text-link">ゲーム一覧を開く →</Link>
+            </div>
+            <div className="game-grid">
+              {GAME_CATALOG.map((game, index) => <GameCard key={game.id} game={game} index={index + 1} />)}
+            </div>
+          </div>
+        </section>
+
+        <section className="site-container py-20 sm:py-28">
+          <div className="grid gap-10 lg:grid-cols-[.75fr_1.25fr] lg:gap-20">
+            <div>
+              <p className="section-kicker">How to start</p>
+              <h2 className="section-heading">集合したら、<br />3ステップ。</h2>
+              <p className="mt-6 max-w-sm leading-7 text-[var(--muted)]">面倒な登録やアプリのインストールはありません。ブラウザだけで始められます。</p>
+            </div>
+            <ol className="grid gap-4 sm:grid-cols-3">
+              {[
+                ['01', '部屋をつくる', '名前と部屋名を決めます。ゲームはあとから選べます。'],
+                ['02', 'URLを送る', '待機画面の招待ボタンから、友達へURLを共有します。'],
+                ['03', 'ゲーム開始', '全員そろったら、遊びたいゲームを選んでスタート。'],
+              ].map(([number, title, body]) => (
+                <li key={number} className="border-l-2 border-[var(--line)] py-2 pl-5">
+                  <span className="text-4xl font-black text-[var(--orange)]">{number}</span>
+                  <h3 className="mt-5 text-lg font-black">{title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="border-t-2 border-[var(--line)] bg-[var(--yellow)] py-14">
+          <div className="site-container flex flex-col items-start justify-between gap-7 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm font-black">準備はできましたか？</p>
+              <h2 className="mt-1 text-3xl font-black tracking-[-.05em] sm:text-4xl">待ち時間を、遊ぶ時間に。</h2>
+            </div>
+            <Link href="/create_room" className="button-secondary bg-white">無料で部屋をつくる →</Link>
+          </div>
+        </section>
       </main>
 
+      <footer className="border-t-2 border-[var(--line)] bg-[var(--ink)] py-8 text-[var(--surface)]">
+        <div className="site-container flex items-center justify-between gap-4 text-xs font-bold">
+          <span>StanParty</span><span>スマホひとつで、みんなと遊ぼう。</span>
+        </div>
+      </footer>
     </div>
   );
 }
