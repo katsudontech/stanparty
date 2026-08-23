@@ -10,9 +10,10 @@ interface RuleSettingPhaseProps {
     onSaveRules: (rules: OneNightRuleSettings) => void;
     onChangeRules: (rules: OneNightRuleSettings) => void;
     isHost: boolean;
+    onBackToLobby: () => Promise<void>;
 }
 
-export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost }: RuleSettingPhaseProps) {
+export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost, onBackToLobby }: RuleSettingPhaseProps) {
 
     const [hostRuleSettings, setRuleSettings] = useState<OneNightRuleSettings>(propRuleSettings);
     const ruleSettings = isHost ? hostRuleSettings : propRuleSettings;
@@ -76,7 +77,7 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
                 </div>
 
                 {/* アクションボタン */}
-                <div className="mt-10 flex justify-center">
+                <div className="mt-10 flex flex-col justify-center gap-3">
                     <button 
                         onClick={() => onSaveRules(ruleSettings)}
                         disabled={!isHost}
@@ -84,6 +85,15 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
                     >
                         {isHost ? 'ゲームを開始する' : 'ホストの設定待ち...'}
                     </button>
+                    {isHost && (
+                        <button
+                            type="button"
+                            onClick={() => void onBackToLobby()}
+                            className="w-full rounded-full border border-slate-600 bg-slate-800 px-6 py-3 font-bold text-slate-200 transition-colors hover:bg-slate-700"
+                        >
+                            ロビーへ戻る
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

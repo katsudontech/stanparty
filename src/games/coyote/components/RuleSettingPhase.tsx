@@ -8,9 +8,10 @@ interface RuleSettingPhaseProps {
     isHost: boolean;
     onStartGame: (maxHp: number) => void;
     initialMaxHp: number;
+    onBackToLobby: () => Promise<void>;
 }
 
-export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp }: RuleSettingPhaseProps) {
+export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp, onBackToLobby }: RuleSettingPhaseProps) {
     const [maxHp, setMaxHp] = useState(initialMaxHp);
 
     return (
@@ -61,12 +62,21 @@ export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp }:
                 </div>
 
                 {isHost ? (
-                    <button
-                        onClick={() => onStartGame(maxHp)}
-                        className="w-full bg-indigo-600 hover:bg-indigo-500 transition text-white py-4 px-4 rounded-xl font-bold shadow-[0_0_20px_-5px_rgba(79,70,229,0.5)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                        設定を完了して開始
-                    </button>
+                    <div className="space-y-3">
+                        <button
+                            onClick={() => onStartGame(maxHp)}
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 transition text-white py-4 px-4 rounded-xl font-bold shadow-[0_0_20px_-5px_rgba(79,70,229,0.5)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            設定を完了して開始
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => void onBackToLobby()}
+                            className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 font-bold text-slate-200 transition hover:bg-slate-700"
+                        >
+                            ロビーへ戻る
+                        </button>
+                    </div>
                 ) : (
                     <div className="text-center text-slate-400 font-bold p-4 bg-slate-800/50 rounded-xl border border-slate-700">
                         ホストがルールを設定しています...

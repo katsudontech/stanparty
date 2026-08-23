@@ -16,9 +16,10 @@ import { useFakeArtistGame } from './hooks/useFakeArtistGame';
 interface FakeArtistGameProps {
   roomState: RoomState;
   myUserId: string | null;
+  onBackToLobby: () => Promise<void>;
 }
 
-export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
+export function FakeArtistGame({ roomState, myUserId, onBackToLobby }: FakeArtistGameProps) {
   // DBからのデータが空（null）の場合でも、デフォルト値とマージして完全な状態を担保する
   const rawState = roomState.game_state as Partial<FakeArtistGameState> | null;
   const gameState: FakeArtistGameState = {
@@ -61,6 +62,7 @@ export function FakeArtistGame({ roomState, myUserId }: FakeArtistGameProps) {
             onSaveRules={handleSaveRules}
             onChangeRules={(newRules) => updateGameState({ ruleSettings: newRules })}
             isHost={isHost}
+            onBackToLobby={onBackToLobby}
           />
         );
 

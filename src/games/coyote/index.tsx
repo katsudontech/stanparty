@@ -11,6 +11,7 @@ import { RuleSettingPhase } from './components/RuleSettingPhase';
 interface CoyoteGameProps {
     roomState: RoomState;
     myUserId: string | null;
+    onBackToLobby: () => Promise<void>;
 }
 
 const formatCardForCoyoteResult = (card: string | null, questionRevealedCard?: string | null): string => {
@@ -22,14 +23,14 @@ const formatCardForCoyoteResult = (card: string | null, questionRevealedCard?: s
     return card;
 };
 
-export function CoyoteGame({ roomState, myUserId }: CoyoteGameProps) {
+export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGameProps) {
     const rawState = roomState.game_state as Partial<CoyoteGameState> | null;
     const gameState: CoyoteGameState = {
         ...DEFAULT_COYOTE_STATE,
         ...(rawState || {})
     } as CoyoteGameState;
 
-    const { startGame, handleCoyote, handleNextGame, backToLobby } = useCoyoteGame(roomState);
+    const { startGame, handleCoyote, handleNextGame } = useCoyoteGame(roomState);
 
     const players = roomState.players;
     const isHost = Boolean(myUserId && roomState.host_id === myUserId);
@@ -127,6 +128,7 @@ export function CoyoteGame({ roomState, myUserId }: CoyoteGameProps) {
                 isHost={isHost}
                 onStartGame={(maxHp: number) => { startGame(maxHp); }}
                 initialMaxHp={gameState.ruleSettings?.maxHp || 3}
+                onBackToLobby={onBackToLobby}
             />
         );
     }
@@ -138,7 +140,7 @@ export function CoyoteGame({ roomState, myUserId }: CoyoteGameProps) {
                 isHost={isHost}
                 winnerId={gameState.winnerId}
                 players={players}
-                onBackToLobby={backToLobby}
+                onBackToLobby={onBackToLobby}
             />
         );
     }

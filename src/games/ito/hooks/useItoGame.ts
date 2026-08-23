@@ -174,15 +174,6 @@ export function useItoGame(roomState: RoomState) {
     await replaceGameState(createDefaultItoState());
   };
 
-  const handleBackToLobby = async () => {
-    const { error } = await supabase
-      .from('rooms')
-      .update({ status: 'waiting', game_state: {} })
-      .eq('id', roomState.id);
-
-    if (error) throw toError(error, 'ロビーに戻れませんでした');
-  };
-
   return {
     gameState,
     handleSaveRules,
@@ -194,6 +185,5 @@ export function useItoGame(roomState: RoomState) {
     handleStartShowdown,
     handleRevealNextCard,
     handleResetGame,
-    handleBackToLobby,
   };
 }

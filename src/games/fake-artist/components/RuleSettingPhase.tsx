@@ -8,9 +8,10 @@ interface RuleSettingPhaseProps {
   onSaveRules: (rules: RuleSettings) => void;
   onChangeRules: (rules: RuleSettings) => void;
   isHost: boolean;
+  onBackToLobby: () => Promise<void>;
 }
 
-export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost }: RuleSettingPhaseProps) {
+export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost, onBackToLobby }: RuleSettingPhaseProps) {
   const [hostRuleSettings, setRuleSettings] = useState<RuleSettings>(propRuleSettings);
   const ruleSettings = isHost ? hostRuleSettings : propRuleSettings;
 
@@ -111,12 +112,21 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
       </div>
 
       {isHost ? (
-        <button
-          onClick={handleSaveRules}
-          className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full"
-        >
-          ルールを確定してゲーム開始
-        </button>
+        <div className="mt-6 space-y-3">
+          <button
+            onClick={handleSaveRules}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full"
+          >
+            ルールを確定してゲーム開始
+          </button>
+          <button
+            type="button"
+            onClick={() => void onBackToLobby()}
+            className="w-full rounded-lg border border-slate-600 bg-slate-800 px-6 py-2 font-bold text-slate-200 transition-colors hover:bg-slate-700"
+          >
+            ロビーへ戻る
+          </button>
+        </div>
       ) : (
         <div className="mt-6 text-slate-300 bg-slate-800 p-4 rounded-lg text-center">
           ホストがルールを設定中です...

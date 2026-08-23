@@ -26,7 +26,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         refreshRoom
     } = useRoomSubscription(roomId, myUserId);
 
-    const { handleChangeGame, handleStartGame } = useRoomControls(roomId);
+    const { handleChangeGame, handleStartGame, handleBackToLobby } = useRoomControls(roomId);
 
     const myPlayer = roomState?.players.find((player) => player.userId === myUserId);
     const isJoined = Boolean(
@@ -64,7 +64,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         if (roomState.game_type === 'fake-artist') {
             return (
                 <GameWrapper>
-                    <FakeArtistGame roomState={roomState} myUserId={myUserId} />
+                    <FakeArtistGame
+                        roomState={roomState}
+                        myUserId={myUserId}
+                        onBackToLobby={handleBackToLobby}
+                    />
                 </GameWrapper>
             );
         }
@@ -72,7 +76,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         if (roomState.game_type === 'coyote') {
             return (
                 <GameWrapper>
-                    <CoyoteGame roomState={roomState} myUserId={myUserId} />
+                    <CoyoteGame
+                        roomState={roomState}
+                        myUserId={myUserId}
+                        onBackToLobby={handleBackToLobby}
+                    />
                 </GameWrapper>
             );
         }
@@ -80,7 +88,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         if (roomState.game_type === 'one-night-werewolf') {
             return (
                 <GameWrapper>
-                    <OneNightWerewolfGame roomState={roomState} myUserId={myUserId} />
+                    <OneNightWerewolfGame
+                        roomState={roomState}
+                        myUserId={myUserId}
+                        onBackToLobby={handleBackToLobby}
+                    />
                 </GameWrapper>
             );
         }
@@ -88,7 +100,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         if (roomState.game_type === 'ito') {
             return (
                 <GameWrapper>
-                    <ItoGame roomState={roomState} myUserId={myUserId} />
+                    <ItoGame
+                        roomState={roomState}
+                        myUserId={myUserId}
+                        onBackToLobby={handleBackToLobby}
+                    />
                 </GameWrapper>
             );
         }

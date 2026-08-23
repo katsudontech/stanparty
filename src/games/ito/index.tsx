@@ -12,6 +12,7 @@ import { useItoGame } from './hooks/useItoGame';
 interface ItoGameProps {
   roomState: RoomState;
   myUserId: string;
+  onBackToLobby: () => Promise<void>;
 }
 
 const PHASE_LABELS = {
@@ -22,7 +23,7 @@ const PHASE_LABELS = {
   result: '結果発表',
 } as const;
 
-export function ItoGame({ roomState, myUserId }: ItoGameProps) {
+export function ItoGame({ roomState, myUserId, onBackToLobby }: ItoGameProps) {
   const isHost = roomState.host_id === myUserId;
   const {
     gameState,
@@ -35,7 +36,6 @@ export function ItoGame({ roomState, myUserId }: ItoGameProps) {
     handleStartShowdown,
     handleRevealNextCard,
     handleResetGame,
-    handleBackToLobby,
   } = useItoGame(roomState);
 
   const renderPhase = () => {
@@ -47,7 +47,7 @@ export function ItoGame({ roomState, myUserId }: ItoGameProps) {
             initialCardsPerPlayer={gameState.ruleSettings.cardsPerPlayer}
             isHost={isHost}
             onStart={handleSaveRules}
-            onBackToLobby={handleBackToLobby}
+            onBackToLobby={onBackToLobby}
           />
         );
 

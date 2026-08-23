@@ -26,5 +26,18 @@ export function useRoomControls(roomId: string) {
         }
     };
 
-    return { handleChangeGame, handleStartGame };
+    const handleBackToLobby = async () => {
+        const supabase = createClient();
+        const { error } = await supabase
+            .from('rooms')
+            .update({ status: 'waiting', game_state: {} })
+            .eq('id', roomId);
+
+        if (error) {
+            console.error('ロビーへの復帰に失敗しました:', error);
+            alert('ロビーに戻れませんでした');
+        }
+    };
+
+    return { handleChangeGame, handleStartGame, handleBackToLobby };
 }

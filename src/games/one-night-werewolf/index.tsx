@@ -11,9 +11,10 @@ import { useOneNightGame } from "./hooks/useOneNightPhase";
 interface OneNightWerewolfGameProps {
     roomState: RoomState;
     myUserId: string | null;
+    onBackToLobby: () => Promise<void>;
 }
 
-export function OneNightWerewolfGame({ roomState, myUserId }: OneNightWerewolfGameProps) {
+export function OneNightWerewolfGame({ roomState, myUserId, onBackToLobby }: OneNightWerewolfGameProps) {
 
     const rawState = roomState.game_state as Partial<OneNightGameState> | null;
     const gameState: OneNightGameState = {
@@ -49,6 +50,7 @@ export function OneNightWerewolfGame({ roomState, myUserId }: OneNightWerewolfGa
                         onSaveRules={handleSaveRule}
                         isHost={isHost}
                         onChangeRules={(rules) => handleSaveRule(rules)}
+                        onBackToLobby={onBackToLobby}
                     />
                 );
             case "night_phase":
