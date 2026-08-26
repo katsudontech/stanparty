@@ -183,6 +183,25 @@ button, input, select, textarea { font: inherit; }
 .form-input:focus, .form-select:focus { box-shadow: 0 0 0 3px #f3c85b; }
 .form-hint { margin-top: 7px; color: var(--muted); font-size: .75rem; line-height: 1.5; }
 
+.rules-dialog {
+  width: min(920px, calc(100% - 24px));
+  max-width: none;
+  max-height: 88dvh;
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 8px 8px 0 var(--line);
+}
+
+.rules-dialog::backdrop {
+  background: rgb(23 35 29 / 68%);
+  backdrop-filter: blur(3px);
+}
+
 /* In-game paper adapter. Existing phase components keep their layout and
    interaction logic while sharing the portal's flat, printed visual language. */
 .paper-game [class*="bg-slate-"] { background-color: var(--surface) !important; }
@@ -241,4 +260,3 @@ button, input, select, textarea { font: inherit; }
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
-

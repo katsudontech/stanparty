@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Avatar } from '@/components/shared/Avatar';
+import { GameRulesDialog } from '@/components/shared/GameRulesDialog';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { GAME_CATALOG, getGameById, getGamePlayerCountError } from '@/games/catalog';
 
@@ -18,6 +19,7 @@ interface WaitingRoomProps {
 
 export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStartGame, onChangeGame }: WaitingRoomProps) {
   const [copied, setCopied] = useState(false);
+  const [isRulesOpen, setIsRulesOpen] = useState(false);
   const onlineUserIdSet = new Set(onlineUserIds);
 
   const handleCopyUrl = async () => {
@@ -124,6 +126,22 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
               </p>
             )}
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{selectedGame?.summary}</p>
+            {selectedGame && (
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="button"
+                  className="text-link self-start"
+                  aria-haspopup="dialog"
+                  onClick={() => setIsRulesOpen(true)}
+                >
+                  詳しいルールを見る →
+                </button>
+                <p className="flex items-center gap-2 text-xs font-bold text-[var(--muted)]">
+                  <span className="inline-block h-2 w-2 rounded-full bg-[var(--green)]" aria-hidden="true" />
+                  ロビーを離れずに開きます
+                </p>
+              </div>
+            )}
             {playerCountError && (
               <p className="mt-3 border-2 border-[var(--orange)] bg-[#fff0e6] px-3 py-2 text-sm font-black text-[#9f3d26]" role="alert">
                 {playerCountError}
@@ -147,6 +165,13 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
           </section>
         </div>
       </main>
+      {selectedGame && (
+        <GameRulesDialog
+          game={selectedGame}
+          isOpen={isRulesOpen}
+          onClose={() => setIsRulesOpen(false)}
+        />
+      )}
     </div>
   );
 }

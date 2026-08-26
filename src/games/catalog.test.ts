@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { getGamePlayerCountError } from './catalog';
+import { GAME_CATALOG, getGamePlayerCountError } from './catalog';
+
+describe('game catalog details', () => {
+  it('ロビーで各ゲームの詳しいルールを表示できる', () => {
+    GAME_CATALOG.forEach((game) => {
+      expect(game.description.length).toBeGreaterThanOrEqual(2);
+      expect(game.steps.length).toBeGreaterThanOrEqual(4);
+      expect(game.tips.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+});
 
 describe('game player count', () => {
   it.each([
