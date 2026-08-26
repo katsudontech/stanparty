@@ -27,7 +27,7 @@ begin
       max_players := 10;
       game_name := 'エセ芸術家';
     when 'coyote' then
-      min_players := 3;
+      min_players := 2;
       max_players := 10;
       game_name := 'Coyote';
     when 'ito' then

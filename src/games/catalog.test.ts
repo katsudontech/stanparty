@@ -5,7 +5,7 @@ import { getGamePlayerCountError } from './catalog';
 describe('game player count', () => {
   it.each([
     ['fake-artist', 2, 'エセ芸術家は3人以上で遊べます。あと1人必要です'],
-    ['coyote', 2, 'Coyoteは3人以上で遊べます。あと1人必要です'],
+    ['coyote', 1, 'Coyoteは2人以上で遊べます。あと1人必要です'],
     ['ito', 1, 'itoは2人以上で遊べます。あと1人必要です'],
   ])('%s は最少人数未満で開始できない', (gameId, playerCount, expectedMessage) => {
     expect(getGamePlayerCountError(gameId, playerCount)).toBe(expectedMessage);
@@ -14,7 +14,7 @@ describe('game player count', () => {
   it.each([
     ['fake-artist', 3],
     ['fake-artist', 10],
-    ['coyote', 3],
+    ['coyote', 2],
     ['coyote', 10],
     ['ito', 2],
     ['ito', 14],
