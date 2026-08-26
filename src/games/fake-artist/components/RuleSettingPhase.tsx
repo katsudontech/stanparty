@@ -29,13 +29,6 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
     onChangeRules(newSettings);
   };
 
-  const handleShowFakeThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isHost) return;
-    const newSettings = { ...ruleSettings, showFakeTheme: e.target.checked };
-    setRuleSettings(newSettings);
-    onChangeRules(newSettings);
-  };
-
   const handleQuestionerDrawsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isHost) return;
     const newSettings = { ...ruleSettings, questionerDraws: e.target.checked };
@@ -79,19 +72,6 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
               className={`form-checkbox h-5 w-5 text-blue-600 bg-slate-800 border-slate-600 rounded ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
             <span className="text-slate-300">自動お題選択</span>
-          </label>
-        </div>
-
-        <div className="mb-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={ruleSettings.showFakeTheme}
-              onChange={handleShowFakeThemeChange}
-              disabled={!isHost}
-              className={`form-checkbox h-5 w-5 text-blue-600 bg-slate-800 border-slate-600 rounded ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
-            />
-            <span className="text-slate-300">エセ芸術家には偽のお題を表示する</span>
           </label>
         </div>
 

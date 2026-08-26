@@ -17,7 +17,6 @@ export interface FakeArtistPlayerState {
 export interface RuleSettings {
   roundLimit: number;
   autoThemeSelection: boolean;
-  showFakeTheme: boolean;
   questionerDraws: boolean;
 }
 
@@ -38,7 +37,7 @@ export interface FakeArtistGameState {
 export const DEFAULT_FAKE_ARTIST_STATE: FakeArtistGameState = {
   phase: 'rule_setting',
   playerStates: {},
-  ruleSettings: { roundLimit: 2, autoThemeSelection: false, showFakeTheme: false, questionerDraws: false },
+  ruleSettings: { roundLimit: 2, autoThemeSelection: true, questionerDraws: false },
   themeGenre: null,
   theme: null,
   currentTurnPlayerId: null,
@@ -68,4 +67,3 @@ export interface ChatMessagePayload {
   senderId: string;
   message: string;
 }
-
