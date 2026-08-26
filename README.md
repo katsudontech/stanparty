@@ -188,6 +188,7 @@ supabase/migrations/20260812010000_game_action_permissions.sql
 supabase/migrations/20260812020000_harden_coyote_player_keys.sql
 supabase/migrations/20260812030000_create_room_rpc.sql
 supabase/migrations/20260824000000_add_ito_game_actions.sql
+supabase/migrations/20260827000000_enforce_game_player_count_on_start.sql
 ```
 
 開発サーバーを起動します。

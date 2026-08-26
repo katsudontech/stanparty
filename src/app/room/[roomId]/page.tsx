@@ -21,6 +21,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         roomState,
         players,
         onlineUserIds,
+        isPresenceSynced,
         loading,
         error,
         refreshRoom
@@ -34,7 +35,15 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     );
     const isHost = Boolean(roomState && myUserId && roomState.host_id === myUserId);
 
-    useHostAutoKick(roomId, isHost, roomState, players, onlineUserIds, myUserId);
+    useHostAutoKick(
+        roomId,
+        isHost,
+        roomState,
+        players,
+        onlineUserIds,
+        isPresenceSynced,
+        myUserId
+    );
 
     if (!myUserId || loading) {
         return <div className="site-shell flex min-h-screen flex-col items-center justify-center gap-4"><div className="h-9 w-9 animate-spin rounded-full border-4 border-[var(--paper-deep)] border-t-[var(--orange)]" /><p className="font-black text-[var(--muted)]">ルームを読み込んでいます…</p></div>;
@@ -53,6 +62,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
             <WaitingRoom
                 roomState={roomState}
                 players={players}
+                onlineUserIds={onlineUserIds}
                 isHost={isHost}
                 onStartGame={handleStartGame}
                 onChangeGame={handleChangeGame}

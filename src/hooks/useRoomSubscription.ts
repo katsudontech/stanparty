@@ -27,7 +27,11 @@ async function loadRoom(roomId: string): Promise<RoomState | null> {
 export function useRoomSubscription(roomId: string, myUserId?: string | null) {
   const [roomState, setRoomState] = useState<RoomState | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
+  const [presenceSnapshot, setPresenceSnapshot] = useState<{
+    roomId: string;
+    userId: string;
+    onlineUserIds: string[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -132,6 +136,16 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
     )
   );
 
+  const currentPresenceSnapshot =
+    isRoomMember &&
+    myUserId &&
+    presenceSnapshot?.roomId === roomId &&
+    presenceSnapshot.userId === myUserId
+      ? presenceSnapshot
+      : null;
+  const onlineUserIds = currentPresenceSnapshot?.onlineUserIds ?? [];
+  const isPresenceSynced = currentPresenceSnapshot !== null;
+
   useEffect(() => {
     if (!myUserId || !isRoomMember) return;
 
@@ -156,7 +170,11 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
           })
         );
 
-        setOnlineUserIds(Array.from(new Set(onlineIds)));
+        setPresenceSnapshot({
+          roomId,
+          userId: myUserId,
+          onlineUserIds: Array.from(new Set(onlineIds))
+        });
       });
 
     const subscribeToPresence = async () => {
@@ -185,6 +203,7 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
     roomState,
     players,
     onlineUserIds,
+    isPresenceSynced,
     loading,
     error,
     refreshRoom

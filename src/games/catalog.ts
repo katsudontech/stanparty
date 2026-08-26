@@ -8,6 +8,8 @@ export interface GameCatalogEntry {
   summary: string;
   description: string[];
   players: string;
+  minPlayers: number;
+  maxPlayers: number;
   duration: string;
   difficulty: string;
   mood: string;
@@ -30,7 +32,9 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
       '本物の芸術家は同じお題を知っていますが、エセ芸術家だけはお題を知りません。順番に一筆ずつ描き、絵を完成させながら、誰の線が怪しいかを観察します。',
       '本物は分かりやすすぎる絵を描くとお題がばれ、曖昧すぎると自分が疑われます。短い一筆に性格と駆け引きが出るゲームです。',
     ],
-    players: '4〜10人',
+    players: '3〜10人',
+    minPlayers: 3,
+    maxPlayers: 10,
     duration: '約15分',
     difficulty: 'かんたん',
     mood: '推理・お絵描き',
@@ -41,7 +45,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
       '全員の線を見返すと急に犯人らしさが見えてくる',
       '見破られても、お題を当てれば逆転できる',
     ],
-    goodFor: ['絵の上手さに関係なく遊びたい', '会話と推理の両方を楽しみたい', '4人以上で盛り上がりたい'],
+    goodFor: ['絵の上手さに関係なく遊びたい', '会話と推理の両方を楽しみたい', '3人以上で盛り上がりたい'],
     steps: [
       { title: '役割を確認', body: '1人がエセ芸術家になります。本物の芸術家だけがお題を確認します。' },
       { title: '一筆ずつ描く', body: '順番に一筆だけ描きます。お題を言葉で伝えてはいけません。' },
@@ -61,6 +65,8 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
       '数字だけでなく、ほかの人の表情や宣言の強さも大切な手がかり。スマホをおでこに掲げる姿まで含めて盛り上がります。',
     ],
     players: '3〜10人',
+    minPlayers: 3,
+    maxPlayers: 10,
     duration: '約10分',
     difficulty: 'ふつう',
     mood: '駆け引き・度胸',
@@ -92,6 +98,8 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
       '「強い動物」や「テンションが上がること」など、答えに正解がないお題だからこそ価値観の違いが見えてきます。成功しても失敗しても会話が残るゲームです。',
     ],
     players: '2〜14人',
+    minPlayers: 2,
+    maxPlayers: 14,
     duration: '約10分',
     difficulty: 'かんたん',
     mood: '協力・価値観',
@@ -118,3 +126,21 @@ export function getGameById(id: string): GameCatalogEntry | undefined {
   return GAME_CATALOG.find((game) => game.id === id);
 }
 
+export function getGamePlayerCountError(gameId: string, playerCount: number): string | null {
+  const game = getGameById(gameId);
+
+  if (!game) {
+    return '選択したゲームは現在プレイできません';
+  }
+
+  if (playerCount < game.minPlayers) {
+    const missingPlayerCount = game.minPlayers - playerCount;
+    return `${game.shortName}は${game.minPlayers}人以上で遊べます。あと${missingPlayerCount}人必要です`;
+  }
+
+  if (playerCount > game.maxPlayers) {
+    return `${game.shortName}は${game.maxPlayers}人までで遊べます`;
+  }
+
+  return null;
+}

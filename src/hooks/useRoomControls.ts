@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
+import { getGamePlayerCountError } from '@/games/catalog';
 
 export function useRoomControls(roomId: string) {
     const handleChangeGame = async (gameId: string) => {
@@ -15,10 +16,33 @@ export function useRoomControls(roomId: string) {
 
     const handleStartGame = async () => {
         const supabase = createClient();
+        const { data: room, error: roomError } = await supabase
+            .from('rooms')
+            .select('game_type, players, status')
+            .eq('id', roomId)
+            .single();
+
+        if (roomError || !room) {
+            console.error('ゲーム開始前のルーム確認に失敗しました:', roomError);
+            alert('ゲームの開始に失敗しました');
+            return;
+        }
+
+        if (room.status !== 'waiting') return;
+
+        const playerCount = Array.isArray(room.players) ? room.players.length : 0;
+        const playerCountError = getGamePlayerCountError(room.game_type, playerCount);
+
+        if (playerCountError) {
+            alert(playerCountError);
+            return;
+        }
+
         const { error } = await supabase
             .from('rooms')
             .update({ status: 'playing' })
-            .eq('id', roomId);
+            .eq('id', roomId)
+            .eq('status', 'waiting');
 
         if (error) {
             console.error('ゲーム開始に失敗しました:', error);

@@ -3,20 +3,22 @@
 import { useState } from 'react';
 import { Avatar } from '@/components/shared/Avatar';
 import { SiteHeader } from '@/components/site/SiteHeader';
-import { GAME_CATALOG, getGameById } from '@/games/catalog';
+import { GAME_CATALOG, getGameById, getGamePlayerCountError } from '@/games/catalog';
 
 import type { RoomState, Player } from '@/games/core/types';
 
 interface WaitingRoomProps {
   roomState: RoomState;
   players: Player[];
+  onlineUserIds: string[];
   isHost: boolean;
   onStartGame: () => void;
   onChangeGame: (gameId: string) => void;
 }
 
-export function WaitingRoom({ roomState, players, isHost, onStartGame, onChangeGame }: WaitingRoomProps) {
+export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStartGame, onChangeGame }: WaitingRoomProps) {
   const [copied, setCopied] = useState(false);
+  const onlineUserIdSet = new Set(onlineUserIds);
 
   const handleCopyUrl = async () => {
     try {
@@ -29,6 +31,12 @@ export function WaitingRoom({ roomState, players, isHost, onStartGame, onChangeG
   };
 
   const selectedGame = getGameById(roomState.game_type);
+  const playerCountError = getGamePlayerCountError(roomState.game_type, players.length);
+
+  const handleStartGame = () => {
+    if (playerCountError) return;
+    onStartGame();
+  };
 
   return (
     <div className="site-shell">
@@ -81,8 +89,8 @@ export function WaitingRoom({ roomState, players, isHost, onStartGame, onChangeG
                     )}
                   </div>
                   <span className="text-xs font-bold text-[var(--muted)]">
-                    <span className={`mr-1 inline-block h-2 w-2 rounded-full ${player.isOnline ? 'bg-[var(--green)]' : 'bg-[#a39f92]'}`} />
-                    {player.isOnline ? 'オンライン' : 'オフライン'}
+                    <span className={`mr-1 inline-block h-2 w-2 rounded-full ${onlineUserIdSet.has(player.userId) ? 'bg-[var(--green)]' : 'bg-[#a39f92]'}`} />
+                    {onlineUserIdSet.has(player.userId) ? 'オンライン' : 'オフライン'}
                   </span>
                 </div>
               </li>
@@ -116,14 +124,20 @@ export function WaitingRoom({ roomState, players, isHost, onStartGame, onChangeG
               </p>
             )}
             <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{selectedGame?.summary}</p>
+            {playerCountError && (
+              <p className="mt-3 border-2 border-[var(--orange)] bg-[#fff0e6] px-3 py-2 text-sm font-black text-[#9f3d26]" role="alert">
+                {playerCountError}
+              </p>
+            )}
           </div>
 
           {isHost ? (
             <button
               className="button-primary mt-6 w-full text-lg"
-              onClick={onStartGame}
+              onClick={handleStartGame}
+              disabled={Boolean(playerCountError)}
             >
-              このゲームを開始 →
+              {playerCountError ? '参加者を待っています' : 'このゲームを開始 →'}
             </button>
           ) : (
             <div className="mt-6 w-full border-2 border-dashed border-[#b9b5a8] bg-[var(--paper-deep)] px-4 py-4 text-center font-bold text-[var(--muted)]">
