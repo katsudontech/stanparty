@@ -11,12 +11,14 @@ interface GuessingPhaseProps {
   gameState: FakeArtistGameState;
   myUserId: string | null;
   hostId: string;
-  onGuessSubmit: (guess: string) => void;
-  onJudgeSubmit: (isCorrect: boolean) => void;
+  onGuessSubmit: (guess: string) => Promise<void>;
+  onJudgeSubmit: (isCorrect: boolean) => Promise<void>;
 }
 
 export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, onGuessSubmit, onJudgeSubmit }: GuessingPhaseProps) {
   const [guessInput, setGuessInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // エセ芸術家のIDを特定
   const fakeArtistId = Object.keys(gameState.playerStates).find(
@@ -33,10 +35,32 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, on
   const isJudge = myUserId === judgeId;
   const hasGuessed = gameState.fakeArtistGuess !== null;
 
-  const handleGuessSubmit = (e: React.FormEvent) => {
+  const handleGuessSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (guessInput.trim()) {
-      onGuessSubmit(guessInput.trim());
+    if (!guessInput.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await onGuessSubmit(guessInput.trim());
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : '回答を送信できませんでした');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleJudgeSubmit = async (isCorrect: boolean) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await onJudgeSubmit(isCorrect);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : '判定結果を送信できませんでした');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -60,9 +84,10 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, on
               />
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg transition-colors"
               >
-                回答を送信する
+                {isSubmitting ? '回答を送信中...' : '回答を送信する'}
               </button>
             </form>
           </div>
@@ -93,13 +118,15 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, on
             
             <div className="flex gap-4">
               <button
-                onClick={() => onJudgeSubmit(true)}
+                onClick={() => void handleJudgeSubmit(true)}
+                disabled={isSubmitting}
                 className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors flex-1"
               >
                 正解！（エセ芸術家の逆転勝利）
               </button>
               <button
-                onClick={() => onJudgeSubmit(false)}
+                onClick={() => void handleJudgeSubmit(false)}
+                disabled={isSubmitting}
                 className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg transition-colors flex-1"
               >
                 不正解（芸術家チームの勝利）
@@ -124,6 +151,7 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, on
             )}
           </div>
         )}
+        {actionError && <p className="mt-5 rounded-lg border border-rose-500 bg-rose-950/60 p-3 text-sm font-bold text-rose-200" role="alert">{actionError}</p>}
       </div>
 
       {/* 完成した絵の表示 */}

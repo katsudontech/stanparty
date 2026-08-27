@@ -1,78 +1,175 @@
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import type { GameEvent } from '@/games/core/types';
 
 interface UseVotingSyncProps {
   roomId: string;
+  myUserId: string | null;
   isHost: boolean;
   playersCount: number;
-  onAllVoted: () => void;
+  onAllVoted: () => Promise<void>;
 }
 
-export function useVotingSync({ roomId, isHost, playersCount, onAllVoted }: UseVotingSyncProps) {
-  const [votedPlayersCount, setVotedPlayersCount] = useState(0);
-  const supabase = createClient();
-  const initializedRoomIdRef = useRef<string | null>(null);
-  const onAllVotedRef = useRef(onAllVoted);
+type VoteEvent = Pick<GameEvent, 'id' | 'event_type' | 'actor_id' | 'created_at'>;
 
-  // onAllVoted を最新に保つための Ref
+export function useVotingSync({ roomId, myUserId, isHost, playersCount, onAllVoted }: UseVotingSyncProps) {
+  const [votedPlayersCount, setVotedPlayersCount] = useState(0);
+  const [hasCurrentPlayerVoted, setHasCurrentPlayerVoted] = useState(false);
+  const [isSyncReady, setIsSyncReady] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [progressionError, setProgressionError] = useState<string | null>(null);
+
+  const seenEventIdsRef = useRef<Set<string>>(new Set());
+  const voterIdsRef = useRef<Set<string>>(new Set());
+  const bufferedEventsRef = useRef<VoteEvent[]>([]);
+  const initialLoadCompleteRef = useRef(false);
+  const initialLoadStartedRef = useRef(false);
+  const finalizationStartedRef = useRef(false);
+  const onAllVotedRef = useRef(onAllVoted);
+  const isHostRef = useRef(isHost);
+  const playersCountRef = useRef(playersCount);
+  const channelInstanceId = useId().replaceAll(':', '');
+
   useEffect(() => {
     onAllVotedRef.current = onAllVoted;
-  }, [onAllVoted]);
+    isHostRef.current = isHost;
+    playersCountRef.current = playersCount;
+  }, [isHost, onAllVoted, playersCount]);
 
-  // 全員の投票状況を監視
+  const triggerAllVoted = useCallback(async (force = false) => {
+    if (
+      !isHostRef.current
+      || finalizationStartedRef.current
+      || (!force && voterIdsRef.current.size < playersCountRef.current)
+    ) {
+      return;
+    }
+
+    finalizationStartedRef.current = true;
+    setIsFinalizing(true);
+    setProgressionError(null);
+
+    try {
+      await onAllVotedRef.current();
+    } catch (error) {
+      finalizationStartedRef.current = false;
+      setProgressionError(error instanceof Error ? error.message : '投票結果を確定できませんでした');
+    } finally {
+      setIsFinalizing(false);
+    }
+  }, []);
+
+  const retryFinalization = useCallback(() => triggerAllVoted(true), [triggerAllVoted]);
+
   useEffect(() => {
     if (!roomId) return;
 
-    const fetchInitialVotes = async () => {
-      if (initializedRoomIdRef.current === roomId) return;
-      initializedRoomIdRef.current = roomId;
+    const supabase = createClient();
+    let isMounted = true;
 
-      const { data, error } = await supabase
-        .from('game_events')
-        .select('*')
-        .eq('room_id', roomId)
-        .eq('event_type', 'vote');
+    seenEventIdsRef.current = new Set();
+    voterIdsRef.current = new Set();
+    bufferedEventsRef.current = [];
+    initialLoadCompleteRef.current = false;
+    initialLoadStartedRef.current = false;
+    finalizationStartedRef.current = false;
 
-      if (error) {
-        console.error('投票状況の取得に失敗しました:', error);
-        return;
-      }
+    const reconcileVoteState = () => {
+      if (!isMounted) return;
 
-      if (data) {
-        const count = data.length;
-        setVotedPlayersCount(count);
-        // ホストのみが遷移判定を行う
-        if (isHost && count >= playersCount) {
-          onAllVotedRef.current();
-        }
+      setVotedPlayersCount(voterIdsRef.current.size);
+      setHasCurrentPlayerVoted(Boolean(myUserId && voterIdsRef.current.has(myUserId)));
+      if (isHostRef.current && voterIdsRef.current.size >= playersCountRef.current) {
+        void triggerAllVoted();
       }
     };
 
-    fetchInitialVotes();
+    const applyVoteEvent = (event: VoteEvent) => {
+      if (event.event_type !== 'vote' || seenEventIdsRef.current.has(event.id)) return;
+
+      seenEventIdsRef.current.add(event.id);
+      voterIdsRef.current.add(event.actor_id || `event:${event.id}`);
+    };
+
+    const fetchInitialVotes = async () => {
+      if (initialLoadCompleteRef.current || initialLoadStartedRef.current) return;
+      initialLoadStartedRef.current = true;
+
+      const { data, error } = await supabase
+        .from('game_events')
+        .select('id, event_type, actor_id, created_at')
+        .eq('room_id', roomId)
+        .eq('event_type', 'vote')
+        .order('created_at', { ascending: true });
+
+      if (!isMounted) return;
+
+      if (error) {
+        initialLoadStartedRef.current = false;
+        setSyncError(error.message || '投票状況の取得に失敗しました');
+        return;
+      }
+
+      for (const event of (data || []) as VoteEvent[]) applyVoteEvent(event);
+
+      initialLoadCompleteRef.current = true;
+      const bufferedEvents = bufferedEventsRef.current
+        .splice(0)
+        .sort((left, right) => left.created_at.localeCompare(right.created_at));
+      for (const event of bufferedEvents) applyVoteEvent(event);
+
+      setSyncError(null);
+      setIsSyncReady(true);
+      reconcileVoteState();
+    };
 
     const channel = supabase
-      .channel(`voting_sync_${roomId}`)
+      .channel(`voting_sync_${roomId}_${channelInstanceId}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'game_events', filter: `room_id=eq.${roomId}` },
         (payload) => {
-          if (payload.new.event_type === 'vote') {
-            setVotedPlayersCount((prev) => {
-              const newCount = prev + 1;
-              if (isHost && newCount >= playersCount) {
-                onAllVotedRef.current();
-              }
-              return newCount;
-            });
+          const event = payload.new as VoteEvent;
+          if (event.event_type !== 'vote') return;
+
+          if (!initialLoadCompleteRef.current) {
+            bufferedEventsRef.current.push(event);
+            return;
           }
+
+          applyVoteEvent(event);
+          reconcileVoteState();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (!isMounted) return;
+
+        if (status === 'SUBSCRIBED') {
+          if (initialLoadCompleteRef.current) {
+            setSyncError(null);
+            setIsSyncReady(true);
+          } else {
+            void fetchInitialVotes();
+          }
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setSyncError('投票のリアルタイム同期に接続できませんでした');
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      isMounted = false;
+      void supabase.removeChannel(channel);
     };
-  }, [roomId, isHost, playersCount, supabase]);
+  }, [channelInstanceId, myUserId, roomId, triggerAllVoted]);
 
-  return { votedPlayersCount };
+  return {
+    votedPlayersCount,
+    hasCurrentPlayerVoted,
+    isSyncReady,
+    isFinalizing,
+    syncError,
+    progressionError,
+    retryFinalization,
+  };
 }

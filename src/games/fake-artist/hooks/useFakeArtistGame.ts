@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { type FakeArtistGameState, type RuleSettings, type FakeArtistPlayerState, type FakeArtistPhase, DEFAULT_FAKE_ARTIST_STATE } from '../types';
+import { type FakeArtistGameState, type RuleSettings, type FakeArtistPlayerState, DEFAULT_FAKE_ARTIST_STATE } from '../types';
 import type { RoomState } from '@/games/core/types';
 
 export const THEMES = [
@@ -31,7 +31,7 @@ export function useFakeArtistGame(roomState: RoomState) {
 
   // ゲームステートの部分更新をラップする便利関数
   const updateGameState = async (newStatePartial: Partial<FakeArtistGameState>) => {
-    const baseState = currentGameState || DEFAULT_FAKE_ARTIST_STATE;
+    const baseState = { ...DEFAULT_FAKE_ARTIST_STATE, ...(currentGameState || {}) };
     const updatedState = { ...baseState, ...newStatePartial };
 
     const { error } = await supabase
@@ -41,6 +41,7 @@ export function useFakeArtistGame(roomState: RoomState) {
 
     if (error) {
       console.error('ゲーム状態の更新に失敗しました:', error);
+      throw new Error(error.message || 'ゲーム状態の更新に失敗しました');
     }
   };
 
@@ -89,6 +90,11 @@ export function useFakeArtistGame(roomState: RoomState) {
       currentTurnPlayerId: turnOrder[0],
       phase: 'role_assignment', // フェーズを進行させる
       currentLap: 1,
+      turnRevision: 0,
+      themeGenre: null,
+      theme: null,
+      fakeArtistGuess: null,
+      winner: null,
     });
   };
 
@@ -112,118 +118,31 @@ export function useFakeArtistGame(roomState: RoomState) {
     });
   };
 
-  // 4. ターン終了時の処理
-  const handleTurnEnd = async () => {
-    if (!currentGameState || currentGameState.phase !== 'drawing') return;
-
-    const { turnOrder, currentTurnPlayerId, currentLap, ruleSettings } = currentGameState;
-    const currentIndex = turnOrder.indexOf(currentTurnPlayerId || '');
-
-    if (currentIndex === -1) return;
-
-    let nextPlayerId: string | null = null;
-    let nextLap = currentLap;
-    let nextPhase: FakeArtistPhase = currentGameState.phase;
-
-    if (currentIndex + 1 < turnOrder.length) {
-      // 次のプレイヤーへ
-      nextPlayerId = turnOrder[currentIndex + 1];
-    } else {
-      // 一周終わった場合、次の周へ
-      nextLap = currentLap + 1;
-      if (nextLap > ruleSettings.roundLimit) {
-        // 設定されたラウンド数を超えたら投票フェーズへ
-        nextPhase = 'voting';
-        nextPlayerId = null;
-      } else {
-        nextPlayerId = turnOrder[0];
-      }
-    }
-
-    await updateGameState({
-      currentTurnPlayerId: nextPlayerId,
-      currentLap: nextLap,
-      phase: nextPhase
-    });
-  };
-
   const handleVote = async (votedPlayerId: string) => {
-    if (!currentGameState || currentGameState.phase !== 'voting') return;
+    if (!currentGameState || currentGameState.phase !== 'voting') {
+      throw new Error('現在は投票できません');
+    }
 
-    await supabase
-      .from('game_events')
-      .insert({
-        room_id: roomId,
-        event_type: 'vote',
-        payload: { votedPlayerId },
-      });
+    const { data, error } = await supabase.rpc('fake_artist_cast_vote', {
+      p_room_id: roomId,
+      p_voted_player_id: votedPlayerId,
+    });
 
+    if (error || !data) {
+      console.error('投票に失敗しました:', error);
+      throw new Error(error?.message || '投票に失敗しました');
+    }
   };
-
-  const judgeFakeArtistVoted = async () => {
-    if (!currentGameState || currentGameState.phase !== 'voting') return;
-
-    //このvote集計処理はいつか関数化するかも
-    const { data: votes, error } = await supabase
-      .from('game_events')
-      .select('*')
-      .eq('room_id', roomId)
-      .eq('event_type', 'vote');
-
-    if (error) {
-      console.error('投票結果の取得に失敗しました:', error);
-      return;
-    }
-
-    // 1. 各プレイヤーの得票数をカウント
-    const voteCounts = (votes || []).reduce((acc, vote) => {
-      const targetId = vote.payload.votedPlayerId as string;
-      acc[targetId] = (acc[targetId] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // 2. 最大得票数を計算 (TSの型エラー回避のため明示的にアサーション、もしくは reduce を使用)
-    const maxVotes = Object.values(voteCounts).reduce<number>((max, count) => Math.max(max, Number(count)), 0);
-
-    // 3. 最大得票のプレイヤーIDを取得（同票を考慮）
-    const mostVotedIds = Object.keys(voteCounts).filter(id => voteCounts[id] === maxVotes);
-
-    console.log('投票結果:', voteCounts);
-    console.log('最多得票者:', mostVotedIds);
-
-    // 4. エセ芸術家判定
-    // currentGameState.playerStates は { fake_artist: 'user_id_a', ... } の形式
-    const fakeArtistId = Object.keys(currentGameState.playerStates).find(
-      key => currentGameState.playerStates[key]?.role === 'fake_artist'
-    );
-
-    if (!fakeArtistId) {
-      console.error('エセ芸術家のIDが見つかりません');
-      return;
-    }
-
-    // エセ芸術家が最多得票者の中に含まれているか？
-    const isFakeArtistVotedOut = mostVotedIds.includes(fakeArtistId);
-
-    console.log('エセ芸術家:', fakeArtistId, '投票結果にエセ芸術家は含まれるか:', isFakeArtistVotedOut);
-    return isFakeArtistVotedOut;
-  }
 
   const handleAllVoted = async () => {
-    // 全員の投票が終わったら結果を集計して結果フェーズへ
-    const isFakeArtistVotedOut = await judgeFakeArtistVoted();
+    const { data, error } = await supabase.rpc('fake_artist_finalize_voting', {
+      p_room_id: roomId,
+    });
 
-    // TODO: ここで isFakeArtistVotedOut を使ってスコア計算などを行い updateGameState に渡す
-    if (isFakeArtistVotedOut) {
-      await updateGameState({ phase: 'guessing' });
-      return;
+    if (error || !data) {
+      console.error('投票結果の確定に失敗しました:', error);
+      throw new Error(error?.message || '投票結果の確定に失敗しました');
     }
-    else {
-
-      await updateGameState({ phase: 'result', winner: 'fake_artist' });
-      return;
-    }
-
   };
   const handleFakeArtistGuess = async (guess: string) => {
     await updateGameState({ fakeArtistGuess: guess });
@@ -237,65 +156,36 @@ export function useFakeArtistGame(roomState: RoomState) {
   };
 
   const handleResetGame = async () => {
-    // 1. game_events テーブルの現在のルームのデータをすべて削除する（描画履歴や投票などをクリア）
-    const { error: eventError } = await supabase
-      .from('game_events')
-      .delete()
-      .eq('room_id', roomId);
-
-    if (eventError) {
-      console.error('イベントデータの削除に失敗しました:', eventError);
-    }
-
-    // 2. game_state を初期状態に戻す（ルール設定フェーズへ）
-    await updateGameState({
-      ...DEFAULT_FAKE_ARTIST_STATE,
-      phase: 'rule_setting'
+    const { data, error } = await supabase.rpc('fake_artist_reset_game', {
+      p_room_id: roomId,
     });
+
+    if (error || !data) {
+      console.error('ゲームのリセットに失敗しました:', error);
+      throw new Error(error?.message || 'ゲームのリセットに失敗しました');
+    }
   };
 
   const handleUndoStroke = async () => {
-    if (!currentGameState || currentGameState.phase !== 'drawing') return;
+    if (!currentGameState || currentGameState.phase !== 'drawing') {
+      throw new Error('現在は線をやり直せません');
+    }
 
-    // DB側でも「現在の手番プレイヤー」だけが最新の線を戻せるようにする。
+    // DB側で線の削除とターン巻き戻しを同じトランザクションにする。
     const { data: wasDeleted, error: undoError } = await supabase.rpc('undo_latest_stroke', {
       p_room_id: roomId
     });
 
     if (undoError || !wasDeleted) {
-      if (undoError) console.error('ストロークの削除に失敗しました:', undoError);
-      return;
+      console.error('ストロークのやり直しに失敗しました:', undoError);
+      throw new Error(undoError?.message || 'やり直せる線がありません');
     }
-
-    // 3. ターンを一つ前に戻す
-    const { turnOrder, currentTurnPlayerId, currentLap } = currentGameState;
-    const currentIndex = turnOrder.indexOf(currentTurnPlayerId || '');
-
-    let prevPlayerId: string | null = null;
-    let prevLap = currentLap;
-    
-    if (currentIndex > 0) {
-      prevPlayerId = turnOrder[currentIndex - 1];
-    } else {
-      if (currentLap > 1) {
-        prevLap = currentLap - 1;
-        prevPlayerId = turnOrder[turnOrder.length - 1];
-      } else {
-        return; // nothing to undo
-      }
-    }
-
-    await updateGameState({
-      currentTurnPlayerId: prevPlayerId,
-      currentLap: prevLap,
-    });
   };
 
   return {
     handleSaveRules,
     proceedToThemeSelection,
     handleThemeSubmit,
-    handleTurnEnd,
     updateGameState,
     handleVote,
     handleAllVoted,

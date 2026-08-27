@@ -11,11 +11,10 @@ interface DrawingPhaseProps {
   players: Player[];
   gameState: FakeArtistGameState;
   myUserId: string | null;
-  onTurnEnd: () => void;
-  onUndoStroke?: () => void;
+  onUndoStroke?: () => Promise<void>;
 }
 
-export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd, onUndoStroke }: DrawingPhaseProps) {
+export function DrawingPhase({ roomId, players, gameState, myUserId, onUndoStroke }: DrawingPhaseProps) {
   const { themeGenre, theme, currentTurnPlayerId, playerStates } = gameState;
   const turnPlayer = players.find(p => p.userId === currentTurnPlayerId);
   const myRole = playerStates[myUserId || '']?.role;
@@ -25,6 +24,22 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd, 
   const canUndo = gameState.currentLap > 1 || gameState.turnOrder.indexOf(currentTurnPlayerId || '') > 0;
 
   const [isInfoVisible, setIsInfoVisible] = useState(false);
+  const [isUndoing, setIsUndoing] = useState(false);
+  const [undoError, setUndoError] = useState<string | null>(null);
+
+  const handleUndo = async () => {
+    if (!onUndoStroke || isUndoing) return;
+
+    setIsUndoing(true);
+    setUndoError(null);
+    try {
+      await onUndoStroke();
+    } catch (error) {
+      setUndoError(error instanceof Error ? error.message : '線をやり直せませんでした');
+    } finally {
+      setIsUndoing(false);
+    }
+  };
 
   return (
     <div className="w-full mt-8 flex flex-col space-y-6">
@@ -74,11 +89,13 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd, 
               {isMyTurn && canUndo && (
                 <div className="mt-4 pt-4 border-t border-slate-700/50">
                   <button
-                    onClick={onUndoStroke}
+                    onClick={() => void handleUndo()}
+                    disabled={isUndoing}
                     className="w-full bg-rose-500/90 text-white px-3 py-2 rounded-md text-sm font-bold shadow hover:bg-rose-600 transition-colors flex items-center justify-center gap-2"
                   >
-                    <span>↩</span> 前の人の線をやり直す
+                    <span>↩</span> {isUndoing ? 'やり直し中...' : '前の人の線をやり直す'}
                   </button>
+                  {undoError && <p className="mt-2 text-xs font-bold text-rose-300" role="alert">{undoError}</p>}
                   <p className="text-[10px] text-slate-500 mt-1 text-center">
                     ※間違えて描いてしまった場合などに使ってください
                   </p>
@@ -116,9 +133,8 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onTurnEnd, 
         roomId={roomId}
         players={players} 
         currentTurnPlayerId={currentTurnPlayerId} 
-        turnKey={`${gameState.currentLap}:${currentTurnPlayerId ?? ''}`}
+        turnKey={`${gameState.currentLap}:${currentTurnPlayerId ?? ''}:${gameState.turnRevision}`}
         myUserId={myUserId}
-        onTurnEnd={onTurnEnd}
       />
     </div>
   );

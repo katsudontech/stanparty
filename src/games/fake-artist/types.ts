@@ -29,6 +29,7 @@ export interface FakeArtistGameState {
   currentTurnPlayerId: string | null;
   turnOrder: string[];
   currentLap: number;
+  turnRevision: number;
   votes: Record<string, string>;
   fakeArtistGuess: string | null;
   winner: 'artists' | 'fake_artist' | null;
@@ -43,6 +44,7 @@ export const DEFAULT_FAKE_ARTIST_STATE: FakeArtistGameState = {
   currentTurnPlayerId: null,
   turnOrder: [],
   currentLap: 1,
+  turnRevision: 0,
   votes: {},
   fakeArtistGuess: null,
   winner: null,
@@ -61,6 +63,12 @@ export interface Point {
 export interface DrawLinePayload {
   playerId: string;
   stroke: CanvasPath;
+  turnKey?: string;
+}
+
+export interface UndoLinePayload {
+  targetEventId: string;
+  targetTurnKey?: string | null;
 }
 
 export interface ChatMessagePayload {

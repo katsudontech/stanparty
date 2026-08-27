@@ -12,7 +12,6 @@ interface CanvasProps {
   currentTurnPlayerId: string | null;
   turnKey?: string;
   myUserId: string | null;
-  onTurnEnd?: () => void;
   isReadOnly?: boolean;
 }
 
@@ -32,17 +31,33 @@ const scalePaths = (paths: CanvasPath[], scaleX: number, scaleY: number): Canvas
   return paths.map(p => scalePath(p, scaleX, scaleY));
 };
 
-export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId, onTurnEnd, isReadOnly = false }: CanvasProps) {
+export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId, isReadOnly = false }: CanvasProps) {
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPathsLengthRef = useRef(0);
   const [submittedTurnKey, setSubmittedTurnKey] = useState<string | null>(null);
+  const [pendingTurnKey, setPendingTurnKey] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const submissionInFlightRef = useRef(false);
   const activeTurnKey = turnKey ?? currentTurnPlayerId;
-  const isSubmitting = activeTurnKey !== null && submittedTurnKey === activeTurnKey;
+  const isSubmitting = activeTurnKey !== null
+    && (submittedTurnKey === activeTurnKey || pendingTurnKey === activeTurnKey);
   
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasSizeRef = useRef({ width: 0, height: 0 });
   const logicalPathsRef = useRef<CanvasPath[]>([]);
+
+  const redrawLogicalPaths = useCallback(() => {
+    const { width, height } = canvasSizeRef.current;
+    if (!canvasRef.current || width <= 0 || height <= 0) return;
+
+    const scaleX = width / LOGICAL_WIDTH;
+    const scaleY = height / LOGICAL_HEIGHT;
+    const localStrokes = scalePaths(logicalPathsRef.current, scaleX, scaleY);
+    canvasRef.current.clearCanvas();
+    canvasRef.current.loadPaths(localStrokes);
+    lastPathsLengthRef.current = localStrokes.length;
+  }, []);
 
   // コンテナのサイズを監視してCanvasの物理サイズをトラッキングする
   useEffect(() => {
@@ -62,18 +77,9 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
 
   // 初回ロード用
   const handleInitialStrokesLoaded = useCallback((strokes: CanvasPath[]) => {
-    logicalPathsRef.current = strokes;
-    const { width, height } = canvasSizeRef.current;
-    if (canvasRef.current && width > 0) {
-      const scaleX = width / LOGICAL_WIDTH;
-      const scaleY = height / LOGICAL_HEIGHT;
-      const localStrokes = scalePaths(strokes, scaleX, scaleY);
-      
-      canvasRef.current.clearCanvas();
-      canvasRef.current.loadPaths(localStrokes);
-      lastPathsLengthRef.current = localStrokes.length;
-    }
-  }, []);
+    logicalPathsRef.current = [...strokes];
+    redrawLogicalPaths();
+  }, [redrawLogicalPaths]);
 
   // リアルタイム受信時
   const handleNewStrokeReceived = useCallback((stroke: CanvasPath) => {
@@ -85,24 +91,19 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
       const scaleY = height / LOGICAL_HEIGHT;
       const localStroke = scalePath(stroke, scaleX, scaleY);
       
-      canvasRef.current.exportPaths().then(currentPaths => {
-        canvasRef.current?.loadPaths([...currentPaths, localStroke]);
-        lastPathsLengthRef.current = currentPaths.length + 1;
-      }).catch(err => {
-        console.error('パスの結合に失敗しました:', err);
-      });
+      // react-sketch-canvas の loadPaths は既存パスへ追記するAPI。
+      // 新しい1本だけを渡し、既存パスの指数的な重複を防ぐ。
+      canvasRef.current.loadPaths([localStroke]);
+      lastPathsLengthRef.current += 1;
     }
   }, []);
 
   const handleStrokeDeleted = useCallback(() => {
     logicalPathsRef.current.pop();
-    if (canvasRef.current) {
-      canvasRef.current.undo();
-      lastPathsLengthRef.current = Math.max(0, lastPathsLengthRef.current - 1);
-    }
-  }, []);
+    redrawLogicalPaths();
+  }, [redrawLogicalPaths]);
 
-  const { insertStroke } = useCanvasSync({
+  const { insertStroke, isSyncReady, syncError } = useCanvasSync({
     roomId,
     myUserId,
     onInitialStrokesLoaded: handleInitialStrokesLoaded,
@@ -112,16 +113,8 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
 
   // リサイズ時に既存のパスを再スケールして描画し直す
   useEffect(() => {
-    if (canvasSize.width > 0 && canvasRef.current && logicalPathsRef.current.length > 0) {
-      const scaleX = canvasSize.width / LOGICAL_WIDTH;
-      const scaleY = canvasSize.height / LOGICAL_HEIGHT;
-      const localStrokes = scalePaths(logicalPathsRef.current, scaleX, scaleY);
-      
-      canvasRef.current.clearCanvas();
-      canvasRef.current.loadPaths(localStrokes);
-      lastPathsLengthRef.current = localStrokes.length;
-    }
-  }, [canvasSize.width, canvasSize.height]);
+    if (canvasSize.width > 0) redrawLogicalPaths();
+  }, [canvasSize.width, canvasSize.height, redrawLogicalPaths]);
 
   // ターンプレイヤーの名前を検索
   const turnPlayer = players.find(p => p.userId === currentTurnPlayerId);
@@ -129,10 +122,11 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
 
   // 自分のターンかどうかを判定
   const isMyTurn = !isReadOnly && myUserId !== null && myUserId === currentTurnPlayerId;
+  const canDraw = isMyTurn && isSyncReady && !isSubmitting && !syncError;
 
   const handleStroke = async () => {
     // 自分のターンじゃない時、または既に送信処理中の発火は無視する
-    if (!isMyTurn || isSubmitting) return;
+    if (!canDraw || submissionInFlightRef.current) return;
 
     if (myUserId && canvasRef.current) {
       try {
@@ -141,7 +135,9 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
         if (allPaths.length <= lastPathsLengthRef.current) return;
 
         // パスが増えていれば送信中フラグを立てる（次の描画をブロック）
-        setSubmittedTurnKey(activeTurnKey);
+        submissionInFlightRef.current = true;
+        setPendingTurnKey(activeTurnKey);
+        setActionError(null);
         lastPathsLengthRef.current = allPaths.length;
 
         if (allPaths.length > 0) {
@@ -157,16 +153,23 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
             
             // 自分の論理パス履歴にも追加して、DBへ保存
             logicalPathsRef.current.push(logicalStroke);
-            insertStroke(myUserId, logicalStroke);
+            try {
+              await insertStroke(logicalStroke);
+              setSubmittedTurnKey(activeTurnKey);
+            } catch (error) {
+              logicalPathsRef.current.pop();
+              redrawLogicalPaths();
+              setActionError(error instanceof Error ? error.message : '線を保存できませんでした');
+            }
           }
         }
       } catch (err) {
         console.error('ストロークの保存に失敗しました:', err);
+        setActionError(err instanceof Error ? err.message : '線を保存できませんでした');
+      } finally {
+        submissionInFlightRef.current = false;
+        setPendingTurnKey(null);
       }
-    }
-
-    if (onTurnEnd) {
-      onTurnEnd();
     }
   };
 
@@ -177,13 +180,18 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
 
   return (
     <div className="w-full flex flex-col items-center">
+      {(syncError || actionError) && (
+        <p className="mb-3 w-full rounded-lg border border-rose-500 bg-rose-950/70 px-4 py-3 text-sm font-bold text-rose-200" role="alert">
+          {actionError || syncError}
+        </p>
+      )}
       <div className={`w-full aspect-[3/4] bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}>
 
         {/* 自分のターンでない時や送信中は pointer-events-none で操作を無効化 */}
         {/* touch-none はブラウザがスクロールと勘違いして線を切断するバグを防止します */}
         <div
           ref={containerRef}
-          className={`w-full h-full touch-none ${isMyTurn && !isSubmitting ? '' : 'pointer-events-none'}`}
+          className={`w-full h-full touch-none ${canDraw ? '' : 'pointer-events-none'}`}
           onPointerUp={() => setTimeout(handleStroke, 100)}
         >
           {canvasSize.width > 0 && (
@@ -200,6 +208,8 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
         <div className={`absolute bottom-4 right-4 px-3 py-1 rounded-md text-sm font-bold shadow pointer-events-none transition-colors ${isMyTurn ? 'bg-indigo-500 text-white' : 'bg-slate-100/90 text-slate-600'}`}>
           {isReadOnly ? (
             '🎨 完成した絵'
+          ) : isMyTurn && !isSyncReady ? (
+            '描画履歴を同期中です...'
           ) : isMyTurn ? (
             '✨ あなたのターンです！描いてください'
           ) : (

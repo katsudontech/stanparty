@@ -10,26 +10,46 @@ interface VotingPhaseProps {
   roomId: string;
   players: Player[];
   myUserId: string | null;
-  onVote: (votedPlayerId: string) => void;
+  onVote: (votedPlayerId: string) => Promise<void>;
   isHost: boolean;
-  onAllVoted: () => void;
+  onAllVoted: () => Promise<void>;
 }
 
 export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVoted }: VotingPhaseProps) {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const [hasVoted, setHasVoted] = useState(false);
+  const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [voteError, setVoteError] = useState<string | null>(null);
 
-  const { votedPlayersCount } = useVotingSync({
+  const {
+    votedPlayersCount,
+    hasCurrentPlayerVoted,
+    isSyncReady,
+    isFinalizing,
+    syncError,
+    progressionError,
+    retryFinalization,
+  } = useVotingSync({
     roomId,
+    myUserId,
     isHost,
     playersCount: players.length,
     onAllVoted,
   });
+  const hasVoted = hasSubmittedVote || hasCurrentPlayerVoted;
 
-  const handleVoteSubmit = () => {
-    if (selectedPlayerId) {
-      onVote(selectedPlayerId);
-      setHasVoted(true);
+  const handleVoteSubmit = async () => {
+    if (!selectedPlayerId || hasVoted || isSubmitting || !isSyncReady) return;
+
+    setIsSubmitting(true);
+    setVoteError(null);
+    try {
+      await onVote(selectedPlayerId);
+      setHasSubmittedVote(true);
+    } catch (error) {
+      setVoteError(error instanceof Error ? error.message : '投票できませんでした');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -41,10 +61,25 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-2xl font-bold">投票</h3>
           <span className="bg-slate-600 px-4 py-1 rounded-full text-sm font-bold">
-            投票状況: {votedPlayersCount} / {players.length}人
+            投票状況: {votedPlayersCount} / {players.length}人{isFinalizing ? '（集計中）' : ''}
           </span>
         </div>
         <p className="text-slate-400">全員で「誰がエセ芸術家か」を投票する画面です。</p>
+        {(syncError || voteError || progressionError) && (
+          <div className="mt-4 rounded-lg border border-rose-500 bg-rose-950/60 px-4 py-3 text-sm font-bold text-rose-200" role="alert">
+            <p>{voteError || progressionError || syncError}</p>
+            {isHost && (progressionError || syncError) && (
+              <button
+                type="button"
+                onClick={() => void retryFinalization()}
+                disabled={isFinalizing}
+                className="mt-3 rounded-md bg-rose-600 px-4 py-2 text-white disabled:opacity-50"
+              >
+                投票結果の集計を再試行
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="w-full">
@@ -54,6 +89,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
           players={players}
           currentTurnPlayerId={null}
           myUserId={myUserId}
+          isReadOnly={true}
         />
       </div>
 
@@ -64,7 +100,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
             return (
               <button
                 key={player.userId}
-                disabled={myUserId === player.userId || hasVoted}
+                disabled={!isSyncReady || myUserId === player.userId || hasVoted || isSubmitting}
                 onClick={() => setSelectedPlayerId(player.userId)}
                 className={`flex items-center gap-3 px-5 py-3 rounded-md transition-all border-2 font-bold ${isSelected
                     ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/50 scale-105'
@@ -86,8 +122,8 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
 
         <div className="mt-8 flex justify-center">
           <button
-            disabled={!selectedPlayerId || hasVoted}
-            onClick={handleVoteSubmit}
+            disabled={!isSyncReady || !selectedPlayerId || hasVoted || isSubmitting}
+            onClick={() => void handleVoteSubmit()}
             className={`px-10 py-4 rounded-full font-bold text-lg transition-all ${hasVoted
                 ? 'bg-emerald-600 text-white'
                 : !selectedPlayerId
@@ -95,7 +131,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
                   : 'bg-indigo-500 text-white hover:bg-indigo-400 hover:-translate-y-1 shadow-xl shadow-indigo-500/30'
               }`}
           >
-            {hasVoted ? '投票完了！' : 'この人に投票する'}
+            {hasVoted ? '投票完了！' : isSubmitting ? '投票中...' : !isSyncReady ? '投票状況を同期中...' : 'この人に投票する'}
           </button>
         </div>
       </div>

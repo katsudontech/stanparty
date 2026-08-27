@@ -33,7 +33,7 @@ export function FakeArtistGame({ roomState, myUserId, onBackToLobby }: FakeArtis
   const isHost = Boolean(myUserId && roomState.host_id === myUserId);
 
   // カスタムフックからゲーム進行ロジック（関数）を取得
-  const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleTurnEnd, handleUndoStroke, handleVote, handleAllVoted, handleFakeArtistGuess, handleGuessJudge, handleResetGame, updateGameState } = useFakeArtistGame(roomState);
+  const { handleSaveRules, proceedToThemeSelection, handleThemeSubmit, handleUndoStroke, handleVote, handleAllVoted, handleFakeArtistGuess, handleGuessJudge, handleResetGame, updateGameState } = useFakeArtistGame(roomState);
 
   // ==========================================
   // ① 常に表示するヘッダー部分
@@ -95,7 +95,6 @@ export function FakeArtistGame({ roomState, myUserId, onBackToLobby }: FakeArtis
             players={roomState.players}
             gameState={gameState}
             myUserId={myUserId}
-            onTurnEnd={handleTurnEnd}
             onUndoStroke={handleUndoStroke}
           />
         );

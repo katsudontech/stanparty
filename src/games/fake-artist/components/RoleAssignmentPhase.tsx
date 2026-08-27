@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { FakeArtistPlayerState } from '../types';
 
 interface RoleAssignmentPhaseProps {
   playerStates: Record<string, FakeArtistPlayerState>;
   myUserId: string | null;
   isHost: boolean;
-  onTimeout: () => void;
+  onTimeout: () => Promise<void>;
   turnOrder: string[];
 }
 
@@ -15,6 +15,7 @@ export function RoleAssignmentPhase({ playerStates, myUserId, isHost, onTimeout,
   const myState = myUserId ? playerStates[myUserId] : null;
   const myRole = myState?.role;
   const myTurnIndex = myUserId ? turnOrder.indexOf(myUserId) : -1;
+  const [transitionError, setTransitionError] = useState<string | null>(null);
 
   // 5秒後に自動遷移する処理
   useEffect(() => {
@@ -22,7 +23,9 @@ export function RoleAssignmentPhase({ playerStates, myUserId, isHost, onTimeout,
     if (!isHost) return;
     
     const timer = setTimeout(() => {
-      onTimeout();
+      void onTimeout().catch((error: unknown) => {
+        setTransitionError(error instanceof Error ? error.message : 'お題設定へ進めませんでした');
+      });
     }, 5000);
 
     return () => clearTimeout(timer);
@@ -79,6 +82,7 @@ export function RoleAssignmentPhase({ playerStates, myUserId, isHost, onTimeout,
         </svg>
         <p>5秒後に自動的にお題設定へ進みます...</p>
       </div>
+      {transitionError && <p className="mt-4 text-sm font-bold text-rose-300" role="alert">{transitionError}</p>}
     </div>
   );
 }

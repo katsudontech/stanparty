@@ -23,6 +23,7 @@ export interface GameEvent<T = unknown> {
   room_id: string;
   event_type: string;
   payload: T;
+  actor_id?: string | null;
   created_at: string;
 }
 

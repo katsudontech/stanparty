@@ -5,40 +5,58 @@ import type { RuleSettings } from '@/games/fake-artist/types';
 
 interface RuleSettingPhaseProps {
   ruleSettings: RuleSettings;
-  onSaveRules: (rules: RuleSettings) => void;
-  onChangeRules: (rules: RuleSettings) => void;
+  onSaveRules: (rules: RuleSettings) => Promise<void>;
+  onChangeRules: (rules: RuleSettings) => Promise<void>;
   isHost: boolean;
   onBackToLobby: () => Promise<void>;
 }
 
 export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost, onBackToLobby }: RuleSettingPhaseProps) {
   const [hostRuleSettings, setRuleSettings] = useState<RuleSettings>(propRuleSettings);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const ruleSettings = isHost ? hostRuleSettings : propRuleSettings;
+
+  const persistRuleSettings = (newSettings: RuleSettings) => {
+    setSaveError(null);
+    void onChangeRules(newSettings).catch((error: unknown) => {
+      setSaveError(error instanceof Error ? error.message : 'ルールを保存できませんでした');
+    });
+  };
 
   const handleRoundLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isHost) return;
     const newSettings = { ...ruleSettings, roundLimit: Number(e.target.value) };
     setRuleSettings(newSettings);
-    onChangeRules(newSettings);
+    persistRuleSettings(newSettings);
   };
 
   const handleAutoThemeSelectionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isHost) return;
     const newSettings = { ...ruleSettings, autoThemeSelection: e.target.checked };
     setRuleSettings(newSettings);
-    onChangeRules(newSettings);
+    persistRuleSettings(newSettings);
   };
 
   const handleQuestionerDrawsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isHost) return;
     const newSettings = { ...ruleSettings, questionerDraws: e.target.checked };
     setRuleSettings(newSettings);
-    onChangeRules(newSettings);
+    persistRuleSettings(newSettings);
   };
 
-  const handleSaveRules = () => {
-    if (!isHost) return;
-    onSaveRules(ruleSettings);
+  const handleSaveRules = async () => {
+    if (!isHost || isSaving) return;
+
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await onSaveRules(ruleSettings);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'ゲームを開始できませんでした');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -91,13 +109,16 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
         )}
       </div>
 
+      {saveError && <p className="mt-4 rounded-lg border border-rose-500 bg-rose-950/60 p-3 text-sm font-bold text-rose-200" role="alert">{saveError}</p>}
+
       {isHost ? (
         <div className="mt-6 space-y-3">
           <button
-            onClick={handleSaveRules}
+            onClick={() => void handleSaveRules()}
+            disabled={isSaving}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full"
           >
-            ルールを確定してゲーム開始
+            {isSaving ? 'ゲームを開始中...' : 'ルールを確定してゲーム開始'}
           </button>
           <button
             type="button"

@@ -10,4 +10,8 @@ describe('fake artist default rule settings', () => {
       questionerDraws: false,
     });
   });
+
+  it('ターンの世代番号が0で初期化される', () => {
+    expect(DEFAULT_FAKE_ARTIST_STATE.turnRevision).toBe(0);
+  });
 });

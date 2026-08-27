@@ -20,6 +20,7 @@ export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit
   const [inputGenre, setInputGenre] = useState('');
   const [inputTheme, setInputTheme] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isThemeDecided = Boolean(gameState.themeGenre && gameState.theme);
 
@@ -30,7 +31,9 @@ export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit
 
     if (isThemeDecided && hasPermission) {
       const timer = setTimeout(() => {
-        onThemeSubmit(gameState.themeGenre!, gameState.theme!);
+        void onThemeSubmit(gameState.themeGenre!, gameState.theme!).catch((error: unknown) => {
+          setSubmitError(error instanceof Error ? error.message : '描画フェーズへ進めませんでした');
+        });
       }, 5000);
       
       return () => clearTimeout(timer);
@@ -42,10 +45,17 @@ export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit
     if (!inputGenre.trim() || !inputTheme.trim() || isSubmitting) return;
     
     setIsSubmitting(true);
-    if (updateGameState) {
-      await updateGameState({ themeGenre: inputGenre, theme: inputTheme });
-    } else {
-      await onThemeSubmit(inputGenre, inputTheme);
+    setSubmitError(null);
+    try {
+      if (updateGameState) {
+        await updateGameState({ themeGenre: inputGenre.trim(), theme: inputTheme.trim() });
+      } else {
+        await onThemeSubmit(inputGenre.trim(), inputTheme.trim());
+      }
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'お題を保存できませんでした');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -82,6 +92,7 @@ export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit
             </svg>
             まもなくゲームを開始します...
           </p>
+          {submitError && <p className="mt-4 text-sm font-bold text-rose-300" role="alert">{submitError}</p>}
         </div>
       </div>
     );
@@ -143,6 +154,7 @@ export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit
           >
             {isSubmitting ? '決定中...' : 'お題を決定する'}
           </button>
+          {submitError && <p className="text-sm font-bold text-rose-300" role="alert">{submitError}</p>}
         </form>
       ) : (
         <div className="text-center py-8">
