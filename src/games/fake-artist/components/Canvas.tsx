@@ -5,6 +5,7 @@ import { ReactSketchCanvas, type ReactSketchCanvasRef, type CanvasPath } from 'r
 import type { Player } from '@/games/core/types';
 import { Avatar } from '@/components/shared/Avatar';
 import { useCanvasSync } from '../hooks/useCanvasSync';
+import { ReadOnlyDrawing } from './ReadOnlyDrawing';
 
 interface CanvasProps {
   roomId: string;
@@ -46,6 +47,7 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasSizeRef = useRef({ width: 0, height: 0 });
   const logicalPathsRef = useRef<CanvasPath[]>([]);
+  const [logicalPaths, setLogicalPaths] = useState<CanvasPath[]>([]);
 
   const redrawLogicalPaths = useCallback(() => {
     const { width, height } = canvasSizeRef.current;
@@ -77,13 +79,20 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
 
   // 初回ロード用
   const handleInitialStrokesLoaded = useCallback((strokes: CanvasPath[]) => {
-    logicalPathsRef.current = [...strokes];
-    redrawLogicalPaths();
-  }, [redrawLogicalPaths]);
+    const nextPaths = [...strokes];
+    logicalPathsRef.current = nextPaths;
+    setLogicalPaths(nextPaths);
+    if (!isReadOnly) redrawLogicalPaths();
+  }, [isReadOnly, redrawLogicalPaths]);
 
   // リアルタイム受信時
   const handleNewStrokeReceived = useCallback((stroke: CanvasPath) => {
-    logicalPathsRef.current.push(stroke);
+    const nextPaths = [...logicalPathsRef.current, stroke];
+    logicalPathsRef.current = nextPaths;
+    setLogicalPaths(nextPaths);
+
+    if (isReadOnly) return;
+
     const { width, height } = canvasSizeRef.current;
     
     if (canvasRef.current && width > 0) {
@@ -96,12 +105,14 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
       canvasRef.current.loadPaths([localStroke]);
       lastPathsLengthRef.current += 1;
     }
-  }, []);
+  }, [isReadOnly]);
 
   const handleStrokeDeleted = useCallback(() => {
-    logicalPathsRef.current.pop();
-    redrawLogicalPaths();
-  }, [redrawLogicalPaths]);
+    const nextPaths = logicalPathsRef.current.slice(0, -1);
+    logicalPathsRef.current = nextPaths;
+    setLogicalPaths(nextPaths);
+    if (!isReadOnly) redrawLogicalPaths();
+  }, [isReadOnly, redrawLogicalPaths]);
 
   const { insertStroke, isSyncReady, syncError } = useCanvasSync({
     roomId,
@@ -113,8 +124,8 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
 
   // リサイズ時に既存のパスを再スケールして描画し直す
   useEffect(() => {
-    if (canvasSize.width > 0) redrawLogicalPaths();
-  }, [canvasSize.width, canvasSize.height, redrawLogicalPaths]);
+    if (!isReadOnly && canvasSize.width > 0) redrawLogicalPaths();
+  }, [canvasSize.width, canvasSize.height, isReadOnly, redrawLogicalPaths]);
 
   // ターンプレイヤーの名前を検索
   const turnPlayer = players.find(p => p.userId === currentTurnPlayerId);
@@ -194,7 +205,9 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
           className={`w-full h-full touch-none ${canDraw ? '' : 'pointer-events-none'}`}
           onPointerUp={() => setTimeout(handleStroke, 100)}
         >
-          {canvasSize.width > 0 && (
+          {isReadOnly ? (
+            <ReadOnlyDrawing paths={logicalPaths} />
+          ) : canvasSize.width > 0 && (
             <ReactSketchCanvas
               ref={canvasRef}
               strokeWidth={currentStrokeWidth}
