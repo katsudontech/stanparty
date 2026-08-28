@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { saveGuestDisplayProfile, useGuestAuth } from '@/hooks/useGuestAuth';
 import { ProfileInput } from '@/components/shared/ProfileInput';
@@ -100,6 +101,9 @@ export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
                         )}
                     </span>
                 </button>
+                <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
+                    入室すると、<Link href="/terms" className="font-black underline underline-offset-4">利用規約</Link>と<Link href="/privacy" className="font-black underline underline-offset-4">プライバシーポリシー</Link>に同意したものとみなします。
+                </p>
             </div>
             </main>
         </div>

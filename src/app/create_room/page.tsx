@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { saveGuestDisplayProfile, useGuestAuth } from '@/hooks/useGuestAuth'
@@ -167,6 +168,9 @@ export default function CreateRoomPage() {
                                     )}
                                 </span>
                             </button>
+                            <p className="text-center text-xs leading-5 text-[var(--muted)]">
+                                部屋を作成すると、<Link href="/terms" className="font-black underline underline-offset-4">利用規約</Link>と<Link href="/privacy" className="font-black underline underline-offset-4">プライバシーポリシー</Link>に同意したものとみなします。
+                            </p>
                     </form>
                 </div>
             </main>

@@ -171,12 +171,15 @@ cd stanparty
 npm install
 ```
 
-プロジェクト直下に`.env.local`を作成し、SupabaseのProject URLと公開用anon keyを設定します。
+`.env.example`を参考にプロジェクト直下へ`.env.local`を作成し、SupabaseのProject URL、公開用anon key、サイトの公開URLを設定します。
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
+
+本番環境では`NEXT_PUBLIC_SITE_URL`へ、`https://`から始まる実際の公開URLを設定してください。この値はOG画像、`sitemap.xml`、`robots.txt`に利用します。Vercelでは未設定の場合、Production Deployment URLを使用します。
 
 Supabaseでは匿名認証を有効にし、ルーム、ユーザー、ゲームイベントを保存するデータベースを用意します。
 
@@ -191,7 +194,15 @@ supabase/migrations/20260824000000_add_ito_game_actions.sql
 supabase/migrations/20260827000000_enforce_game_player_count_on_start.sql
 supabase/migrations/20260827010000_fix_fake_artist_game_actions.sql
 supabase/migrations/20260828000000_default_rooms_private.sql
+supabase/migrations/20260828010000_schedule_stale_data_cleanup.sql
 ```
+
+最後のマイグレーションはSupabase Cronを有効にし、毎時17分（UTC）に次のデータを自動削除します。
+
+- 最後のルーム更新またはゲームイベントから24時間が経過したルームと、そのゲームイベント
+- 最終利用から30日が経過し、残っているルームから参照されていない匿名ユーザーとプロフィール
+
+既存ルームの`last_activity_at`と既存ユーザーの`last_seen_at`はマイグレーション適用時刻で初期化されるため、適用直後に古いデータが削除されることはありません。実行状況はSupabase DashboardのCron履歴で確認できます。SQL Editorから`select * from public.cleanup_stale_stanparty_data();`を実行すると、期限を超えたデータがその場で削除され、削除件数が返ります。
 
 開発サーバーを起動します。
 

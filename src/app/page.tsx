@@ -118,12 +118,15 @@ export default function Home() {
       </main>
 
       <footer className="border-t-2 border-[var(--line)] bg-[var(--ink)] py-8 text-[var(--surface)]">
-        <div className="site-container flex items-center justify-between gap-4 text-xs font-bold">
+        <div className="site-container flex flex-col items-start justify-between gap-5 text-xs font-bold sm:flex-row sm:items-center">
           <span>StanParty</span>
-          <div className="flex items-center gap-5">
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-3" aria-label="フッターナビゲーション">
+            <Link href="/privacy" className="underline underline-offset-4">プライバシー</Link>
+            <Link href="/terms" className="underline underline-offset-4">利用規約</Link>
+            <Link href="/contact" className="underline underline-offset-4">問い合わせ</Link>
             <Link href="/credits" className="underline underline-offset-4">権利表記</Link>
             <span>スマホひとつで、みんなと遊ぼう。</span>
-          </div>
+          </nav>
         </div>
       </footer>
     </div>

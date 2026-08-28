@@ -1,0 +1,45 @@
+name: 不具合報告
+description: StanPartyで発生した不具合を報告します
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        報告ありがとうございます。このIssueは公開されます。本名、メールアドレス、ルームの招待URL、匿名ID、認証情報は記載しないでください。
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: 問題が起きるまでの操作を順番に記載してください。
+      placeholder: |
+        1. 部屋を作成する
+        2. ゲームを選択する
+        3. ○○を押す
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待していた動作
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 端末・ブラウザ
+      placeholder: 例：iPhone 15 / Safari、Windows 11 / Chrome
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: 補足
+      description: 個人情報やルームIDを隠したスクリーンショットなどがあれば添付してください。

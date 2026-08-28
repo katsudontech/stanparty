@@ -14,7 +14,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const game = getGameById(slug);
   if (!game) return {};
-  return { title: game.shortName, description: game.summary };
+  return {
+    title: game.shortName,
+    description: game.summary,
+    openGraph: {
+      title: game.shortName,
+      description: game.summary,
+      images: [],
+    },
+    twitter: {
+      title: game.shortName,
+      description: game.summary,
+      images: [],
+    },
+  };
 }
 
 export default async function GameDetailPage({ params }: { params: Promise<{ slug: string }> }) {
