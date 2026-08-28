@@ -38,6 +38,8 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
   const [submittedTurnKey, setSubmittedTurnKey] = useState<string | null>(null);
   const [pendingTurnKey, setPendingTurnKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [requiresDrawConfirmation, setRequiresDrawConfirmation] = useState(true);
+  const [armedTurnKey, setArmedTurnKey] = useState<string | null>(null);
   const submissionInFlightRef = useRef(false);
   const activeTurnKey = turnKey ?? currentTurnPlayerId;
   const isSubmitting = activeTurnKey !== null
@@ -46,6 +48,16 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasSizeRef = useRef({ width: 0, height: 0 });
   const logicalPathsRef = useRef<CanvasPath[]>([]);
+
+  // タッチ端末では、スクロールを描画と誤認しないよう一筆ごとに明示的に有効化する。
+  useEffect(() => {
+    const pointerQuery = window.matchMedia('(pointer: coarse)');
+    const updatePointerMode = () => setRequiresDrawConfirmation(pointerQuery.matches);
+
+    updatePointerMode();
+    pointerQuery.addEventListener('change', updatePointerMode);
+    return () => pointerQuery.removeEventListener('change', updatePointerMode);
+  }, []);
 
   const redrawLogicalPaths = useCallback(() => {
     const { width, height } = canvasSizeRef.current;
@@ -123,6 +135,8 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
   // 自分のターンかどうかを判定
   const isMyTurn = !isReadOnly && myUserId !== null && myUserId === currentTurnPlayerId;
   const canDraw = isMyTurn && isSyncReady && !isSubmitting && !syncError;
+  const isDrawArmed = activeTurnKey !== null && armedTurnKey === activeTurnKey;
+  const isDrawInputEnabled = canDraw && (!requiresDrawConfirmation || isDrawArmed);
 
   const handleStroke = async () => {
     // 自分のターンじゃない時、または既に送信処理中の発火は無視する
@@ -178,6 +192,13 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
     ? LOGICAL_STROKE_WIDTH * (canvasSize.width / LOGICAL_WIDTH) 
     : LOGICAL_STROKE_WIDTH;
 
+  const handlePointerUp = () => {
+    if (!isDrawInputEnabled) return;
+
+    if (requiresDrawConfirmation) setArmedTurnKey(null);
+    window.setTimeout(() => void handleStroke(), 100);
+  };
+
   return (
     <div className="w-full flex flex-col items-center">
       {(syncError || actionError) && (
@@ -185,14 +206,13 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
           {actionError || syncError}
         </p>
       )}
-      <div className={`w-full aspect-[3/4] bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}>
+      <div className={`fake-artist-canvas-frame aspect-[3/4] bg-white rounded-xl shadow-inner relative overflow-hidden border-2 transition-colors duration-300 ${isMyTurn ? 'border-indigo-400 ring-4 ring-indigo-400/20' : 'border-slate-300'}`}>
 
-        {/* 自分のターンでない時や送信中は pointer-events-none で操作を無効化 */}
-        {/* touch-none はブラウザがスクロールと勘違いして線を切断するバグを防止します */}
         <div
           ref={containerRef}
-          className={`w-full h-full touch-none ${canDraw ? '' : 'pointer-events-none'}`}
-          onPointerUp={() => setTimeout(handleStroke, 100)}
+          className="w-full h-full"
+          onPointerUp={handlePointerUp}
+          onPointerCancel={() => setArmedTurnKey(null)}
         >
           {canvasSize.width > 0 && (
             <ReactSketchCanvas
@@ -201,17 +221,36 @@ export function Canvas({ roomId, players, currentTurnPlayerId, turnKey, myUserId
               strokeColor={turnPlayer?.color || "#334155"}
               canvasColor="transparent"
               className="!border-none"
+              style={{
+                pointerEvents: isDrawInputEnabled ? 'auto' : 'none',
+                touchAction: isDrawInputEnabled ? 'none' : 'pan-y',
+              }}
             />
           )}
         </div>
+
+        {canDraw && requiresDrawConfirmation && !isDrawArmed && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-5">
+            <button
+              type="button"
+              className="pointer-events-auto rounded-xl border-2 border-indigo-700 bg-indigo-600 px-5 py-3 text-white shadow-lg transition-colors active:bg-indigo-700"
+              onClick={() => setArmedTurnKey(activeTurnKey)}
+            >
+              <span className="block text-base font-black">一筆を描く</span>
+              <span className="mt-1 block text-[11px] font-bold text-indigo-100">押すまでは絵の上もスクロールできます</span>
+            </button>
+          </div>
+        )}
 
         <div className={`absolute bottom-4 right-4 px-3 py-1 rounded-md text-sm font-bold shadow pointer-events-none transition-colors ${isMyTurn ? 'bg-indigo-500 text-white' : 'bg-slate-100/90 text-slate-600'}`}>
           {isReadOnly ? (
             '🎨 完成した絵'
           ) : isMyTurn && !isSyncReady ? (
             '描画履歴を同期中です...'
+          ) : isMyTurn && requiresDrawConfirmation && isDrawArmed ? (
+            '指を離すまでが一筆です'
           ) : isMyTurn ? (
-            '✨ あなたのターンです！描いてください'
+            '✨ あなたのターンです！'
           ) : (
             <span className="flex items-center gap-2">
               {turnPlayer && (

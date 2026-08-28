@@ -42,8 +42,72 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onUndoStrok
   };
 
   return (
-    <div className="w-full mt-8 flex flex-col space-y-6">
-      <div className="w-full max-w-2xl mx-auto bg-slate-700/50 p-6 rounded-xl border border-slate-600 flex flex-col sm:flex-row justify-between items-start sm:items-center shadow-lg gap-6">
+    <div className="mt-2 flex w-full flex-col space-y-3 sm:mt-8 sm:space-y-6">
+      <div className="w-full rounded-xl border border-slate-600 bg-slate-700/50 p-3 text-left shadow-lg sm:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold text-slate-500">ジャンル · ラウンド {gameState.currentLap}/{gameState.ruleSettings.roundLimit}</p>
+            <p className="truncate text-base font-black text-white">{themeGenre || '未設定'}</p>
+          </div>
+          <button
+            type="button"
+            aria-expanded={isInfoVisible}
+            onClick={() => setIsInfoVisible(!isInfoVisible)}
+            className="shrink-0 rounded-md border border-indigo-500/40 bg-indigo-500/10 px-3 py-2 text-xs font-black text-indigo-400"
+          >
+            {isInfoVisible ? '閉じる ▲' : 'お題・役職 ▼'}
+          </button>
+        </div>
+
+        <div className="mt-2 flex items-center gap-2 border-t border-slate-600 pt-2">
+          <span className="shrink-0 text-[11px] font-bold text-slate-500">いまの番</span>
+          {turnPlayer ? (
+            <>
+              <Avatar
+                avatarUrl={turnPlayer.avatarUrl}
+                name={turnPlayer.name}
+                color={turnPlayer.color}
+                size="xs"
+                decorative
+              />
+              <span className="min-w-0 truncate text-sm font-black" style={{ color: turnPlayer.color }}>
+                {turnPlayer.name}
+              </span>
+            </>
+          ) : (
+            <span className="text-sm font-black text-white">だれか</span>
+          )}
+        </div>
+
+        {isInfoVisible && (
+          <div className="mt-3 border-t border-slate-600 pt-3">
+            <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2">
+              <span className="block text-[10px] text-slate-500">お題</span>
+              <span className={`text-base font-black ${isFakeArtist ? 'text-rose-400' : 'text-emerald-400'}`}>
+                {isFakeArtist ? '???' : (theme || '未設定')}
+              </span>
+            </div>
+            <p className={`mt-2 text-xs font-black ${isFakeArtist ? 'text-rose-400' : 'text-emerald-400'}`}>
+              あなたの役職: {isFakeArtist ? 'エセ芸術家 🎨' : '芸術家 🖌️'}
+            </p>
+            {isMyTurn && canUndo && (
+              <div className="mt-3 border-t border-slate-700/50 pt-3">
+                <button
+                  type="button"
+                  onClick={() => void handleUndo()}
+                  disabled={isUndoing}
+                  className="w-full rounded-md bg-rose-500/90 px-3 py-2 text-sm font-bold text-white"
+                >
+                  ↩ {isUndoing ? 'やり直し中...' : '前の人の線をやり直す'}
+                </button>
+                {undoError && <p className="mt-2 text-xs font-bold text-rose-300" role="alert">{undoError}</p>}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="mx-auto hidden w-full max-w-2xl flex-col items-start justify-between gap-6 rounded-xl border border-slate-600 bg-slate-700/50 p-6 shadow-lg sm:flex sm:flex-row sm:items-center">
         
         <div className="text-left w-full sm:flex-1">
           <p className="text-slate-400 text-sm font-medium mb-2">公開情報</p>
@@ -89,6 +153,7 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onUndoStrok
               {isMyTurn && canUndo && (
                 <div className="mt-4 pt-4 border-t border-slate-700/50">
                   <button
+                    type="button"
                     onClick={() => void handleUndo()}
                     disabled={isUndoing}
                     className="w-full bg-rose-500/90 text-white px-3 py-2 rounded-md text-sm font-bold shadow hover:bg-rose-600 transition-colors flex items-center justify-center gap-2"

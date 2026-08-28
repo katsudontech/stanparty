@@ -261,6 +261,31 @@ button, input, select, textarea { font: inherit; }
 .paper-game [class*="rounded-3xl"] { border-radius: 14px !important; }
 .paper-game [class*="rounded-2xl"] { border-radius: 10px !important; }
 .paper-game [class*="rounded-xl"] { border-radius: 8px !important; }
+
+.fake-artist-canvas-frame { width: 100%; }
+
+@media (max-width: 639px) {
+  .fake-artist-game[data-phase="drawing"] {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    height: 100vh;
+    height: 100svh;
+    padding-top: max(.5rem, env(safe-area-inset-top));
+    padding-right: max(.5rem, env(safe-area-inset-right));
+    padding-bottom: max(.5rem, env(safe-area-inset-bottom));
+    padding-left: max(.5rem, env(safe-area-inset-left));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .fake-artist-canvas-frame {
+    width: min(100%, calc(75vh - 6.5rem));
+    width: min(100%, calc(75svh - 6.5rem));
+  }
+}
 .ito-game { --game-accent: var(--blue); }
 .fake-artist-game { --game-accent: var(--orange); }
 .ito-game input,

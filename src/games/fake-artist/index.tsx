@@ -136,9 +136,12 @@ export function FakeArtistGame({ roomState, myUserId, onBackToLobby }: FakeArtis
   // ③ 実際の画面レイアウト（ここで①と②を合体させる）
   // ==========================================
   return (
-    <div className="paper-game fake-artist-game flex w-full flex-col items-center border-2 border-[var(--line)] bg-[var(--surface)] p-2 text-center shadow-[5px_5px_0_var(--line)] sm:p-5">
+    <div
+      className="paper-game fake-artist-game flex w-full flex-col items-center border-2 border-[var(--line)] bg-[var(--surface)] p-2 text-center shadow-[5px_5px_0_var(--line)] sm:p-5"
+      data-phase={currentPhase}
+    >
       {/* 上部に常にヘッダーを表示 */}
-      <div className="w-full max-w-2xl mx-auto">
+      <div className={`w-full max-w-2xl mx-auto ${currentPhase === 'drawing' ? 'hidden sm:block' : ''}`}>
         {renderHeader()}
       </div>
 
