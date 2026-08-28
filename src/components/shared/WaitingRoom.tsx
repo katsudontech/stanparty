@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Avatar } from '@/components/shared/Avatar';
 import { GameRulesDialog } from '@/components/shared/GameRulesDialog';
+import { buildLineInviteUrl } from '@/components/shared/lineInvite';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { GAME_CATALOG, getGameById, getGamePlayerCountError } from '@/games/catalog';
 
@@ -32,6 +33,14 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
     }
   };
 
+  const handleLineInvite = () => {
+    window.open(
+      buildLineInviteUrl(window.location.href),
+      '_blank',
+      'noopener,noreferrer'
+    );
+  };
+
   const selectedGame = getGameById(roomState.game_type);
   const playerCountError = getGamePlayerCountError(roomState.game_type, players.length);
 
@@ -46,22 +55,36 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
       <main className="site-container py-10 sm:py-14">
         <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div><p className="section-kicker">Waiting room</p><h1 className="mt-2 text-4xl font-black tracking-[-.055em] sm:text-5xl">みんなを待っています。</h1></div>
-          <button
-            onClick={handleCopyUrl}
-            className="button-secondary shrink-0"
-          >
-            {copied ? (
-              <>
-                <svg className="h-5 w-5 text-[var(--green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                <span>コピーしました</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                招待URLをコピー
-              </>
-            )}
-          </button>
+          <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
+            <button
+              type="button"
+              onClick={handleLineInvite}
+              className="button-secondary button-line shrink-0"
+              aria-label="LINEでルームに招待"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 11.5a8.38 8.38 0 01-9 8.5 9.5 9.5 0 01-4.5-1.1L3 20l1.35-3.6A8.1 8.1 0 013 11.5C3 6.8 7 3 12 3s9 3.8 9 8.5z" />
+              </svg>
+              LINEで招待
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyUrl}
+              className="button-secondary shrink-0"
+            >
+              {copied ? (
+                <>
+                  <svg className="h-5 w-5 text-[var(--green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <span>コピーしました</span>
+                </>
+              ) : (
+                <>
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                  招待URLをコピー
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="grid gap-7 lg:grid-cols-[.9fr_1.1fr]">
