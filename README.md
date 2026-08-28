@@ -43,6 +43,9 @@ StanPartyでは、一人がルームを作成し、ほかの参加者がURLか�
 - **待機ルームでのゲーム選択**\
   参加者の接続状況を確認しながら、ホストが遊ぶゲームを選択して開始できます。
 
+- **PWA対応**\
+  対応ブラウザではホーム画面へインストールして、アプリのように起動できます。通信できない状態で開いた場合は、専用のオフライン案内を表示します。
+
 ## 技術スタック
 
 | 分類                 | 技術                                     | 用途                                             |
@@ -54,7 +57,7 @@ StanPartyでは、一人がルームを作成し、ほかの参加者がURLか�
 | リアルタイム通信     | Supabase Realtime                        | 参加者、ゲーム状態、描画、投票などの同期         |
 | DB処理・アクセス制御 | PostgreSQL RPC / RLS                     | ルーム操作、ゲーム操作の検証とアクセス制御       |
 | 描画                 | react-sketch-canvas                      | エセ芸術家の描画画面                             |
-| ブラウザAPI          | Screen Wake Lock API / localStorage      | ゲーム中の画面消灯防止、名前などの端末内保存     |
+| ブラウザAPI          | Service Worker / Screen Wake Lock API / localStorage | PWA・オフライン案内、画面消灯防止、端末内保存 |
 | テスト               | Vitest                                   | Coyoteとitoのルール処理の単体テスト              |
 | インフラ             | Vercel                                   | Webアプリのホスティングとデプロイ                |
 | 品質管理             | ESLint / TypeScript                      | 静的解析と型チェック                             |

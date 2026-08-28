@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import "./theme.css";
@@ -22,6 +23,14 @@ export const metadata: Metadata = {
   },
   description: "スマホひとつで友達と遊べる、リアルタイムのパーティゲーム。アカウント登録なしですぐに始められます。",
   applicationName: "StanParty",
+  appleWebApp: {
+    capable: true,
+    title: "StanParty",
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     title: "StanParty｜待ち時間を、遊ぶ時間に。",
     description: "スマホひとつで友達と遊べる、リアルタイムのパーティゲーム。アカウント登録なしですぐに始められます。",
@@ -37,6 +46,10 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#f4f0e6",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -47,7 +60,10 @@ export default function RootLayout({
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <ServiceWorkerRegistration />
+      </body>
     </html>
   );
 }
