@@ -47,7 +47,7 @@ StanPartyでは、一人がルームを作成し、ほかの参加者がURLか�
 
 | 分類                 | 技術                                     | 用途                                             |
 | -------------------- | ---------------------------------------- | ------------------------------------------------ |
-| フロントエンド       | Next.js 16.2 / React 19.2 / TypeScript 5 | 画面表示、ルーティング、ルーム・ゲーム状態の管理 |
+| フロントエンド       | Next.js 16.3 / React 19.2 / TypeScript 5 | 画面表示、ルーティング、ルーム・ゲーム状態の管理 |
 | スタイリング         | Tailwind CSS 4                           | スマートフォン向けUIの構築                       |
 | データベース         | Supabase PostgreSQL                      | ルーム、参加者、ゲーム状態、ゲームイベントの保存 |
 | 認証                 | Supabase Anonymous Sign-Ins              | アカウント登録を必要としない参加者の識別         |
@@ -155,7 +155,7 @@ Coyote Online Foreheadについては、以前に開発した[単独版のリポ
 
 ### 必要な環境
 
-- Node.js 20.9以上
+- Node.js 20.19以上
 - npm
 - Supabaseプロジェクト
 - Supabase Anonymous Sign-Ins
@@ -189,6 +189,8 @@ supabase/migrations/20260812020000_harden_coyote_player_keys.sql
 supabase/migrations/20260812030000_create_room_rpc.sql
 supabase/migrations/20260824000000_add_ito_game_actions.sql
 supabase/migrations/20260827000000_enforce_game_player_count_on_start.sql
+supabase/migrations/20260827010000_fix_fake_artist_game_actions.sql
+supabase/migrations/20260828000000_default_rooms_private.sql
 ```
 
 開発サーバーを起動します。
@@ -214,7 +216,7 @@ npm run build
 
 - 現在遊べるゲームは「エセ芸術家 ニューヨークへ行く」「Coyote Online Forehead」「ito」の3種類です。
 - ワンナイト人狼は基本的な画面構成のみ実装しており、ゲームとして遊べる状態にはなっていません。
-- ゲーム画面からルームを退出する操作は、まだ完全には実装していません。
+- ゲーム進行中の人数変更には対応していないため、ゲーム画面には途中退出の操作を設けていません。
 - 匿名認証のユーザー情報はブラウザのセッションに依存するため、別の端末やブラウザから同じ利用者として再参加することはできません。
 - itoの秘密の数字は通常画面では本人だけに表示しますが、ゲーム状態を共有しているため、参加者がブラウザの開発者ツールを使えば確認できます。
 - Coyoteとitoのルール処理には単体テストがありますが、エセ芸術家や共通ルーム機能の自動テストは未導入です。
@@ -226,7 +228,6 @@ npm run build
 
 - [ ] ワンナイト人狼を完成させる
 - [ ] itoへアカイイトやニジノイトなどのルールを追加する
-- [ ] ゲーム画面からの退出と、ホスト退出時のルーム終了処理を整備する
 - [ ] 通信切断後の再接続とゲーム復帰処理を改善する
 - [ ] 初期テーブル、RLS、Realtime設定、DB関数を含むマイグレーションを整備する
 - [ ] `.env.example`を追加し、ローカル環境を再現しやすくする

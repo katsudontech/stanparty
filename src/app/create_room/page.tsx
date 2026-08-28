@@ -11,7 +11,7 @@ export default function CreateRoomPage() {
     const [roomName, setRoomName] = useState('')
     const [hostName, setHostName] = useState<string | null>(null)
     const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null)
-    const [isPublic, setIsPublic] = useState(true)
+    const [isPublic, setIsPublic] = useState(false)
     const [loading, setLoading] = useState(false)
     
     const { profile: myProfile, loading: checkingAuth } = useGuestAuth()
@@ -146,8 +146,8 @@ export default function CreateRoomPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-black">「部屋を探す」の一覧に表示する</p>
-                                    <p className="mt-1 text-xs leading-5 text-[var(--muted)]">オフにすると、URLを知っている人だけが参加できます。</p>
+                                    <p className="text-sm font-black">公開ルームにする</p>
+                                    <p className="mt-1 text-xs leading-5 text-[var(--muted)]">オンにすると一覧へ表示され、誰でも参加できます。オフのままなら、招待URLを知っている人だけが参加できます。</p>
                                 </div>
                             </label>
 

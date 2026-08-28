@@ -3,6 +3,8 @@ export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito';
 export interface GameCatalogEntry {
   id: PlayableGameId;
   name: string;
+  officialPublisher: string;
+  officialProductUrl: string;
   shortName: string;
   catchphrase: string;
   summary: string;
@@ -25,6 +27,8 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   {
     id: 'fake-artist',
     name: 'エセ芸術家 ニューヨークへ行く',
+    officialPublisher: 'オインクゲームズ',
+    officialProductUrl: 'https://oinkgames.com/ja/games/analog/a-fake-artist-goes-to-new-york/',
     shortName: 'エセ芸術家',
     catchphrase: '一筆ずつ描いて、知らないふりを見破れ。',
     summary: 'みんなで1枚の絵を描きながら、お題を知らない「エセ芸術家」を探す正体隠匿ゲーム。',
@@ -57,6 +61,8 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   {
     id: 'coyote',
     name: 'Coyote Online Forehead',
+    officialPublisher: 'ニューゲームズオーダー',
+    officialProductUrl: 'https://www.newgamesorder.jp/games/coyote',
     shortName: 'Coyote',
     catchphrase: '見えない自分の数字を、みんなの顔から読み切れ。',
     summary: 'スマホをおでこに掲げ、ほかの人のカードだけを見て場の合計を予想する度胸試し。',
@@ -90,6 +96,8 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   {
     id: 'ito',
     name: 'ito クモノイト2.0',
+    officialPublisher: 'アークライトゲームズ',
+    officialProductUrl: 'https://arclightgames.jp/product/705rainbow/',
     shortName: 'ito',
     catchphrase: '数字を言わずに、気持ちのものさしを合わせよう。',
     summary: '1〜100の秘密の数字を言葉でたとえ、会話だけで小さい順に並べる協力ゲーム。',

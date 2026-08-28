@@ -119,7 +119,11 @@ export default function Home() {
 
       <footer className="border-t-2 border-[var(--line)] bg-[var(--ink)] py-8 text-[var(--surface)]">
         <div className="site-container flex items-center justify-between gap-4 text-xs font-bold">
-          <span>StanParty</span><span>スマホひとつで、みんなと遊ぼう。</span>
+          <span>StanParty</span>
+          <div className="flex items-center gap-5">
+            <Link href="/credits" className="underline underline-offset-4">権利表記</Link>
+            <span>スマホひとつで、みんなと遊ぼう。</span>
+          </div>
         </div>
       </footer>
     </div>

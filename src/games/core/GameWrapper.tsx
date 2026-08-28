@@ -15,20 +15,13 @@ export function GameWrapper({ children, players, myUserId, showPlayerBar = true 
   return (
     <div className="party-game min-h-screen overflow-x-hidden bg-[var(--paper)] p-2 text-[var(--ink)] sm:p-4">
       <div className="mx-auto w-full max-w-6xl">
-        <header className="mb-3 flex items-center justify-between border-b-2 border-[var(--line)] px-1 pb-3 sm:mb-5 sm:pb-4">
+        <header className="mb-3 flex items-center border-b-2 border-[var(--line)] px-1 pb-3 sm:mb-5 sm:pb-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="site-brand__mark">
               SP
             </div>
             <h1 className="text-base font-black tracking-[-.03em] sm:text-lg">StanParty</h1>
           </div>
-          
-          <button 
-            className="border-2 border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-xs font-black transition hover:bg-[var(--paper-deep)] sm:px-4 sm:text-sm"
-            onClick={() => alert('TODO: 退室処理')}
-          >
-            退出する
-          </button>
         </header>
 
         {showPlayerBar && (

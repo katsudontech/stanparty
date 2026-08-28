@@ -33,6 +33,7 @@ export default function RoomsListPage() {
                 const { data, error } = await supabase
                     .from('room_directory')
                     .select('id, room_name, game_type, status, player_count, created_at')
+                    .eq('status', 'waiting')
                     .order('created_at', { ascending: false })
 
                 if (error) throw error
@@ -54,17 +55,26 @@ export default function RoomsListPage() {
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
                         const newRoom = payload.new as RoomDirectoryEntry
-                        setRooms((previousRooms) => [
-                            newRoom,
-                            ...previousRooms.filter((room) => room.id !== newRoom.id)
-                        ])
+                        if (newRoom.status === 'waiting') {
+                            setRooms((previousRooms) => [
+                                newRoom,
+                                ...previousRooms.filter((room) => room.id !== newRoom.id)
+                            ])
+                        }
                     } else if (payload.eventType === 'UPDATE') {
                         const updatedRoom = payload.new as RoomDirectoryEntry
-                        setRooms((previousRooms) =>
-                            previousRooms.map((room) =>
-                                room.id === updatedRoom.id ? updatedRoom : room
-                            )
-                        )
+                        setRooms((previousRooms) => {
+                            if (updatedRoom.status !== 'waiting') {
+                                return previousRooms.filter((room) => room.id !== updatedRoom.id)
+                            }
+
+                            const roomExists = previousRooms.some((room) => room.id === updatedRoom.id)
+                            return roomExists
+                                ? previousRooms.map((room) =>
+                                    room.id === updatedRoom.id ? updatedRoom : room
+                                )
+                                : [updatedRoom, ...previousRooms]
+                        })
                     } else if (payload.eventType === 'DELETE') {
                         const deletedRoom = payload.old as { id?: string }
                         setRooms((previousRooms) =>
@@ -95,8 +105,8 @@ export default function RoomsListPage() {
                 <div className="mb-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
                     <div>
                         <p className="section-kicker">Open rooms</p>
-                        <h1 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-6xl">開いている部屋</h1>
-                        <p className="mt-3 text-[var(--muted)]">待機中の部屋を選んで、そのまま参加できます。</p>
+                        <h1 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-6xl">参加できる公開ルーム</h1>
+                        <p className="mt-3 text-[var(--muted)]">ゲーム開始前の部屋だけを表示しています。</p>
                     </div>
                     
                     <Link
@@ -135,7 +145,6 @@ export default function RoomsListPage() {
                         {rooms.map((room) => {
                             const roomName = room.room_name || '無名のルーム'
                             const playerCount = room.player_count
-                            const isWaiting = room.status === 'waiting'
                             const game = getGameById(room.game_type)
 
                             return (
@@ -149,12 +158,8 @@ export default function RoomsListPage() {
                                             <h2 className="line-clamp-1 text-xl font-black tracking-[-.03em] sm:text-2xl">
                                                 {roomName}
                                             </h2>
-                                            <span className={`shrink-0 border px-2 py-1 text-[10px] font-black ${
-                                                isWaiting 
-                                                    ? 'border-[var(--green)] bg-[#dbe9db] text-[var(--green)]'
-                                                    : 'border-[#8c887d] bg-[var(--paper-deep)] text-[var(--muted)]'
-                                            }`}>
-                                                {isWaiting ? '待機中' : 'プレイ中'}
+                                            <span className="shrink-0 border border-[var(--green)] bg-[#dbe9db] px-2 py-1 text-[10px] font-black text-[var(--green)]">
+                                                待機中
                                             </span>
                                         </div>
 

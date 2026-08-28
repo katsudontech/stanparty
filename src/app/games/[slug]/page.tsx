@@ -108,7 +108,17 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
         <section className="border-t-2 border-[var(--line)] bg-[var(--yellow)] py-14">
           <div className="site-container flex flex-col items-start justify-between gap-7 sm:flex-row sm:items-center">
             <div><p className="text-sm font-black">遊びたくなったら</p><h2 className="mt-1 text-3xl font-black tracking-[-.05em]">みんなを部屋に呼ぼう。</h2></div>
-            <Link href="/create_room" className="button-secondary bg-white">遊ぶ部屋をつくる →</Link>
+            <div className="flex w-full flex-col items-start gap-4 sm:w-auto sm:items-end">
+              <Link href="/create_room" className="button-secondary bg-white">遊ぶ部屋をつくる →</Link>
+              <a
+                href={game.officialProductUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-link"
+              >
+                {game.officialPublisher}の公式商品ページ ↗
+              </a>
+            </div>
           </div>
         </section>
       </main>
