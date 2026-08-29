@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAiBarenaiGuessPrompt, buildPublicResult, getAnswerMatchResult, getCyclicAssignments, nextAssignmentCursor, selectWinner, validateGeminiGuess, validateGeminiSemantic } from './rules';
+import { buildAiBarenaiGuessPrompt, buildAiBarenaiReactionFallback, buildAiBarenaiReactionPrompt, buildPublicResult, composeAiBarenaiReaction, getAnswerMatchResult, getCyclicAssignments, nextAssignmentCursor, selectAiReactionHint, selectWinner, validateAiBarenaiReaction, validateGeminiGuess, validateGeminiSemantic } from './rules';
 
 describe('AIにバレるな！ rules', () => {
   it('matches NFKC, case, and safe whitespace exactly', () => {
@@ -31,6 +31,27 @@ describe('AIにバレるな！ rules', () => {
   it('validates semantic Gemini responses', () => {
     expect(validateGeminiSemantic({correct: true})).toBe(true);
     expect(validateGeminiSemantic({correct: 'true'})).toBeNull();
+  });
+  it('composes an approximately three-sentence reaction with the decisive hint', () => {
+    const reaction = composeAiBarenaiReaction({opening: '正解できてうれしいです', decisiveHint: '青い海', decisiveMoment: '青い海を聞いて、答えがひらめきました', closing: 'また挑戦したいです'});
+    expect(reaction).toBe('正解できてうれしいです。青い海を聞いて、答えがひらめきました。また挑戦したいです。');
+    expect(reaction.split(/[。！？]/u).filter(Boolean)).toHaveLength(3);
+  });
+  it('accepts a decisive hint only when it is an actual revealed hint', () => {
+    const hints = [{round: 1, hints: [{text: '赤い'}]}, {round: 2, hints: [{text: '青い'}]}];
+    expect(selectAiReactionHint(hints, '存在しないヒント')).toBe('青い');
+    expect(validateAiBarenaiReaction({opening: '分かりました', decisiveHint: '存在しないヒント', decisiveMoment: '存在しないヒントが決め手でした', closing: '楽しかったです'}, hints)).toEqual({opening: '分かりました', decisiveHint: '青い', decisiveMoment: '「青い」が決め手になって、答えが分かりました', closing: '楽しかったです'});
+    expect(validateAiBarenaiReaction({opening: '分かりました', decisiveHint: '青い', decisiveMoment: 'そこから答えが見えました', closing: '楽しかったです'}, hints)?.decisiveMoment).toBe('「青い」が決め手になって、答えが分かりました');
+    expect(buildAiBarenaiReactionFallback(hints)).toContain('「青い」');
+  });
+  it('builds reaction prompt from only public hints and the AI answer', () => {
+    const prompt = buildAiBarenaiReactionPrompt([{round: 1, hints: [{text: '青い海'}]}], 'イルカ');
+    expect(prompt).toContain('青い海');
+    expect(prompt).toContain('イルカ');
+    expect(prompt).not.toContain('秘密のお題');
+    expect(prompt).not.toContain('人間の答え');
+    expect(prompt).not.toContain('aliases');
+    expect(prompt).not.toContain('humanCorrect');
   });
   it('includes only prior-round answer strings in the Gemini context', () => {
     const prompt = buildAiBarenaiGuessPrompt(

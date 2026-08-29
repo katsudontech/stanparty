@@ -23,6 +23,7 @@ export interface AiBarenaiGameState {
 export interface AiBarenaiResult {
   winner: 'ai' | 'humans' | 'draw' | null; topic: string | null; humanAnswer: string;
   aiAnswer: string; aiConfidence: number; humanCorrect: boolean; aiCorrect: boolean; aiError?: boolean;
+  aiComment?: string;
 }
 export function createDefaultAiBarenaiState(): AiBarenaiGameState {
   return { game: 'ai-barenai', version: 1, phase: 'rule_setting', hintsPerRound: 1,

@@ -207,6 +207,7 @@ supabase/migrations/20260828010000_schedule_stale_data_cleanup.sql
 supabase/migrations/20260829000000_add_ai_barenai.sql
 supabase/migrations/20260829010000_ai_barenai_host_progression.sql
 supabase/migrations/20260829020000_ai_barenai_answer_history.sql
+supabase/migrations/20260829030000_ai_barenai_ai_reaction.sql
 ```
 
 `20260828010000_schedule_stale_data_cleanup.sql` はSupabase Cronを有効にし、毎時17分（UTC）に次のデータを自動削除します。

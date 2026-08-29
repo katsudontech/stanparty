@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { pickAiBarenaiTopic } from '@/games/ai-barenai/topics';
-import { buildAiBarenaiGuessPrompt, getAnswerMatchResult, validateGeminiGuess, validateGeminiSemantic } from '@/games/ai-barenai/rules';
+import { buildAiBarenaiGuessPrompt, buildAiBarenaiReactionFallback, buildAiBarenaiReactionPrompt, composeAiBarenaiReaction, getAnswerMatchResult, validateAiBarenaiReaction, validateGeminiGuess, validateGeminiSemantic } from '@/games/ai-barenai/rules';
 import type { AiBarenaiAnswerHistory } from '@/games/ai-barenai/types';
 import { isAiBarenaiHostAction, type AiBarenaiAction } from './authorization';
 
@@ -41,7 +41,7 @@ async function actorFromToken(token: string) {
 async function autoJudge(supabase: ReturnType<typeof serviceClient>, roomId: string, actorId: string) {
   const claimToken = crypto.randomUUID();
   const claim = await supabase.rpc('ai_barenai_claim_judging', {p_room_id: roomId, p_actor_id: actorId, p_claim_token: claimToken});
-  const secret = claim.data as {claimed?: boolean; round?: number; token?: string; topic?: string; aliases?: string[]; human_answer?: string; ai_answer?: string} | null;
+  const secret = claim.data as {claimed?: boolean; round?: number; token?: string; topic?: string; aliases?: string[]; human_answer?: string; ai_answer?: string; hints?: unknown} | null;
   if (
     claim.error
     || secret?.claimed !== true
@@ -71,7 +71,20 @@ aliases: ${JSON.stringify(secret.aliases ?? [])}
     evaluate(secret.human_answer),
     evaluate(secret.ai_answer),
   ]);
-  const result = await supabase.rpc('ai_barenai_complete_judging', {p_room_id: roomId, p_actor_id: actorId, p_claim_token: secret.token, p_claim_round: secret.round, p_human_correct: humanCorrect, p_ai_correct: aiCorrect});
+  let aiComment: string | null = null;
+  if (aiCorrect) {
+    try {
+      const reaction = validateAiBarenaiReaction(await gemini(buildAiBarenaiReactionPrompt(secret.hints, secret.ai_answer), {
+        type: 'object', properties: {opening: {type: 'string'}, decisiveHint: {type: 'string'}, decisiveMoment: {type: 'string'}, closing: {type: 'string'}},
+        required: ['opening', 'decisiveHint', 'decisiveMoment', 'closing'], additionalProperties: false,
+      }), secret.hints);
+      if (!reaction) throw new Error('Invalid Gemini reaction');
+      aiComment = composeAiBarenaiReaction(reaction);
+    } catch {
+      aiComment = buildAiBarenaiReactionFallback(secret.hints);
+    }
+  }
+  const result = await supabase.rpc('ai_barenai_complete_judging', {p_room_id: roomId, p_actor_id: actorId, p_claim_token: secret.token, p_claim_round: secret.round, p_human_correct: humanCorrect, p_ai_correct: aiCorrect, p_ai_comment: aiComment});
   if (result.error) throw result.error;
   return result.data;
 }
