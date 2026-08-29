@@ -147,10 +147,14 @@ export async function POST(request: Request) {
       if (result.error) throw result.error; data = result.data;
     } else if (body.action === 'hint') {
       const result = await supabase.rpc('ai_barenai_submit_hint', {p_room_id: body.roomId, p_actor_id: actorId, p_hint: body.hint});
-      if (result.error) throw result.error; data = isHost ? await ensureProgress(supabase, body.roomId, actorId) ?? result.data : result.data;
+      if (result.error) throw result.error;
+      // An authorized player action may unlock the next server-owned step.
+      // Use the canonical host ID so progression does not depend on the host tab being active.
+      data = await ensureProgress(supabase, body.roomId, room.data.host_id) ?? result.data;
     } else if (body.action === 'answer') {
       const result = await supabase.rpc('ai_barenai_submit_answer', {p_room_id: body.roomId, p_actor_id: actorId, p_answer: body.answer});
-      if (result.error) throw result.error; data = isHost ? await ensureProgress(supabase, body.roomId, actorId) ?? result.data : result.data;
+      if (result.error) throw result.error;
+      data = await ensureProgress(supabase, body.roomId, room.data.host_id) ?? result.data;
     } else if (body.action === 'topic') {
       const result = await supabase.rpc('ai_barenai_get_topic', {p_room_id: body.roomId, p_actor_id: actorId});
       if (result.error) return jsonError('お題を表示できません', 403);
