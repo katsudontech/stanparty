@@ -93,7 +93,7 @@ export function buildAiBarenaiReactionFallback(hints: unknown): string {
 export function buildAiBarenaiReactionPrompt(hints: unknown, aiAnswer: unknown): string {
   const safeHints = getRevealedHintTexts(hints);
   const safeAnswer = typeof aiAnswer === 'string' ? aiAnswer.normalize('NFKC').trim().slice(0, 200) : '';
-  return `あなたは言葉当てゲームのAIです。AIが正解したときの短い感想を日本語で作ってください。
+  return `あなたは言葉当てゲームのAIです。AIが正解したときの短い感想を日本語で作ってください。正解の文章は自分が正解したときの感想をお願いします。
 以下の公開済みヒントとAIの最終回答だけを使い、opening、decisiveMoment、closingはそれぞれ短い一文にしてください。decisiveHintには、必ず以下のヒントのいずれか1つをそのまま入れてください。decisiveMomentには、decisiveHintがどのように答えの決め手になったかを自然な一文で説明し、decisiveHintの内容を明記してください。
 ${JSON.stringify({hints: safeHints, aiAnswer: safeAnswer})}
 指定されたJSON形式だけを返してください。`;
