@@ -1,9 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { pickAiBarenaiTopic } from '@/games/ai-barenai/topics';
-import { getAnswerMatchResult, validateGeminiGuess, validateGeminiSemantic } from '@/games/ai-barenai/rules';
+import { buildAiBarenaiGuessPrompt, getAnswerMatchResult, validateGeminiGuess, validateGeminiSemantic } from '@/games/ai-barenai/rules';
+import type { AiBarenaiAnswerHistory } from '@/games/ai-barenai/types';
+import { isAiBarenaiHostAction, type AiBarenaiAction } from './authorization';
 
 export const dynamic = 'force-dynamic';
-type Action = 'initialize'|'hint'|'answer'|'topic'|'guess'|'judge'|'next-round'|'resume';
+export type Action = AiBarenaiAction;
+export { HOST_ONLY_ACTIONS, isAiBarenaiHostAction } from './authorization';
 function jsonError(message: string, status = 400) { return Response.json({error: message}, {status}); }
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -76,22 +79,12 @@ async function runGuess(supabase: ReturnType<typeof serviceClient>, roomId: stri
   const claimToken = crypto.randomUUID();
   const claimed = await supabase.rpc('ai_barenai_claim_guess', {p_room_id: roomId, p_actor_id: actorId, p_claim_token: claimToken});
   if (claimed.error) return null;
-  const claimData = claimed.data as {claimed?: unknown; round?: number; token?: string; hints?: Array<{round?: number; hints?: Array<{text?: string}>}>} | null;
+  const claimData = claimed.data as {claimed?: unknown; round?: number; token?: string; hints?: Array<{round?: number; hints?: Array<{text?: string}>}>; answerHistory?: AiBarenaiAnswerHistory[]} | null;
   if (claimData?.claimed !== true || typeof claimData.round !== 'number' || typeof claimData.token !== 'string') return null;
   const hints = (claimData.hints ?? []).map((round) => ({round: round.round, hints: (round.hints ?? []).map((hint) => hint.text).filter((hint): hint is string => typeof hint === 'string')}));
   let answer = 'AI回答を取得できませんでした', confidence = 0, errorText: string | null = null;
   try {
-    const guess = validateGeminiGuess(await gemini(`あなたは言葉当てゲームの回答者です。
-これまでに提示されたすべてのヒントから、隠されたお題を推測してください。
-
-情報が少なくても、必ず現時点で最も可能性が高いものを1つだけ回答してください。
-「分かりません」「判断できません」や複数候補の回答は認められません。
-さらに、その回答が正解であるとどの程度確信しているかを0〜100の整数で示してください。
-
-以下は公開済みヒントだけをラウンド別にまとめたものです。お題、aliases、以前のAI回答、正誤結果は含まれていません。
-${JSON.stringify(hints)}
-
-指定されたJSON形式だけを返してください。`, {type:'object', properties:{answer:{type:'string'},confidence:{type:'integer',minimum:0,maximum:100}}, required:['answer','confidence'], additionalProperties:false}));
+    const guess = validateGeminiGuess(await gemini(buildAiBarenaiGuessPrompt(hints, claimData.answerHistory, claimData.round), {type:'object', properties:{answer:{type:'string'},confidence:{type:'integer',minimum:0,maximum:100}}, required:['answer','confidence'], additionalProperties:false}));
     if (!guess) throw new Error('Invalid Gemini guess'); answer = guess.answer; confidence = guess.confidence;
   } catch (error) { errorText = error instanceof Error ? error.message : 'Gemini error'; }
   const completed = await supabase.rpc('ai_barenai_complete_guess', {p_room_id: roomId, p_actor_id: actorId, p_claim_token: claimData.token, p_claim_round: claimData.round, p_answer: answer, p_confidence: confidence, p_error: errorText});
@@ -128,6 +121,12 @@ export async function POST(request: Request) {
     if (membership.error || membership.data !== true) {
       return jsonError('Room membership is required', 403);
     }
+    const room = await supabase.from('rooms').select('host_id').eq('id', body.roomId).single();
+    if (room.error || !room.data) throw room.error ?? new Error('Room not found');
+    const isHost = room.data.host_id === actorId;
+    if (isAiBarenaiHostAction(body.action) && !isHost) {
+      return jsonError('この操作はホストのみ実行できます', 403);
+    }
     let data: unknown;
     if (body.action === 'initialize') {
       const topic = pickAiBarenaiTopic();
@@ -135,10 +134,10 @@ export async function POST(request: Request) {
       if (result.error) throw result.error; data = result.data;
     } else if (body.action === 'hint') {
       const result = await supabase.rpc('ai_barenai_submit_hint', {p_room_id: body.roomId, p_actor_id: actorId, p_hint: body.hint});
-      if (result.error) throw result.error; data = await ensureProgress(supabase, body.roomId, actorId) ?? result.data;
+      if (result.error) throw result.error; data = isHost ? await ensureProgress(supabase, body.roomId, actorId) ?? result.data : result.data;
     } else if (body.action === 'answer') {
       const result = await supabase.rpc('ai_barenai_submit_answer', {p_room_id: body.roomId, p_actor_id: actorId, p_answer: body.answer});
-      if (result.error) throw result.error; data = await ensureProgress(supabase, body.roomId, actorId) ?? result.data;
+      if (result.error) throw result.error; data = isHost ? await ensureProgress(supabase, body.roomId, actorId) ?? result.data : result.data;
     } else if (body.action === 'topic') {
       const result = await supabase.rpc('ai_barenai_get_topic', {p_room_id: body.roomId, p_actor_id: actorId});
       if (result.error) return jsonError('お題を表示できません', 403);
@@ -146,6 +145,8 @@ export async function POST(request: Request) {
     } else if (body.action === 'next-round') {
       const result = await supabase.rpc('ai_barenai_next_round', {p_room_id: body.roomId, p_actor_id: actorId});
       if (result.error) throw result.error; data = result.data;
+    } else if (body.action === 'guess') {
+      data = await runGuess(supabase, body.roomId, actorId);
     } else if (body.action === 'judge') {
       data = await autoJudge(supabase, body.roomId, actorId);
     } else {

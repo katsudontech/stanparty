@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPublicResult, getAnswerMatchResult, getCyclicAssignments, nextAssignmentCursor, selectWinner, validateGeminiGuess, validateGeminiSemantic } from './rules';
+import { buildAiBarenaiGuessPrompt, buildPublicResult, getAnswerMatchResult, getCyclicAssignments, nextAssignmentCursor, selectWinner, validateGeminiGuess, validateGeminiSemantic } from './rules';
 
 describe('AIにバレるな！ rules', () => {
   it('matches NFKC, case, and safe whitespace exactly', () => {
@@ -31,5 +31,24 @@ describe('AIにバレるな！ rules', () => {
   it('validates semantic Gemini responses', () => {
     expect(validateGeminiSemantic({correct: true})).toBe(true);
     expect(validateGeminiSemantic({correct: 'true'})).toBeNull();
+  });
+  it('includes only prior-round answer strings in the Gemini context', () => {
+    const prompt = buildAiBarenaiGuessPrompt(
+      [{round: 2, hints: ['青い', '海']}],
+      [
+        {round: 1, humanAnswer: '人間の答え', aiAnswer: 'AIの答え', aiConfidence: 91, humanCorrect: false, aiCorrect: true, aiError: false, topic: '秘密のお題', aliases: ['別名']},
+        {round: 2, humanAnswer: '現在ラウンドの答え', aiAnswer: '現在ラウンドのAI答え', aiConfidence: 10, humanCorrect: true, aiCorrect: false, aiError: false},
+      ],
+      2,
+    );
+    expect(prompt).toContain('人間の答え');
+    expect(prompt).toContain('AIの答え');
+    expect(prompt).toContain('青い');
+    expect(prompt).not.toContain('現在ラウンドの答え');
+    expect(prompt).not.toContain('現在ラウンドのAI答え');
+    expect(prompt).not.toContain('秘密のお題');
+    expect(prompt).not.toContain('別名');
+    expect(prompt).not.toContain('aiConfidence');
+    expect(prompt).not.toContain('humanCorrect');
   });
 });

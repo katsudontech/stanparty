@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { RoomState } from '@/games/core/types';
 import { normalizeAiBarenaiGameState, type AiBarenaiGameState } from '../types';
 
-export function useAiBarenaiGame(room: RoomState) {
+export function useAiBarenaiGame(room: RoomState, isHost: boolean) {
   const gameState = normalizeAiBarenaiGameState(room.game_state);
   const [topic, setTopic] = useState<string | null>(null);
   const inFlight = useRef<string | null>(null);
@@ -24,7 +24,7 @@ export function useAiBarenaiGame(room: RoomState) {
   const handleTopic = useCallback(async () => { const result = await call('topic'); if (result.answer) setTopic(result.answer); }, [call]);
 
   useEffect(() => {
-    if (gameState.phase !== 'answering') return;
+    if (!isHost || gameState.phase !== 'answering') return;
     let active = true;
     const runProgress = async () => {
       const key = `${gameState.round}:resume`;
@@ -36,6 +36,6 @@ export function useAiBarenaiGame(room: RoomState) {
     void runProgress();
     const timer = window.setInterval(() => void runProgress(), 12_000);
     return () => { active = false; window.clearInterval(timer); };
-  }, [call, gameState.phase, gameState.round]);
+  }, [call, gameState.phase, gameState.round, isHost]);
   return { gameState, topic, handleInitialize, handleHint, handleAnswer, handleNextRound, handleTopic };
 }

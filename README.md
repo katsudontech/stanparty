@@ -185,7 +185,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPABASE_SERVICE_ROLE_KEY=
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash-lite
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
 本番環境では`NEXT_PUBLIC_SITE_URL`へ、`https://`から始まる実際の公開URLを設定してください。この値はOG画像、`sitemap.xml`、`robots.txt`に利用します。Vercelでは未設定の場合、Production Deployment URLを使用します。
@@ -205,6 +205,8 @@ supabase/migrations/20260827010000_fix_fake_artist_game_actions.sql
 supabase/migrations/20260828000000_default_rooms_private.sql
 supabase/migrations/20260828010000_schedule_stale_data_cleanup.sql
 supabase/migrations/20260829000000_add_ai_barenai.sql
+supabase/migrations/20260829010000_ai_barenai_host_progression.sql
+supabase/migrations/20260829020000_ai_barenai_answer_history.sql
 ```
 
 `20260828010000_schedule_stale_data_cleanup.sql` はSupabase Cronを有効にし、毎時17分（UTC）に次のデータを自動削除します。
