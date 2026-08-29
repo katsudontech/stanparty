@@ -1,10 +1,10 @@
-export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito';
+export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai';
 
 export interface GameCatalogEntry {
   id: PlayableGameId;
   name: string;
-  officialPublisher: string;
-  officialProductUrl: string;
+  officialPublisher?: string;
+  officialProductUrl?: string;
   shortName: string;
   catchphrase: string;
   summary: string;
@@ -127,6 +127,18 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
       { title: '答え合わせ', body: '準備ができたらカードを順番に公開。すべて昇順なら成功です。' },
     ],
     tips: ['両端の1と100を先にイメージする', '似たヒントは具体的な場面を聞いて比べる', '自分の感覚が普通だと決めつけない'],
+  },
+  {
+    id: 'ai-barenai', name: 'AIにバレるな！', shortName: 'AIにバレるな！',
+    catchphrase: 'ヒントだけで、お題をAIに悟らせるな。',
+    summary: 'みんなでヒントを出し、AIより先にお題を当てる協力型の読み合いゲーム。',
+    description: ['1人だけがお題を知らない回答者。ほかの人はお題を直接言わずにヒントを出し、AIに悟られないようにします。', 'ヒントが揃ったら人間とAIがそれぞれ回答。AIが正解すれば、どれだけ惜しくてもAIの勝利です。'],
+    players: '2〜14人', minPlayers: 2, maxPlayers: 14, duration: '約10分', difficulty: 'かんたん', mood: '協力・AI推理',
+    accent: '#8b5cf6', softColor: '#e4d8fa',
+    funPoints: ['AIに伝わるギリギリのヒントを考える', '回答者とヒント担当の役割がはっきりしている', 'AIが正解した瞬間の悔しさも盛り上がる'],
+    goodFor: ['AIとの読み合いを遊びたい', '短い言葉で表現するのが好き', '2人から大人数まで遊びたい'],
+    steps: [{title: '担当を決める', body: '1人が回答者になり、残りの人が順番にヒントを出します。'}, {title: 'ヒントを出す', body: 'お題を直接言わず、担当者だけが1つずつヒントを入力します。'}, {title: '回答する', body: 'ヒントが揃ったら、人間とAIがそれぞれお題を予想します。'}, {title: '結果を見る', body: 'AIが正解すればAIの勝利。AIが外して人間だけ正解なら人間の勝利です。'}],
+    tips: ['固有名詞をそのまま書かない', 'AIにも人間にも伝わる具体性を狙う', 'ヒント担当の順番を活かして情報を積み上げる'],
   },
 ] as const;
 

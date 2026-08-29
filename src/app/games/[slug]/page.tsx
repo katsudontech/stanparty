@@ -123,14 +123,9 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
             <div><p className="text-sm font-black">遊びたくなったら</p><h2 className="mt-1 text-3xl font-black tracking-[-.05em]">みんなを部屋に呼ぼう。</h2></div>
             <div className="flex w-full flex-col items-start gap-4 sm:w-auto sm:items-end">
               <Link href="/create_room" className="button-secondary bg-white">遊ぶ部屋をつくる →</Link>
-              <a
-                href={game.officialProductUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-link"
-              >
+              {game.officialProductUrl && game.officialPublisher ? <a href={game.officialProductUrl} target="_blank" rel="noreferrer" className="text-link">
                 {game.officialPublisher}の公式商品ページ ↗
-              </a>
+              </a> : <span className="text-sm font-bold text-[var(--muted)]">StanPartyオリジナルゲーム</span>}
             </div>
           </div>
         </section>

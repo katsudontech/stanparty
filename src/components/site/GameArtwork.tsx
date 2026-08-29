@@ -32,6 +32,18 @@ export function GameArtwork({ gameId, className = '' }: GameArtworkProps) {
     );
   }
 
+  if (gameId === 'ai-barenai') {
+    return (
+      <svg className={className} viewBox="0 0 240 180" role="img" aria-label="AIと吹き出しのイラスト">
+        <rect x="46" y="30" width="148" height="112" rx="18" fill="#e4d8fa" stroke="currentColor" strokeWidth="5" />
+        <circle cx="91" cy="81" r="12" fill="#8b5cf6" /><circle cx="149" cy="81" r="12" fill="#8b5cf6" />
+        <path d="M86 111c18 12 40 12 58 0" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+        <path d="M37 58H16v47h21l19 17V41z" fill="#fffaf0" stroke="currentColor" strokeWidth="5" />
+        <text x="27" y="91" textAnchor="middle" fontSize="24" fontWeight="900" fill="#8b5cf6">?</text>
+      </svg>
+    );
+  }
+
   return (
     <svg className={className} viewBox="0 0 240 180" role="img" aria-label="糸でつながった数字のイラスト">
       <path d="M25 115c20-70 56-70 73-18s42 50 56 6 36-56 61-12" fill="none" stroke="#3978a8" strokeWidth="7" strokeLinecap="round" />
@@ -44,4 +56,3 @@ export function GameArtwork({ gameId, className = '' }: GameArtworkProps) {
     </svg>
   );
 }
-

@@ -12,6 +12,7 @@ import { FakeArtistGame } from '@/games/fake-artist';
 import { CoyoteGame } from '@/games/coyote';
 import { OneNightWerewolfGame } from '@/games/one-night-werewolf';
 import { ItoGame } from '@/games/ito';
+import { AiBarenaiGame } from '@/games/ai-barenai';
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
     const { roomId } = use(params);
@@ -115,6 +116,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
                         myUserId={myUserId}
                         onBackToLobby={handleBackToLobby}
                     />
+                </GameWrapper>
+            );
+        }
+
+        if (roomState.game_type === 'ai-barenai') {
+            return (
+                <GameWrapper players={players} myUserId={myUserId}>
+                    <AiBarenaiGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
                 </GameWrapper>
             );
         }

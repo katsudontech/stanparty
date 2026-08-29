@@ -40,6 +40,9 @@ StanPartyでは、一人がルームを作成し、ほかの参加者がURLか�
 - **ito（クモノイト2.0）**\
   1〜100の秘密の数字をお題に沿った言葉でたとえ、全員のカードを小さい順に並べる協力ゲームです。ランダム・自由入力のお題選択、複数枚配布、共同での並べ替え、完成確認、ショーダウンまでリアルタイムで進行します。
 
+- **AIにバレるな！**\
+  お題を知らない回答者へみんなでヒントを出し、AIより先にお題を当てるオリジナルゲームです。ヒントの公開、AIの推測、人間とAIの判定までリアルタイムで進行します。
+
 - **待機ルームでのゲーム選択**\
   参加者の接続状況を確認しながら、ホストが遊ぶゲームを選択して開始できます。
 
@@ -180,6 +183,9 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+SUPABASE_SERVICE_ROLE_KEY=
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash-lite
 ```
 
 本番環境では`NEXT_PUBLIC_SITE_URL`へ、`https://`から始まる実際の公開URLを設定してください。この値はOG画像、`sitemap.xml`、`robots.txt`に利用します。Vercelでは未設定の場合、Production Deployment URLを使用します。
@@ -198,9 +204,10 @@ supabase/migrations/20260827000000_enforce_game_player_count_on_start.sql
 supabase/migrations/20260827010000_fix_fake_artist_game_actions.sql
 supabase/migrations/20260828000000_default_rooms_private.sql
 supabase/migrations/20260828010000_schedule_stale_data_cleanup.sql
+supabase/migrations/20260829000000_add_ai_barenai.sql
 ```
 
-最後のマイグレーションはSupabase Cronを有効にし、毎時17分（UTC）に次のデータを自動削除します。
+`20260828010000_schedule_stale_data_cleanup.sql` はSupabase Cronを有効にし、毎時17分（UTC）に次のデータを自動削除します。
 
 - 最後のルーム更新またはゲームイベントから24時間が経過したルームと、そのゲームイベント
 - 最終利用から30日が経過し、残っているルームから参照されていない匿名ユーザーとプロフィール
@@ -228,7 +235,7 @@ npm run build
 
 ### 現在の制約
 
-- 現在遊べるゲームは「エセ芸術家 ニューヨークへ行く」「Coyote Online Forehead」「ito」の3種類です。
+- 現在遊べるゲームは「エセ芸術家 ニューヨークへ行く」「Coyote Online Forehead」「ito」「AIにバレるな！」の4種類です。
 - ワンナイト人狼は基本的な画面構成のみ実装しており、ゲームとして遊べる状態にはなっていません。
 - ゲーム進行中の人数変更には対応していないため、ゲーム画面には途中退出の操作を設けていません。
 - 匿名認証のユーザー情報はブラウザのセッションに依存するため、別の端末やブラウザから同じ利用者として再参加することはできません。
