@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
+import { isAuthSessionMissingError } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { getDefaultAvatarUrl } from '@/lib/avatarTemplates';
 
@@ -14,6 +15,26 @@ export interface GuestProfile extends GuestDisplayProfile {
 
 const GUEST_PROFILE_STORAGE_KEY = 'guest_profile';
 let authenticatedUserPromise: Promise<User> | null = null;
+
+const RECOVERABLE_AUTH_ERROR_CODES = new Set([
+    'refresh_token_not_found',
+    'refresh_token_already_used',
+    'session_not_found',
+    'session_expired',
+    'user_not_found',
+    'bad_jwt'
+]);
+
+export function isRecoverableAuthError(error: unknown): boolean {
+    if (isAuthSessionMissingError(error)) return true;
+
+    if (typeof error !== 'object' || error === null || !('code' in error)) {
+        return false;
+    }
+
+    const code = (error as { code?: unknown }).code;
+    return typeof code === 'string' && RECOVERABLE_AUTH_ERROR_CODES.has(code);
+}
 
 function readGuestDisplayProfile(): GuestDisplayProfile | null {
     const storedProfile = localStorage.getItem(GUEST_PROFILE_STORAGE_KEY);
@@ -48,25 +69,51 @@ export function saveGuestDisplayProfile(profile: GuestDisplayProfile) {
     );
 }
 
-async function initializeAuthenticatedUser(): Promise<User> {
+async function signInAnonymously(supabase: ReturnType<typeof createClient>): Promise<User> {
+    const { data, error } = await supabase.auth.signInAnonymously();
+    if (error) throw error;
+    if (!data.user) throw new Error('Anonymous authentication did not return a user.');
+
+    return data.user;
+}
+
+async function clearLocalAuthSession(supabase: ReturnType<typeof createClient>): Promise<void> {
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
+    if (error) throw error;
+}
+
+export async function initializeAuthenticatedUser(): Promise<User> {
     const supabase = createClient();
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
-    if (sessionError) throw sessionError;
-    if (sessionData.session?.user) return sessionData.session.user;
+    if (sessionError) {
+        if (!isRecoverableAuthError(sessionError)) throw sessionError;
 
-    const { data: anonymousData, error: anonymousError } = await supabase.auth.signInAnonymously();
-    if (anonymousError) throw anonymousError;
-    if (!anonymousData.user) throw new Error('Anonymous authentication did not return a user.');
+        await clearLocalAuthSession(supabase);
+        return signInAnonymously(supabase);
+    }
 
-    return anonymousData.user;
+    if (!sessionData.session) return signInAnonymously(supabase);
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) {
+        if (!isRecoverableAuthError(userError)) throw userError;
+
+        await clearLocalAuthSession(supabase);
+        return signInAnonymously(supabase);
+    }
+
+    if (!userData.user) {
+        throw new Error('Authenticated session did not return a user.');
+    }
+
+    return userData.user;
 }
 
 function getAuthenticatedUser(): Promise<User> {
     if (!authenticatedUserPromise) {
-        authenticatedUserPromise = initializeAuthenticatedUser().catch((error: unknown) => {
+        authenticatedUserPromise = initializeAuthenticatedUser().finally(() => {
             authenticatedUserPromise = null;
-            throw error;
         });
     }
 
