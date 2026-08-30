@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Avatar } from '@/components/shared/Avatar';
+import { GameSelectionMenu } from '@/components/shared/GameSelectionMenu';
 import { GameRulesDialog } from '@/components/shared/GameRulesDialog';
 import { buildLineInviteUrl } from '@/components/shared/lineInvite';
 import { SiteHeader } from '@/components/site/SiteHeader';
@@ -133,22 +134,12 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
           <p className="text-xs font-black tracking-[.14em] text-[var(--orange)]">PLAY NEXT</p>
           <h2 className="mt-2 text-2xl font-black tracking-[-.04em]">遊ぶゲームを選ぶ</h2>
           <div className="mt-6 border-y-2 border-[var(--line)] py-5">
-            {isHost ? (
-              <select
-                className="form-select text-lg"
-                value={roomState.game_type}
-                onChange={(e) => onChangeGame(e.target.value)}
-              >
-                {GAME_CATALOG.map(game => (
-                  <option key={game.id} value={game.id}>{game.shortName}</option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-xl font-black">
-                {selectedGame?.shortName || roomState.game_type}
-              </p>
-            )}
-            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{selectedGame?.summary}</p>
+            <GameSelectionMenu
+              games={GAME_CATALOG}
+              value={roomState.game_type}
+              onChange={onChangeGame}
+              browseOnly={!isHost}
+            />
             {selectedGame && (
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <button
