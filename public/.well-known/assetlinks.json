@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.katsudon.stanparty",
+        "sha256_cert_fingerprints": ["FE:A0:98:C9:14:79:6F:BF:EA:96:89:23:7F:FD:36:43:4E:E1:1A:EE:CF:55:74:AE:00:F8:F1:33:D8:65:FA:98"]
+      }
+    }]
