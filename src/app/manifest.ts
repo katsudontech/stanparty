@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "StanParty｜待ち時間を、遊ぶ時間に。",
     short_name: "StanParty",
     description,
-    start_url: "/",
+    start_url: "/app",
     scope: "/",
     display: "standalone",
     background_color: "#f4f0e6",
