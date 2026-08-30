@@ -129,7 +129,7 @@ export function GameSelectionMenu({ games, value, onChange, browseOnly = false }
 
       {browseOnly && (
         <p id={helperId} className="mt-2 text-xs font-bold text-[var(--muted)]">
-          ホストのみゲームを変更できます。ゲーム名と概要を確認できます。
+          ホストのみゲームを変更できます。
         </p>
       )}
 
