@@ -13,6 +13,7 @@ import { CoyoteGame } from '@/games/coyote';
 import { OneNightWerewolfGame } from '@/games/one-night-werewolf';
 import { ItoGame } from '@/games/ito';
 import { AiBarenaiGame } from '@/games/ai-barenai';
+import { AiBarenaiDrawingGame } from '@/games/ai-barenai-drawing';
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
     const { roomId } = use(params);
@@ -124,6 +125,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
             return (
                 <GameWrapper players={players} myUserId={myUserId}>
                     <AiBarenaiGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
+                </GameWrapper>
+            );
+        }
+
+        if (roomState.game_type === 'ai-barenai-drawing') {
+            return (
+                <GameWrapper players={players} myUserId={myUserId}>
+                    <AiBarenaiDrawingGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
                 </GameWrapper>
             );
         }

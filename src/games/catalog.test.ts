@@ -18,6 +18,7 @@ describe('game player count', () => {
     ['coyote', 1, 'Coyoteは2人以上で遊べます。あと1人必要です'],
     ['ito', 1, 'itoは2人以上で遊べます。あと1人必要です'],
     ['ai-barenai', 1, 'AIにバレるな！は2人以上で遊べます。あと1人必要です'],
+    ['ai-barenai-drawing', 1, 'AIにバレるな！お絵かき版は2人以上で遊べます。あと1人必要です'],
   ])('%s は最少人数未満で開始できない', (gameId, playerCount, expectedMessage) => {
     expect(getGamePlayerCountError(gameId, playerCount)).toBe(expectedMessage);
   });
@@ -31,6 +32,8 @@ describe('game player count', () => {
     ['ito', 14],
     ['ai-barenai', 2],
     ['ai-barenai', 14],
+    ['ai-barenai-drawing', 2],
+    ['ai-barenai-drawing', 14],
   ])('%s は対応人数の範囲内なら開始できる', (gameId, playerCount) => {
     expect(getGamePlayerCountError(gameId, playerCount)).toBeNull();
   });
@@ -40,6 +43,7 @@ describe('game player count', () => {
     ['coyote', 11, 'Coyoteは10人までで遊べます'],
     ['ito', 15, 'itoは14人までで遊べます'],
     ['ai-barenai', 15, 'AIにバレるな！は14人までで遊べます'],
+    ['ai-barenai-drawing', 15, 'AIにバレるな！お絵かき版は14人までで遊べます'],
   ])('%s は最大人数を超えると開始できない', (gameId, playerCount, expectedMessage) => {
     expect(getGamePlayerCountError(gameId, playerCount)).toBe(expectedMessage);
   });

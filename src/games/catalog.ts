@@ -1,4 +1,4 @@
-export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai';
+export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing';
 
 export interface GameCatalogEntry {
   id: PlayableGameId;
@@ -139,6 +139,18 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     goodFor: ['AIとの読み合いを遊びたい', '短い言葉で表現するのが好き', '2人から大人数まで遊びたい'],
     steps: [{title: '担当を決める', body: '1人が回答者になり、残りの人が順番にヒントを出します。'}, {title: 'ヒントを出す', body: 'お題を直接言わず、担当者だけが1つずつヒントを入力します。'}, {title: '回答する', body: 'ヒントが揃ったら、人間とAIがそれぞれお題を予想します。'}, {title: '結果を見る', body: 'AIが正解すればAIの勝利。AIが外して人間だけ正解なら人間の勝利です。'}],
     tips: ['固有名詞をそのまま書かない', 'AIにも人間にも伝わる具体性を狙う', 'ヒント担当の順番を活かして情報を積み上げる'],
+  },
+  {
+    id: 'ai-barenai-drawing', name: 'AIにバレるな！お絵かき版', shortName: 'AIにバレるな！お絵かき版',
+    catchphrase: '人間には伝わる、AIにはまだ伝わらない絵を描け。',
+    summary: '1人が絵を描き、AIと人間の回答者が同時にお題を推測するゲーム。',
+    description: ['描く人だけがお題を知り、Canvasに絵を描きます。ほかのプレイヤーは絵からお題を推測します。', '人間が正解する前にAIに見破られないよう、絵を足すタイミングを見極めましょう。'],
+    players: '2〜14人', minPlayers: 2, maxPlayers: 14, duration: '約10分', difficulty: 'かんたん', mood: '協力・お絵かき',
+    accent: '#ef6c4d', softColor: '#f8ded3',
+    funPoints: ['人間には伝わるギリギリを狙う', '絵が変わるたびAIの推理も変わる', '描く人の判断が勝負を決める'],
+    goodFor: ['絵の上手さに関係なく遊びたい', 'AIとの読み合いを遊びたい', '短時間で盛り上がりたい'],
+    steps: [{title:'描く人を決める',body:'1人が描く人になり、お題を確認します。'}, {title:'絵を描く',body:'描く人がCanvasに自由に絵を描きます。'}, {title:'判定する',body:'描く人が好きなタイミングで判定します。'}, {title:'同時に回答',body:'人間とAIの回答を公開し、結果を確認します。'}],
+    tips: ['最初は特徴を1つだけ描く', 'リセットで今の絵を描き直す', 'AIの確信度を見ながら描き足す'],
   },
 ] as const;
 

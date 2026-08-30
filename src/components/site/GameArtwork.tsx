@@ -44,6 +44,19 @@ export function GameArtwork({ gameId, className = '' }: GameArtworkProps) {
     );
   }
 
+  if (gameId === 'ai-barenai-drawing') {
+    return (
+      <svg className={className} viewBox="0 0 240 180" role="img" aria-label="AIにバレるな！お絵かき版のイラスト">
+        <rect x="45" y="25" width="125" height="125" fill="#fffaf0" stroke="currentColor" strokeWidth="5" />
+        <path d="M65 117c25-32 37-8 53-36 12-21 21-18 38-37" fill="none" stroke="#ef6c4d" strokeWidth="7" strokeLinecap="round" />
+        <path d="m174 131 35-77 12 6-35 77z" fill="#f3c85b" stroke="currentColor" strokeWidth="4" />
+        <path d="m173 131-4 22 18-16z" fill="#ef6c4d" stroke="currentColor" strokeWidth="4" />
+        <circle cx="190" cy="34" r="20" fill="#f8ded3" stroke="currentColor" strokeWidth="4" />
+        <text x="190" y="42" textAnchor="middle" fontSize="22" fontWeight="900" fill="#ef6c4d">?</text>
+      </svg>
+    );
+  }
+
   return (
     <svg className={className} viewBox="0 0 240 180" role="img" aria-label="糸でつながった数字のイラスト">
       <path d="M25 115c20-70 56-70 73-18s42 50 56 6 36-56 61-12" fill="none" stroke="#3978a8" strokeWidth="7" strokeLinecap="round" />
