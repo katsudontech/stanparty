@@ -28,6 +28,8 @@ describe('AIにバレるな！お絵かき版の実装回帰', () => {
 
     expect(canvasSource).toContain('onStroke={handleCompletedStroke}');
     expect(canvasSource).toContain('if (activePointerIdRef.current !== null) return;');
+    expect(canvasSource).toContain('onPointerDownCapture=');
+    expect(canvasSource).toContain('onPointerUpCapture=');
     expect(canvasSource).toContain("document.addEventListener('pointerup', finishStroke)");
     expect(canvasSource).not.toContain('canvasRef.current.exportPaths()');
   });

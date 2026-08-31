@@ -225,13 +225,23 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
         <div
           ref={containerRef}
           className="h-full w-full"
-          onPointerDown={(event) => {
+          onPointerDownCapture={(event) => {
             if (
               drawingEnabled
               && activePointerIdRef.current === null
               && (event.pointerType !== 'mouse' || event.button === 0)
             ) {
               activePointerIdRef.current = event.pointerId;
+            }
+          }}
+          onPointerUpCapture={(event) => {
+            if (activePointerIdRef.current === event.pointerId) {
+              activePointerIdRef.current = null;
+            }
+          }}
+          onPointerCancelCapture={(event) => {
+            if (activePointerIdRef.current === event.pointerId) {
+              activePointerIdRef.current = null;
             }
           }}
         >
