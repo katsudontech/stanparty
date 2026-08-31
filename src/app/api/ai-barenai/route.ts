@@ -5,8 +5,7 @@ import type { AiBarenaiAnswerHistory } from '@/games/ai-barenai/types';
 import { isAiBarenaiHostAction, type AiBarenaiAction } from './authorization';
 
 export const dynamic = 'force-dynamic';
-export type Action = AiBarenaiAction;
-export { HOST_ONLY_ACTIONS, isAiBarenaiHostAction } from './authorization';
+type Action = AiBarenaiAction;
 function jsonError(message: string, status = 400) { return Response.json({error: message}, {status}); }
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

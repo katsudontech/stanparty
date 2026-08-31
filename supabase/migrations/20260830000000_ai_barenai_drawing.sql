@@ -187,7 +187,11 @@ begin
  if not found or r.game_type<>'ai-barenai-drawing' or r.status<>'playing' or not public.ai_barenai_drawing_is_member(p_room_id,p_actor_id) or state->>'phase'<>'answering' or state->>'aiGuessReady'<>'true' then return jsonb_build_object('claimed',false); end if;
  expected:=pg_catalog.jsonb_array_length(r.players)-1;
  select * into sec from private.ai_barenai_drawing_secrets where room_id=p_room_id for update;
- if jsonb_object_length(sec.human_answers)<expected then return jsonb_build_object('claimed',false); end if;
+ if not found
+   or sec.ai_answer is null
+   or pg_catalog.jsonb_array_length(coalesce(state->'answerSubmittedPlayerIds','[]'::jsonb))<expected then
+   return jsonb_build_object('claimed',false);
+ end if;
  if sec.judging_claimed_at is not null and sec.judging_claimed_at>now()-interval '90 seconds' then return jsonb_build_object('claimed',false); end if;
  update private.ai_barenai_drawing_secrets set judging_claimed_at=now(),judging_claim_token=p_claim_token,judging_claim_round=(state->>'round')::integer where room_id=p_room_id;
  return jsonb_build_object('claimed',true,'token',p_claim_token,'round',(state->>'round')::integer,'topic',sec.topic,'aliases',sec.aliases,'answers',sec.human_answers,'ai_answer',sec.ai_answer,'ai_confidence',sec.ai_confidence);
