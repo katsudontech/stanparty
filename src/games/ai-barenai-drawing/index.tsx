@@ -61,7 +61,7 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
 
   if (state.phase === 'rule_setting') {
     return (
-      <main className="paper-card mx-auto min-w-0 max-w-2xl p-5 sm:p-10">
+      <main className="ai-barenai-drawing-game ai-barenai-drawing-game--rules paper-card mx-auto min-w-0 max-w-2xl p-5 sm:p-10" data-phase={state.phase}>
         <p className="section-kicker">AI DRAWING GAME</p>
         <h1 className="mt-2 text-3xl font-black">AIにバレるな！お絵かき版</h1>
         <p className="mt-4 leading-7 text-[var(--muted)]">
@@ -92,33 +92,40 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
         : 'ゲーム終了';
 
   return (
-    <main className="mx-auto min-w-0 max-w-3xl space-y-5">
-      <header className="paper-card min-w-0 p-5 sm:p-7">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="section-kicker">ROUND {state.round}</p>
-          <span className="rounded-full bg-[var(--yellow)] px-3 py-1 text-xs font-black">{phaseLabel}</span>
+    <main className="ai-barenai-drawing-game mx-auto min-w-0 max-w-3xl" data-phase={state.phase}>
+      <header className="aibd-hud paper-card min-w-0 p-5 sm:p-7">
+        <div className="aibd-hud__round">
+          <p className="section-kicker">ROUND</p>
+          <strong>{state.round}</strong>
         </div>
-        <h1 className="mt-2 text-[clamp(1.75rem,8vw,1.875rem)] font-black">AIにバレるな！お絵かき版</h1>
-        <p className="mt-2 text-sm font-bold text-[var(--muted)]">描く人：{drawer?.name ?? '決定中'}</p>
-        {state.phase === 'drawing' && (
-          <p className="mt-3 font-bold text-[var(--muted)]">
-            {isDrawer
-              ? '人間には伝わる。でもAIにはバレない絵を狙いましょう。'
-              : `${drawer?.name ?? '描く人'}さんがお絵かき中です。絵を見てお題を考えましょう。`}
-          </p>
-        )}
+        <span className="aibd-hud__phase">{phaseLabel}</span>
+        <div className="aibd-hud__drawer">
+          <span>描く人</span>
+          <strong>{drawer?.name ?? '決定中'}</strong>
+        </div>
         {isDrawer && (
-          <div className="mt-3">
+          <div className="aibd-hud__topic">
             {topic ? (
               <p className="font-black text-[var(--purple)]">お題：{topic}</p>
             ) : (
-              <button className="button-secondary" onClick={() => void showTopic()}>お題を確認する</button>
+              <button className="button-secondary" onClick={() => void showTopic()}>お題を確認</button>
             )}
           </div>
         )}
       </header>
 
-      <section className="paper-card p-5">
+      <section className="aibd-title" aria-live="polite">
+        <h1>AIにバレるな！お絵かき版</h1>
+        {state.phase === 'drawing' && (
+          <p>
+            {isDrawer
+              ? '人間には伝わる。でもAIにはバレない絵を狙いましょう。'
+              : `${drawer?.name ?? '描く人'}さんがお絵かき中です。絵を見てお題を考えましょう。`}
+          </p>
+        )}
+      </section>
+
+      <section className="aibd-canvas-card paper-card p-5">
         <Canvas
           roomId={roomState.id}
           players={roomState.players}
@@ -132,7 +139,7 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
       </section>
 
       {state.phase === 'answering' && (
-        <section className="paper-card p-5">
+        <section className="aibd-answer-card paper-card p-5">
           <p className="font-bold">絵からお題を1回だけ回答してください。全員の回答が揃うまで内容は公開されません。</p>
           {!isDrawer && !state.answerSubmittedPlayerIds.includes(myUserId) && (
             <form
@@ -166,7 +173,7 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
       )}
 
       {state.result && (
-        <section className="paper-card p-5">
+        <section className="aibd-result-card paper-card p-5">
           <p className="section-kicker">RESULT</p>
           <h2 className="mt-2 text-3xl font-black">
             {state.result.winner === 'ai'
@@ -221,7 +228,7 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
         </section>
       )}
 
-      {error && <p role="alert" className="font-bold text-red-600">{error}</p>}
+      {error && <p role="alert" className="aibd-page-error font-bold text-red-600">{error}</p>}
     </main>
   );
 }

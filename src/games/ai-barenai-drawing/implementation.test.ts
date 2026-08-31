@@ -34,6 +34,41 @@ describe('AIにバレるな！お絵かき版の実装回帰', () => {
     expect(canvasSource).not.toContain('canvasRef.current.exportPaths()');
   });
 
+  it('描画版だけが専用のビューポートラッパーを使う', () => {
+    const roomPageSource = readProjectFile('src/app/room/[roomId]/page.tsx');
+
+    expect(roomPageSource).toContain(
+      'showPlayerBar={false} hideBrandHeader gameClassName="ai-barenai-drawing-wrapper"',
+    );
+    expect(roomPageSource).toContain(
+      '<GameWrapper players={players} myUserId={myUserId} showPlayerBar={false}>',
+    );
+  });
+
+  it('フェーズとキャンバスのモバイルレイアウトに専用スコープを持つ', () => {
+    const gameSource = readProjectFile('src/games/ai-barenai-drawing/index.tsx');
+    const canvasSource = readProjectFile(
+      'src/games/ai-barenai-drawing/components/Canvas.tsx',
+    );
+    const themeSource = readProjectFile('src/app/theme.css');
+
+    expect(gameSource).toContain('className="ai-barenai-drawing-game');
+    expect(gameSource).toContain('data-phase={state.phase}');
+    expect(gameSource).toContain('className="aibd-hud');
+    expect(gameSource).toContain('className="aibd-answer-card');
+    expect(gameSource).toContain('className="aibd-result-card');
+    expect(canvasSource).toContain('className="ai-barenai-drawing-canvas');
+    expect(canvasSource).toContain('className="aibd-canvas-frame');
+    expect(canvasSource).toContain('className="aibd-canvas-controls');
+
+    expect(themeSource).toContain('.ai-barenai-drawing-wrapper');
+    expect(themeSource).toContain('height: 100dvh');
+    expect(themeSource).toContain('env(safe-area-inset-top)');
+    expect(themeSource).toContain('.ai-barenai-drawing-wrapper > div > main');
+    expect(themeSource).toContain('.ai-barenai-drawing-game[data-phase="answering"] .aibd-canvas-frame');
+    expect(themeSource).not.toContain('.fake-artist-game[data-phase="answering"]');
+  });
+
   it('全回答後の判定claimで有効なPostgreSQL関数だけを使う', () => {
     const migrations = [
       'supabase/migrations/20260830000000_ai_barenai_drawing.sql',

@@ -429,7 +429,131 @@ button, input, select, textarea { font: inherit; }
 .aib-answer-history { padding: .6rem .65rem; border-radius: 6px; background: var(--paper-deep); overflow-wrap: anywhere; font-size: .8rem; line-height: 1.6; }
 .aib-comment-full { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
 
+/* The drawing variant uses the same app-like viewport shell as AIにバレるな！
+   while keeping its canvas and phase controls isolated from the other games. */
+.ai-barenai-drawing-wrapper {
+  min-height: 100dvh;
+  padding: max(.75rem, env(safe-area-inset-top)) max(.75rem, env(safe-area-inset-right)) max(.75rem, env(safe-area-inset-bottom)) max(.75rem, env(safe-area-inset-left));
+  overflow: hidden;
+}
+.ai-barenai-drawing-wrapper > div {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+}
+.ai-barenai-drawing-game {
+  width: min(100%, 960px);
+  min-width: 0;
+  min-height: 0;
+  margin-inline: auto;
+}
+.ai-barenai-drawing-game:not(.ai-barenai-drawing-game--rules) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  overflow: hidden;
+}
+.ai-barenai-drawing-game--rules { margin-block: auto; }
+.aibd-hud {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .7rem;
+}
+.aibd-hud__round { display: flex; align-items: baseline; gap: .35rem; white-space: nowrap; }
+.aibd-hud__round .section-kicker { color: var(--muted); font-size: .62rem; }
+.aibd-hud__round strong { font-size: 1.15rem; }
+.aibd-hud__phase { justify-self: center; padding: .32rem .7rem; border: 1px solid var(--line); border-radius: 99px; background: var(--yellow); font-size: .76rem; font-weight: 900; white-space: nowrap; }
+.aibd-hud__drawer { min-width: 0; display: flex; align-items: baseline; gap: .35rem; }
+.aibd-hud__drawer span { color: var(--muted); font-size: .62rem; font-weight: 900; white-space: nowrap; }
+.aibd-hud__drawer strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
+.aibd-hud__topic { min-width: 0; justify-self: end; }
+.aibd-hud__topic p { max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; }
+.aibd-hud__topic .button-secondary { min-height: 44px; padding-inline: .75rem; font-size: .76rem; }
+.aibd-title { flex: none; min-width: 0; }
+.aibd-title h1 { margin: 0; font-size: clamp(1.6rem, 5vw, 2rem); font-weight: 950; letter-spacing: -.05em; line-height: 1.1; }
+.aibd-title p { margin: .35rem 0 0; color: var(--muted); font-size: .86rem; font-weight: 700; line-height: 1.45; }
+.aibd-canvas-card { min-height: 0; flex: 1; display: flex; justify-content: center; overflow: hidden; }
+.aibd-canvas-card .ai-barenai-drawing-canvas { min-height: 0; height: 100%; display: flex; flex-direction: column; align-items: center; }
+.aibd-canvas-frame { width: min(100%, calc((100dvh - 13rem) * .75)); flex: none; }
+.aibd-canvas-controls { flex: none; align-items: center; }
+.aibd-canvas-drawer { flex: none; }
+.aibd-answer-card { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+.aibd-result-card { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+.ai-barenai-drawing-game[data-phase="answering"] .aibd-canvas-card,
+.ai-barenai-drawing-game[data-phase="revealing"] .aibd-canvas-card,
+.ai-barenai-drawing-game[data-phase="game_over"] .aibd-canvas-card { flex: none; }
+.ai-barenai-drawing-game[data-phase="answering"] .aibd-canvas-frame,
+.ai-barenai-drawing-game[data-phase="revealing"] .aibd-canvas-frame,
+.ai-barenai-drawing-game[data-phase="game_over"] .aibd-canvas-frame { width: min(100%, calc((100dvh - 22rem) * .75)); }
+.ai-barenai-drawing-game[data-phase="answering"] .aibd-answer-card { overflow-y: auto; }
+.aibd-page-error { flex: none; }
+
 @media (max-width: 639px) {
+  .ai-barenai-drawing-wrapper {
+    height: 100dvh;
+    min-height: 0;
+    padding-top: max(.35rem, env(safe-area-inset-top));
+    padding-right: max(.45rem, env(safe-area-inset-right));
+    padding-bottom: max(.35rem, env(safe-area-inset-bottom));
+    padding-left: max(.45rem, env(safe-area-inset-left));
+    overflow: hidden;
+  }
+  .ai-barenai-drawing-wrapper > div > main {
+    min-height: 0;
+    flex: 1;
+    display: flex;
+  }
+  .ai-barenai-drawing-game {
+    width: 100%;
+  }
+  .ai-barenai-drawing-game:not(.ai-barenai-drawing-game--rules) {
+    gap: .4rem;
+  }
+  .ai-barenai-drawing-game--rules {
+    width: 100%;
+    margin-block: auto;
+    padding: .875rem;
+    overflow-y: auto;
+  }
+  .aibd-hud {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    gap: .35rem;
+    padding: .45rem .55rem;
+  }
+  .aibd-hud__round .section-kicker { font-size: .55rem; }
+  .aibd-hud__round strong { font-size: 1rem; }
+  .aibd-hud__phase { padding-inline: .45rem; font-size: .68rem; }
+  .aibd-hud__drawer { display: block; }
+  .aibd-hud__drawer span,
+  .aibd-hud__drawer strong { display: block; line-height: 1.15; }
+  .aibd-hud__drawer strong { margin-top: .1rem; max-width: 6rem; font-size: .7rem; }
+  .aibd-hud__topic p { max-width: 7rem; font-size: .68rem; }
+  .aibd-hud__topic .button-secondary { min-height: 42px; padding-inline: .5rem; font-size: .66rem; }
+  .ai-barenai-drawing-game[data-phase="drawing"] .aibd-title { display: block; }
+  .ai-barenai-drawing-game:not([data-phase="drawing"]) .aibd-title { display: none; }
+  .aibd-title h1 { display: none; }
+  .aibd-title p { display: -webkit-box; margin-top: .1rem; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 1; font-size: .68rem; line-height: 1.25; }
+  .aibd-canvas-card { padding: .45rem; }
+  .aibd-canvas-card .ai-barenai-drawing-canvas { width: 100%; }
+  .aibd-canvas-frame { width: min(100%, calc((100dvh - 10.5rem) * .75)); }
+  .aibd-canvas-controls { width: 100%; margin-top: .35rem; gap: .35rem; }
+  .aibd-canvas-controls button { min-width: 0; flex: 1; padding-inline: .45rem; font-size: .7rem; }
+  .aibd-canvas-note { display: none; }
+  .aibd-canvas-drawer { margin-top: .15rem; font-size: .66rem; }
+  .ai-barenai-drawing-game[data-phase="answering"] .aibd-canvas-frame,
+  .ai-barenai-drawing-game[data-phase="revealing"] .aibd-canvas-frame,
+  .ai-barenai-drawing-game[data-phase="game_over"] .aibd-canvas-frame { width: min(100%, calc((100dvh - 20rem) * .75)); }
+  .aibd-answer-card,
+  .aibd-result-card { padding: .75rem; }
+  .aibd-answer-card { overflow-y: auto; }
+  .aibd-result-card { overflow-y: auto; }
+  .aibd-answer-card form { margin-top: .65rem; }
+
   .ai-barenai-wrapper { padding-top: max(.35rem, env(safe-area-inset-top)); padding-right: max(.45rem, env(safe-area-inset-right)); padding-bottom: max(.35rem, env(safe-area-inset-bottom)); padding-left: max(.45rem, env(safe-area-inset-left)); }
   .aib-hud { gap: .35rem; min-height: 48px; }
   .aib-hud__phase { padding-inline: .5rem; font-size: .7rem; }

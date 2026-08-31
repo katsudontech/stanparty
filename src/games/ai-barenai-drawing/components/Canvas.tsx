@@ -214,14 +214,14 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
   };
 
   return (
-    <div className="w-full">
+    <div className="ai-barenai-drawing-canvas w-full">
       {(sync.error || actionError) && (
-        <p role="alert" className="mb-2 rounded border border-rose-500 bg-rose-950 p-3 text-sm font-bold text-rose-200">
+        <p role="alert" className="aibd-canvas-error mb-2 rounded border border-rose-500 bg-rose-950 p-3 text-sm font-bold text-rose-200">
           {actionError || sync.error}
         </p>
       )}
 
-      <div className="relative aspect-[3/4] overflow-hidden rounded-xl border-2 border-slate-300 bg-white">
+      <div className="aibd-canvas-frame relative aspect-[3/4] overflow-hidden rounded-xl border-2 border-slate-300 bg-white">
         <div
           ref={containerRef}
           className="h-full w-full"
@@ -268,7 +268,7 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
       </div>
 
       {canDraw && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="aibd-canvas-controls mt-3 flex flex-wrap gap-2">
           <button
             type="button"
             className="button-secondary"
@@ -287,14 +287,14 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
               この絵で判定する
             </button>
           )}
-          <span className="self-center text-xs font-bold text-[var(--muted)]">
+          <span className="aibd-canvas-note self-center text-xs font-bold text-[var(--muted)]">
             リセットは現在の絵だけを消します
           </span>
         </div>
       )}
 
       {drawer && (
-        <p className="mt-2 text-sm font-bold text-[var(--muted)]">
+        <p className="aibd-canvas-drawer mt-2 text-sm font-bold text-[var(--muted)]">
           描く人：{drawer.name}{drawerId === myUserId ? '（あなた）' : ''}
         </p>
       )}
