@@ -26,9 +26,10 @@ describe('AIにバレるな！お絵かき版の実装回帰', () => {
       'src/games/ai-barenai-drawing/components/Canvas.tsx',
     );
 
-    expect(canvasSource).not.toContain('onStroke={submitPendingStrokes}');
+    expect(canvasSource).toContain('onStroke={handleCompletedStroke}');
+    expect(canvasSource).toContain('if (activePointerIdRef.current !== null) return;');
     expect(canvasSource).toContain("document.addEventListener('pointerup', finishStroke)");
-    expect(canvasSource).toContain('window.setTimeout(() => void submitPendingStrokes(), 0)');
+    expect(canvasSource).not.toContain('canvasRef.current.exportPaths()');
   });
 
   it('全回答後の判定claimで有効なPostgreSQL関数だけを使う', () => {

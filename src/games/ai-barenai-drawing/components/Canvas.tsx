@@ -119,31 +119,25 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
   const syncAllowsActions = sync.ready && !sync.error;
   const drawingEnabled = canDraw && syncAllowsActions && !busy;
 
-  const submitPendingStrokes = useCallback(async () => {
-    if (!drawingEnabled || actionInFlightRef.current || !canvasRef.current) return;
+  const submitCompletedStroke = useCallback(async (physicalPath: CanvasPath) => {
+    if (!drawingEnabled || actionInFlightRef.current) return;
+
+    const { width, height } = canvasSizeRef.current;
+    if (width <= 0 || height <= 0) return;
 
     actionInFlightRef.current = true;
     setBusy(true);
     setActionError(null);
 
     try {
-      const physicalPaths = await canvasRef.current.exportPaths();
-      const persistedCount = logicalPathsRef.current.length;
-      const pendingPaths = physicalPaths.slice(persistedCount);
-      const { width, height } = canvasSizeRef.current;
-
-      if (pendingPaths.length === 0 || width <= 0 || height <= 0) return;
-
-      for (const physicalPath of pendingPaths) {
-        const logicalPath = scalePath(
-          physicalPath,
-          LOGICAL_WIDTH / width,
-          LOGICAL_HEIGHT / height,
-        );
-        await sync.submitStroke(logicalPath);
-        logicalPathsRef.current.push(logicalPath);
-        setPathCount(logicalPathsRef.current.length);
-      }
+      const logicalPath = scalePath(
+        physicalPath,
+        LOGICAL_WIDTH / width,
+        LOGICAL_HEIGHT / height,
+      );
+      await sync.submitStroke(logicalPath);
+      logicalPathsRef.current.push(logicalPath);
+      setPathCount(logicalPathsRef.current.length);
     } catch (error) {
       redrawLogicalPaths();
       setActionError(error instanceof Error ? error.message : '線を保存できませんでした');
@@ -156,13 +150,7 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
   useEffect(() => {
     const finishStroke = (event: PointerEvent) => {
       if (activePointerIdRef.current !== event.pointerId) return;
-
       activePointerIdRef.current = null;
-
-      // react-sketch-canvas commits the completed path during its pointerup
-      // handler. Read it on the next task so the whole stroke, rather than its
-      // initial point, is persisted and broadcast.
-      window.setTimeout(() => void submitPendingStrokes(), 0);
     };
 
     document.addEventListener('pointerup', finishStroke);
@@ -171,7 +159,15 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
       document.removeEventListener('pointerup', finishStroke);
       document.removeEventListener('pointercancel', finishStroke);
     };
-  }, [submitPendingStrokes]);
+  }, []);
+
+  const handleCompletedStroke = useCallback((stroke: CanvasPath) => {
+    // react-sketch-canvas invokes onStroke once at pointerdown and again after
+    // pointerup. Ignore the first invocation and persist the completed path
+    // supplied by the second invocation.
+    if (activePointerIdRef.current !== null) return;
+    void submitCompletedStroke(stroke);
+  }, [submitCompletedStroke]);
 
   const resetCanvas = async () => {
     if (
@@ -249,6 +245,7 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
                 pointerEvents: drawingEnabled ? 'auto' : 'none',
                 touchAction: drawingEnabled ? 'none' : 'pan-y',
               }}
+              onStroke={handleCompletedStroke}
             />
           )}
         </div>
