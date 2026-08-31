@@ -1,27 +1,156 @@
 'use client';
-import { useState } from 'react';
+
+import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { Avatar } from '@/components/shared/Avatar';
 import type { RoomState } from '@/games/core/types';
 import { useAiBarenaiGame } from './hooks/useAiBarenaiGame';
+import type { AiBarenaiPhase, AiBarenaiRoundHints } from './types';
 
-interface Props { roomState: RoomState; myUserId: string; onBackToLobby: () => Promise<void> }
-export function AiBarenaiGame({roomState, myUserId, onBackToLobby}: Props) {
+interface Props {
+  roomState: RoomState;
+  myUserId: string;
+  onBackToLobby: () => Promise<void>;
+}
+
+const PHASE_LABELS: Record<AiBarenaiPhase, string> = {
+  rule_setting: 'ルール設定',
+  hinting: 'ヒントタイム',
+  answering: '回答タイム',
+  revealing: '結果発表',
+  game_over: 'ゲーム終了',
+};
+
+function Dialog({ open, title, onClose, children }: { open: boolean; title: string; onClose: () => void; children: ReactNode }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
+  const titleId = `aib-dialog-title-${useId().replace(/:/g, '')}`;
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) {
+      restoreRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      dialog.showModal();
+    } else if (!open && dialog.open) {
+      dialog.close();
+    }
+  }, [open]);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className="aib-dialog"
+      aria-labelledby={titleId}
+      onCancel={(event) => { event.preventDefault(); onClose(); }}
+      onClose={() => { restoreRef.current?.focus(); restoreRef.current = null; onClose(); }}
+      onClick={(event: MouseEvent<HTMLDialogElement>) => {
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const clickedOutside = event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom;
+        if (clickedOutside) onClose();
+      }}
+    >
+      <header className="aib-dialog__header"><h2 id={titleId}>{title}</h2><button className="aib-icon-button" type="button" onClick={onClose} aria-label="閉じる">×</button></header>
+      <div className="aib-dialog__body">{children}</div>
+    </dialog>
+  );
+}
+
+function Hud({ phase, round, answerer, players, onPlayers }: { phase: AiBarenaiPhase; round: number; answerer: string; players: RoomState['players']; onPlayers: () => void }) {
+  return (
+    <header className="aib-hud">
+      <div className="aib-hud__round"><span>ROUND</span><strong>{round}</strong></div>
+      <div className="aib-hud__phase">{PHASE_LABELS[phase]}</div>
+      <div className="aib-hud__answerer"><span>回答者</span><strong>{answerer}</strong></div>
+      <button className="aib-player-button" type="button" onClick={onPlayers} aria-label={`参加者 ${players.length}人を表示`}><span aria-hidden="true">●</span>{players.length}人</button>
+    </header>
+  );
+}
+
+function PlayersDialog({ open, onClose, players, myUserId }: { open: boolean; onClose: () => void; players: RoomState['players']; myUserId: string }) {
+  return (
+    <Dialog open={open} title="参加者" onClose={onClose}>
+      <ul className="aib-player-list">
+        {players.map((player) => <li key={player.userId}><Avatar avatarUrl={player.avatarUrl} name={player.name} color={player.color} size="sm" decorative /><span className="aib-player-list__name">{player.name}</span>{player.userId === myUserId && <span className="aib-chip">あなた</span>}{player.isHost && <span className="aib-chip">ホスト</span>}<span className={`aib-online-dot ${player.isOnline ? 'is-online' : ''}`} aria-label={player.isOnline ? 'オンライン' : 'オフライン'} /></li>)}
+      </ul>
+    </Dialog>
+  );
+}
+
+function HistoryDialog({ open, onClose, hints, answers, playerName }: { open: boolean; onClose: () => void; hints: AiBarenaiRoundHints[]; answers: ReturnType<typeof useAiBarenaiGame>['gameState']['answerHistory']; playerName: (id: string) => string }) {
+  return (
+    <Dialog open={open} title="ゲームの履歴" onClose={onClose}>
+      <div className="aib-history-dialog">
+        <section><h3>公開ヒント</h3>{hints.length === 0 ? <p className="aib-empty">まだありません。</p> : hints.map((round) => <div className="aib-history-group" key={round.round}><p className="aib-history-label">ラウンド {round.round}</p>{round.hints.map((hint) => <p className="aib-history-entry" key={`${round.round}-${hint.playerId}`}><strong>{playerName(hint.playerId)}</strong>{hint.text}</p>)}</div>)}</section>
+        <section><h3>回答履歴</h3>{answers.length === 0 ? <p className="aib-empty">まだありません。</p> : answers.map((entry) => <div className="aib-answer-history" key={entry.round}><p className="aib-history-label">ラウンド {entry.round}</p><p>人間：<strong>{entry.humanAnswer}</strong>（{entry.humanCorrect ? '正解' : '不正解'}）</p><p>AI：<strong>{entry.aiError ? 'AI回答を取得できませんでした' : entry.aiAnswer}</strong>（確信度 {entry.aiConfidence}%・{entry.aiCorrect ? '正解' : '不正解'}）</p></div>)}</section>
+      </div>
+    </Dialog>
+  );
+}
+
+function Composer({ value, onChange, onSubmit, placeholder, submitLabel, maxLength }: { value: string; onChange: (value: string) => void; onSubmit: () => void; placeholder: string; submitLabel: string; maxLength: number }) {
+  return <form className="aib-composer" onSubmit={(event) => { event.preventDefault(); onSubmit(); }}><input className="aib-composer__input" value={value} onChange={(event) => onChange(event.target.value)} maxLength={maxLength} required placeholder={placeholder} aria-label={placeholder} /><button className="button-primary aib-composer__submit" type="submit">{submitLabel}</button></form>;
+}
+
+function HintList({ hints, playerName }: { hints: AiBarenaiRoundHints[]; playerName: (id: string) => string }) {
+  const total = hints.reduce((count, round) => count + round.hints.length, 0);
+  if (total === 0) return <p className="aib-empty">ヒントが公開されるとここに表示されます。</p>;
+  return <div className="aib-hints" aria-live="polite">{hints.map((round) => <section className="aib-hint-round" key={round.round}><p className="aib-history-label">ラウンド {round.round}</p>{round.hints.map((hint) => <div className="aib-hint" key={`${round.round}-${hint.playerId}`}><span>{playerName(hint.playerId)}</span><strong>{hint.text}</strong></div>)}</section>)}</div>;
+}
+
+function ResultPanel({ result, phase, onComment }: { result: NonNullable<ReturnType<typeof useAiBarenaiGame>['gameState']['result']>; phase: AiBarenaiPhase; onComment: () => void }) {
+  const title = phase === 'revealing' ? '両者不正解' : result.winner === 'ai' ? 'AIの勝利' : result.winner === 'humans' ? '人間の勝利' : '引き分け';
+  return (
+    <section className="aib-result" aria-labelledby="aib-result-title"><div className="aib-result__heading"><p className="section-kicker">RESULT</p><h2 id="aib-result-title">{title}</h2></div>{result.topic ? <p className="aib-topic aib-topic--result">お題：{result.topic}</p> : <p className="aib-muted">お題は次のラウンドまで秘密です。</p>}<div className="aib-result__grid"><div className={`aib-result-card ${result.humanCorrect ? 'is-correct' : ''}`}><span>人間の回答</span><strong>{result.humanAnswer || '未回答'}</strong><b>{result.humanCorrect ? '正解' : '不正解'}</b></div><div className={`aib-result-card ${result.aiCorrect ? 'is-correct' : ''}`}><span>AIの回答</span><strong>{result.aiError ? '取得できませんでした' : result.aiAnswer}</strong><b>確信度 {result.aiConfidence}%・{result.aiCorrect ? '正解' : '不正解'}</b></div></div>{phase === 'game_over' && result.aiComment && <div className="aib-comment"><p>AIの感想</p><div className="aib-comment__preview">{result.aiComment}</div><button className="text-link" type="button" onClick={onComment}>全文を読む</button></div>}</section>
+  );
+}
+
+export function AiBarenaiGame({ roomState, myUserId, onBackToLobby }: Props) {
   const isHost = roomState.host_id === myUserId;
-  const {gameState, topic, handleInitialize, handleHint, handleAnswer, handleNextRound, handleTopic} = useAiBarenaiGame(roomState, isHost);
-  const [hints, setHints] = useState(gameState.hintsPerRound); const [text, setText] = useState(''); const [error, setError] = useState('');
+  const { gameState, topic, handleInitialize, handleHint, handleAnswer, handleNextRound, handleTopic } = useAiBarenaiGame(roomState, isHost);
+  const [hints, setHints] = useState(gameState.hintsPerRound);
+  const [text, setText] = useState('');
+  const [error, setError] = useState('');
+  const [playersOpen, setPlayersOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [commentOpen, setCommentOpen] = useState(false);
   const isAnswerer = gameState.answererId === myUserId;
-  const isAssignee = gameState.currentAssigneeIds.includes(myUserId), submitted = gameState.submittedHintPlayerIds.includes(myUserId);
+  const isAssignee = gameState.currentAssigneeIds.includes(myUserId);
+  const submitted = gameState.submittedHintPlayerIds.includes(myUserId);
+  const answerHistory = gameState.answerHistory;
   const playerName = (id: string | null) => roomState.players.find((player) => player.userId === id)?.name ?? '参加者';
   const assigneeNames = gameState.currentAssigneeIds.map(playerName).join('、');
-  const fullOrderNames = gameState.clueGiverOrder.map(playerName).join(' → ');
-  const act = async (fn: () => Promise<unknown>) => { setError(''); try { await fn(); } catch (e) { setError(e instanceof Error ? e.message : '操作に失敗しました'); } };
-  if (gameState.phase === 'rule_setting') return <main className="paper-card mx-auto min-w-0 max-w-2xl p-5 sm:p-10"><p className="section-kicker">AI GAME</p><h1 className="mt-2 text-3xl font-black">AIにバレるな！</h1><p className="mt-4 leading-7 text-[var(--muted)]">お題を知らない回答者に、みんなでヒントを出します。AIより先に当てられるか挑戦しましょう。</p>{isHost ? <div className="mt-8"><label className="font-bold">1ラウンドのヒント担当人数</label><input type="number" min={1} max={Math.max(1, roomState.players.length - 1)} value={hints} onChange={e=>setHints(Number(e.target.value))} className="mt-2 block w-32 rounded border-2 border-[var(--line)] bg-white p-3 text-xl font-black" /><button className="button-primary mt-5" onClick={()=>void act(()=>handleInitialize(hints))}>ゲームを始める</button></div> : <p className="mt-8 font-bold text-[var(--muted)]">ホストがルールを設定しています…</p>}<button className="text-link mt-8 block" onClick={()=>void onBackToLobby()}>← ロビーに戻る</button></main>;
-  const phaseTitle = gameState.phase === 'hinting' ? 'ヒントを積み上げよう' : gameState.phase === 'answering' ? '回答タイム' : gameState.phase === 'revealing' ? '結果発表' : 'ゲーム終了';
-  return <main className="mx-auto min-w-0 max-w-3xl space-y-5"><header className="paper-card min-w-0 p-5 sm:p-7"><div className="flex flex-wrap items-center justify-between gap-2"><p className="section-kicker">ROUND {gameState.round}</p><span className="shrink-0 rounded-full bg-[var(--yellow)] px-3 py-1 text-xs font-black">{gameState.phase}</span></div><h1 className="mt-2 text-[clamp(1.75rem,8vw,1.875rem)] font-black">{phaseTitle}</h1><p className="mt-2 text-sm font-bold text-[var(--muted)]">回答者：{playerName(gameState.answererId)}</p>{fullOrderNames && <p className="mt-2 break-words text-xs font-bold text-[var(--muted)]">ヒント順：{fullOrderNames}</p>}{isAnswerer ? <p className="mt-3 font-bold text-[var(--orange)]">あなたは回答者です。お題は見ず、ヒントが揃うまで待ちましょう。</p> : (gameState.phase === 'hinting' || gameState.phase === 'answering') && <>{topic ? <p className="mt-3 break-words font-black text-[var(--purple)]">お題：{topic}</p> : <button className="button-secondary mt-3" onClick={()=>void act(handleTopic)}>担当者のお題を確認する</button>}</>}</header>
-    {gameState.phase === 'hinting' && <section className="paper-card p-5"><h2 className="text-xl font-black">今回のヒント担当</h2><p className="mt-2 font-bold text-[var(--muted)]">{assigneeNames}</p><p className="mt-2 text-sm text-[var(--muted)]">{isAnswerer ? 'みんながヒントを出すのを待っています。' : isAssignee ? (submitted ? 'このラウンドは提出済みです。' : 'お題を直接言わずにヒントを1つ出してください。') : '今回はヒント担当ではありません。'}</p>{isAssignee && !submitted && <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={e=>{e.preventDefault(); void act(async()=>{await handleHint(text);setText('')})}}><input value={text} onChange={e=>setText(e.target.value)} maxLength={300} required className="min-w-0 w-full flex-1 rounded border-2 border-[var(--line)] bg-white p-3" placeholder="ヒントを入力"/><button className="button-primary sm:w-auto" type="submit">提出</button></form>}<p className="mt-3 text-xs font-bold text-[var(--muted)]">提出済み {gameState.submittedHintPlayerIds.length} / {gameState.currentAssigneeIds.length}</p></section>}
-    {gameState.revealedHintHistory.length > 0 && <section className="paper-card p-5"><h2 className="text-xl font-black">公開されたヒント</h2><div className="mt-4 space-y-3">{gameState.revealedHintHistory.map(r=><div key={r.round}><p className="text-xs font-black text-[var(--muted)]">ラウンド {r.round}</p>{r.hints.map(h=><p key={h.playerId} className="mt-1 rounded bg-[var(--surface)] p-3 font-bold">{h.text}</p>)}</div>)}</div></section>}
-    {gameState.answerHistory.length > 0 && <section className="paper-card p-5"><h2 className="text-xl font-black">これまでの回答履歴</h2><p className="mt-2 text-sm font-bold text-[var(--muted)]">この履歴を参考に、次のラウンドのヒントを考えられます。</p><div className="mt-4 space-y-3">{gameState.answerHistory.map((entry)=><div key={entry.round} className="rounded bg-[var(--surface)] p-3"><p className="text-xs font-black text-[var(--muted)]">ラウンド {entry.round}</p><p className="mt-2">人間：<span className="font-bold">{entry.humanAnswer}</span>（{entry.humanCorrect?'正解':'不正解'}）</p><p>AI：<span className="font-bold">{entry.aiError?'AI回答を取得できませんでした':entry.aiAnswer}</span>（確信度 {entry.aiConfidence}%・{entry.aiCorrect?'正解':'不正解'}）</p></div>)}</div></section>}
-    {gameState.phase === 'answering' && <section className="paper-card p-5"><p className="font-bold">{isAnswerer ? 'ヒントからお題を一度だけ回答してください。' : 'AIも考えています。回答者の入力を待っています。'}</p>{isAnswerer && !gameState.humanAnswerSubmitted && <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={e=>{e.preventDefault();void act(async()=>{await handleAnswer(text);setText('')})}}><input value={text} onChange={e=>setText(e.target.value)} required maxLength={200} className="min-w-0 w-full flex-1 rounded border-2 border-[var(--line)] bg-white p-3" placeholder="お題の答え"/><button className="button-primary sm:w-auto" type="submit">回答する</button></form>}<p className="mt-3 text-sm text-[var(--muted)]">人間の回答：{gameState.humanAnswerSubmitted?'提出済み':'待機中'} / AI：{gameState.aiGuessReady?'準備完了':'思考中…'}</p></section>}
-    {gameState.result && <section className="paper-card p-5"><p className="section-kicker">RESULT</p><h2 className="mt-2 text-3xl font-black">{gameState.phase === 'revealing' ? '両者不正解' : gameState.result.winner === 'ai' ? 'AIの勝利' : '人間の勝利'}</h2>{gameState.result.topic ? <p className="mt-4 font-bold">お題：{gameState.result.topic}</p> : <p className="mt-4 font-bold text-[var(--muted)]">お題は次のラウンドまで秘密です。</p>}<p className="mt-2">人間：{gameState.result.humanAnswer}（{gameState.result.humanCorrect?'正解':'不正解'}）</p><p>AI：{gameState.result.aiError ? 'AI回答を取得できませんでした' : gameState.result.aiAnswer}（確信度 {gameState.result.aiConfidence}%・{gameState.result.aiCorrect?'正解':'不正解'}）</p>{gameState.phase === 'game_over' && gameState.result.winner === 'ai' && gameState.result.aiComment && <div className="mt-5 rounded bg-[var(--surface)] p-4"><p className="text-sm font-black text-[var(--muted)]">AIの感想</p><p className="mt-2 leading-7">{gameState.result.aiComment}</p></div>}{gameState.phase === 'revealing' && (isHost ? <button className="button-primary mt-5" onClick={()=>void act(handleNextRound)}>次のラウンドへ</button> : <p className="mt-5 font-bold text-[var(--muted)]">ホストが次のラウンドを始めるまでお待ちください。</p>)}{gameState.phase === 'game_over' && (isHost ? <button className="text-link mt-5 block" onClick={()=>void onBackToLobby()}>ロビーに戻る</button> : <p className="mt-5 font-bold text-[var(--muted)]">ホストがロビーに戻るまでお待ちください。</p>)}</section>}
-    {error && <p className="font-bold text-red-600">{error}</p>}
-  </main>;
+  const maxHints = Math.max(1, roomState.players.length - 1);
+  const selectedHints = Math.min(hints, maxHints);
+  const revealedHintCount = gameState.revealedHintHistory.reduce((count, round) => count + round.hints.length, 0);
+  const historyCount = revealedHintCount + answerHistory.length;
+
+  const act = async (fn: () => Promise<unknown>) => { setError(''); try { await fn(); } catch (caught) { setError(caught instanceof Error ? caught.message : '操作に失敗しました'); } };
+  const submitHint = () => void act(async () => { await handleHint(text); setText(''); });
+  const submitAnswer = () => void act(async () => { await handleAnswer(text); setText(''); });
+  const hud = <Hud phase={gameState.phase} round={gameState.round} answerer={gameState.answererId ? playerName(gameState.answererId) : '未決定'} players={roomState.players} onPlayers={() => setPlayersOpen(true)} />;
+  const historyButton = historyCount > 0 && <button className="aib-history-button" type="button" onClick={() => setHistoryOpen(true)}>履歴 <span>{historyCount}</span></button>;
+  const showLobbyLink = gameState.phase === 'rule_setting';
+
+  let content: ReactNode;
+  let composer: ReactNode = null;
+  let bottomAction: ReactNode = null;
+
+  if (gameState.phase === 'rule_setting') {
+    content = <section className="aib-rule-stage"><div><p className="section-kicker">AI GAME</p><h1>AIにバレるな！</h1><p className="aib-lede">お題を知らない回答者に、みんなでヒントを出します。AIより先に当てられるか挑戦しましょう。</p></div><div className="aib-rule-note"><strong>ルール</strong><span>回答者にはお題を見せず、担当者がヒントを1つずつ出します。</span></div></section>;
+    bottomAction = isHost ? <div className="aib-rule-controls"><div className="aib-stepper"><span>1ラウンドのヒント担当</span><div><button type="button" aria-label="ヒント担当を減らす" disabled={selectedHints <= 1} onClick={() => setHints((value) => Math.max(1, value - 1))}>−</button><strong>{selectedHints}人</strong><button type="button" aria-label="ヒント担当を増やす" disabled={selectedHints >= maxHints} onClick={() => setHints((value) => Math.min(maxHints, value + 1))}>＋</button></div></div><button className="button-primary aib-full-button" type="button" onClick={() => void act(() => handleInitialize(selectedHints))}>ゲームを始める</button></div> : <p className="aib-waiting">ホストがルールを設定しています…</p>;
+  } else if (gameState.phase === 'hinting') {
+    content = <section className="aib-phase-stage"><div className="aib-stage-heading"><div><p className="section-kicker">HINTING</p><h1>ヒントを積み上げよう</h1></div><span className="aib-progress">{gameState.submittedHintPlayerIds.length}/{gameState.currentAssigneeIds.length} 提出</span></div><div className="aib-role-card">{isAnswerer ? <><strong>あなたは回答者</strong><span>お題は見えません。みんながヒントを出すのを待ちましょう。</span></> : isAssignee ? <><strong>あなたはヒント担当</strong><span>{submitted ? 'このラウンドは提出済みです。' : 'お題を確認して、ヒントを1つ出してください。'}</span>{topic ? <p className="aib-topic">お題：{topic}</p> : <button className="button-secondary aib-inline-button" type="button" onClick={() => void act(handleTopic)}>お題を確認する</button>}</> : <><strong>今回はヒント担当ではありません</strong><span>{assigneeNames || '担当者'}がヒントを出しています。</span></>}</div><div className="aib-hint-waiting"><span>担当者</span><strong>{assigneeNames || '未決定'}</strong></div></section>;
+    if (isAssignee && !submitted) composer = <Composer value={text} onChange={setText} onSubmit={submitHint} placeholder="ヒントを入力（お題を直接言わない）" submitLabel="提出" maxLength={300} />;
+  } else if (gameState.phase === 'answering') {
+    content = <section className="aib-phase-stage aib-answer-stage"><div className="aib-stage-heading"><div><p className="section-kicker">ANSWERING</p><h1>ヒントから答えよう</h1></div><span className="aib-progress">{revealedHintCount} ヒント</span></div><div className="aib-public-hints"><h2>公開されたヒント</h2><HintList hints={gameState.revealedHintHistory} playerName={playerName} /></div><div className="aib-status-row"><span>人間の回答</span><strong>{gameState.humanAnswerSubmitted ? '提出済み' : '待機中'}</strong><span>AI</span><strong>{gameState.aiGuessReady ? '準備完了' : '思考中…'}</strong></div></section>;
+    if (isAnswerer && !gameState.humanAnswerSubmitted) composer = <Composer value={text} onChange={setText} onSubmit={submitAnswer} placeholder="お題の答え" submitLabel="回答する" maxLength={200} />;
+  } else if (gameState.result) {
+    content = <ResultPanel result={gameState.result} phase={gameState.phase} onComment={() => setCommentOpen(true)} />;
+    if (gameState.phase === 'revealing') bottomAction = isHost ? <button className="button-primary aib-full-button" type="button" onClick={() => void act(handleNextRound)}>次のラウンドへ</button> : <p className="aib-waiting">ホストが次のラウンドを始めるまでお待ちください。</p>;
+    if (gameState.phase === 'game_over') bottomAction = isHost ? <button className="button-secondary aib-full-button" type="button" onClick={() => void act(onBackToLobby)}>ロビーに戻る</button> : <p className="aib-waiting">ホストがロビーに戻るまでお待ちください。</p>;
+  } else {
+    content = <section className="aib-phase-stage"><p className="aib-muted">結果を読み込んでいます…</p></section>;
+  }
+
+  return <div className="ai-barenai-game" data-phase={gameState.phase}>{hud}{historyButton && <div className="aib-toolbar">{historyButton}</div>}<main className="aib-main"><div className="aib-stage">{content}</div>{composer && <div className="aib-bottom-composer">{composer}</div>}{bottomAction && <div className="aib-bottom-action">{bottomAction}</div>}{showLobbyLink && <button className="aib-lobby-link" type="button" onClick={() => void act(onBackToLobby)}>ロビーに戻る</button>}{error && <p className="aib-error" role="alert">{error}</p>}</main><PlayersDialog open={playersOpen} onClose={() => setPlayersOpen(false)} players={roomState.players} myUserId={myUserId} /><HistoryDialog open={historyOpen} onClose={() => setHistoryOpen(false)} hints={gameState.revealedHintHistory} answers={answerHistory} playerName={playerName} /><Dialog open={commentOpen} title="AIの感想" onClose={() => setCommentOpen(false)}><p className="aib-comment-full">{gameState.result?.aiComment}</p></Dialog></div>;
 }

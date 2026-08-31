@@ -123,7 +123,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
         if (roomState.game_type === 'ai-barenai') {
             return (
-                <GameWrapper players={players} myUserId={myUserId}>
+                <GameWrapper players={players} myUserId={myUserId} showPlayerBar={false} hideBrandHeader gameClassName="ai-barenai-wrapper">
                     <AiBarenaiGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
                 </GameWrapper>
             );
