@@ -45,4 +45,14 @@ describe('AIにバレるな！お絵かき版の実装回帰', () => {
     expect(migrations[1]).toContain("state -> 'answerSubmittedPlayerIds'");
     expect(migrations[1]).toContain('pg_catalog.jsonb_array_length');
   });
+
+  it('描画イベントのINSERT許可がAIにバレるな！お絵かき版に含まれている', () => {
+    const migration = stripSqlLineComments(
+      readProjectFile('supabase/migrations/20260831100000_fix_ai_barenai_drawing_game_event_permissions.sql'),
+    );
+
+    expect(migration).toContain("if new.event_type = 'ai_barenai_drawing_line' then");
+    expect(migration).toContain("if new.event_type = 'ai_barenai_drawing_reset' then");
+    expect(migration).toContain("target_room.game_type <> 'ai-barenai-drawing'");
+  });
 });
