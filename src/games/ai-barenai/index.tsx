@@ -87,8 +87,9 @@ function HistoryDialog({ open, onClose, hints, answers, playerName }: { open: bo
   );
 }
 
-function Composer({ value, onChange, onSubmit, placeholder, submitLabel, maxLength }: { value: string; onChange: (value: string) => void; onSubmit: () => void; placeholder: string; submitLabel: string; maxLength: number }) {
-  return <form className="aib-composer" onSubmit={(event) => { event.preventDefault(); onSubmit(); }}><input className="aib-composer__input" value={value} onChange={(event) => onChange(event.target.value)} maxLength={maxLength} required placeholder={placeholder} aria-label={placeholder} /><button className="button-primary aib-composer__submit" type="submit">{submitLabel}</button></form>;
+function Composer({ value, onChange, onSubmit, label, placeholder, submitLabel, maxLength }: { value: string; onChange: (value: string) => void; onSubmit: () => void; label: string; placeholder: string; submitLabel: string; maxLength: number }) {
+  const inputId = `aib-composer-${useId().replace(/:/g, '')}`;
+  return <form className="aib-composer" onSubmit={(event) => { event.preventDefault(); onSubmit(); }}><div className="aib-composer__field"><label className="aib-composer__label" htmlFor={inputId}>{label}</label><input id={inputId} className="aib-composer__input" value={value} onChange={(event) => onChange(event.target.value)} maxLength={maxLength} required placeholder={placeholder} /></div><button className="button-primary aib-composer__submit" type="submit">{submitLabel}</button></form>;
 }
 
 function HintList({ hints, playerName }: { hints: AiBarenaiRoundHints[]; playerName: (id: string) => string }) {
@@ -128,7 +129,7 @@ export function AiBarenaiGame({ roomState, myUserId, onBackToLobby }: Props) {
   const submitHint = () => void act(async () => { await handleHint(text); setText(''); });
   const submitAnswer = () => void act(async () => { await handleAnswer(text); setText(''); });
   const hud = <Hud phase={gameState.phase} round={gameState.round} answerer={gameState.answererId ? playerName(gameState.answererId) : '未決定'} players={roomState.players} onPlayers={() => setPlayersOpen(true)} />;
-  const historyButton = historyCount > 0 && <button className="aib-history-button" type="button" onClick={() => setHistoryOpen(true)}>履歴 <span>{historyCount}</span></button>;
+  const historyButton = historyCount > 0 && <button className="aib-history-button" type="button" onClick={() => setHistoryOpen(true)} aria-label={`履歴を見る（${historyCount}件）`}><svg className="aib-history-button__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /><path d="M12 7v5l3 2" /></svg><span className="aib-history-button__label">履歴を見る</span><span className="aib-history-button__count">{historyCount}</span></button>;
   const showLobbyLink = gameState.phase === 'rule_setting';
 
   let content: ReactNode;
@@ -140,10 +141,10 @@ export function AiBarenaiGame({ roomState, myUserId, onBackToLobby }: Props) {
     bottomAction = isHost ? <div className="aib-rule-controls"><div className="aib-stepper"><span>1ラウンドのヒント担当</span><div><button type="button" aria-label="ヒント担当を減らす" disabled={selectedHints <= 1} onClick={() => setHints((value) => Math.max(1, value - 1))}>−</button><strong>{selectedHints}人</strong><button type="button" aria-label="ヒント担当を増やす" disabled={selectedHints >= maxHints} onClick={() => setHints((value) => Math.min(maxHints, value + 1))}>＋</button></div></div><button className="button-primary aib-full-button" type="button" onClick={() => void act(() => handleInitialize(selectedHints))}>ゲームを始める</button></div> : <p className="aib-waiting">ホストがルールを設定しています…</p>;
   } else if (gameState.phase === 'hinting') {
     content = <section className="aib-phase-stage"><div className="aib-stage-heading"><div><p className="section-kicker">HINTING</p><h1>ヒントを積み上げよう</h1></div><span className="aib-progress">{gameState.submittedHintPlayerIds.length}/{gameState.currentAssigneeIds.length} 提出</span></div><div className="aib-role-card">{isAnswerer ? <><strong>あなたは回答者</strong><span>お題は見えません。みんながヒントを出すのを待ちましょう。</span></> : isAssignee ? <><strong>あなたはヒント担当</strong><span>{submitted ? 'このラウンドは提出済みです。' : 'お題を確認して、ヒントを1つ出してください。'}</span>{topic ? <p className="aib-topic">お題：{topic}</p> : <button className="button-secondary aib-inline-button" type="button" onClick={() => void act(handleTopic)}>お題を確認する</button>}</> : <><strong>今回はヒント担当ではありません</strong><span>{assigneeNames || '担当者'}がヒントを出しています。</span></>}</div><div className="aib-hint-waiting"><span>担当者</span><strong>{assigneeNames || '未決定'}</strong></div></section>;
-    if (isAssignee && !submitted) composer = <Composer value={text} onChange={setText} onSubmit={submitHint} placeholder="ヒントを入力（お題を直接言わない）" submitLabel="提出" maxLength={300} />;
+    if (isAssignee && !submitted) composer = <Composer value={text} onChange={setText} onSubmit={submitHint} label="ヒント（お題を直接言わない）" placeholder="ヒントを入力（お題を直接言わない）" submitLabel="提出" maxLength={300} />;
   } else if (gameState.phase === 'answering') {
     content = <section className="aib-phase-stage aib-answer-stage"><div className="aib-stage-heading"><div><p className="section-kicker">ANSWERING</p><h1>ヒントから答えよう</h1></div><span className="aib-progress">{revealedHintCount} ヒント</span></div><div className="aib-public-hints"><h2>公開されたヒント</h2><HintList hints={gameState.revealedHintHistory} playerName={playerName} /></div><div className="aib-status-row"><span>人間の回答</span><strong>{gameState.humanAnswerSubmitted ? '提出済み' : '待機中'}</strong><span>AI</span><strong>{gameState.aiGuessReady ? '準備完了' : '思考中…'}</strong></div></section>;
-    if (isAnswerer && !gameState.humanAnswerSubmitted) composer = <Composer value={text} onChange={setText} onSubmit={submitAnswer} placeholder="お題の答え" submitLabel="回答する" maxLength={200} />;
+    if (isAnswerer && !gameState.humanAnswerSubmitted) composer = <Composer value={text} onChange={setText} onSubmit={submitAnswer} label="お題の答え" placeholder="お題の答え" submitLabel="回答する" maxLength={200} />;
   } else if (gameState.result) {
     content = <ResultPanel result={gameState.result} phase={gameState.phase} onComment={() => setCommentOpen(true)} />;
     if (gameState.phase === 'revealing') bottomAction = isHost ? <button className="button-primary aib-full-button" type="button" onClick={() => void act(handleNextRound)}>次のラウンドへ</button> : <p className="aib-waiting">ホストが次のラウンドを始めるまでお待ちください。</p>;
