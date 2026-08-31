@@ -41,6 +41,7 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
   const canvasSizeRef = useRef({ width: 0, height: 0 });
   const logicalPathsRef = useRef<CanvasPath[]>([]);
   const actionInFlightRef = useRef(false);
+  const activePointerIdRef = useRef<number | null>(null);
 
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [pathCount, setPathCount] = useState(0);
@@ -118,7 +119,7 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
   const syncAllowsActions = sync.ready && !sync.error;
   const drawingEnabled = canDraw && syncAllowsActions && !busy;
 
-  const submitPendingStrokes = async () => {
+  const submitPendingStrokes = useCallback(async () => {
     if (!drawingEnabled || actionInFlightRef.current || !canvasRef.current) return;
 
     actionInFlightRef.current = true;
@@ -150,7 +151,27 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
       actionInFlightRef.current = false;
       setBusy(false);
     }
-  };
+  }, [drawingEnabled, redrawLogicalPaths, sync]);
+
+  useEffect(() => {
+    const finishStroke = (event: PointerEvent) => {
+      if (activePointerIdRef.current !== event.pointerId) return;
+
+      activePointerIdRef.current = null;
+
+      // react-sketch-canvas commits the completed path during its pointerup
+      // handler. Read it on the next task so the whole stroke, rather than its
+      // initial point, is persisted and broadcast.
+      window.setTimeout(() => void submitPendingStrokes(), 0);
+    };
+
+    document.addEventListener('pointerup', finishStroke);
+    document.addEventListener('pointercancel', finishStroke);
+    return () => {
+      document.removeEventListener('pointerup', finishStroke);
+      document.removeEventListener('pointercancel', finishStroke);
+    };
+  }, [submitPendingStrokes]);
 
   const resetCanvas = async () => {
     if (
@@ -205,7 +226,19 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
       )}
 
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl border-2 border-slate-300 bg-white">
-        <div ref={containerRef} className="h-full w-full">
+        <div
+          ref={containerRef}
+          className="h-full w-full"
+          onPointerDown={(event) => {
+            if (
+              drawingEnabled
+              && activePointerIdRef.current === null
+              && (event.pointerType !== 'mouse' || event.button === 0)
+            ) {
+              activePointerIdRef.current = event.pointerId;
+            }
+          }}
+        >
           {canvasSize.width > 0 && (
             <ReactSketchCanvas
               ref={canvasRef}
@@ -216,7 +249,6 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
                 pointerEvents: drawingEnabled ? 'auto' : 'none',
                 touchAction: drawingEnabled ? 'none' : 'pan-y',
               }}
-              onStroke={submitPendingStrokes}
             />
           )}
         </div>
