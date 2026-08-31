@@ -55,7 +55,7 @@ export function RuleSettingPhase({
 
   return (
     <section className="space-y-6">
-      <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-6 text-left">
+      <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-4 text-left sm:p-6">
         <p className="text-sm font-black uppercase tracking-[0.25em] text-cyan-300">How to play</p>
         <h2 className="mt-2 text-3xl font-black text-white">ito クモノイト2.0</h2>
         <ol className="mt-5 space-y-3 text-sm leading-relaxed text-slate-200 sm:text-base">
@@ -65,8 +65,8 @@ export function RuleSettingPhase({
         </ol>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
-        <div className="mb-5 flex items-center justify-between gap-4">
+      <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-4 sm:p-6">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="text-left">
             <p className="text-sm font-bold text-slate-400">参加人数</p>
             <p className="text-2xl font-black text-white">{playerCount}人</p>

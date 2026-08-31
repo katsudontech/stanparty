@@ -36,7 +36,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
   if (!game) notFound();
 
   return (
-    <div className="site-shell" style={{ '--game-accent': game.accent, '--game-soft': game.softColor } as CSSProperties}>
+    <div className="site-shell mobile-page" style={{ '--game-accent': game.accent, '--game-soft': game.softColor } as CSSProperties}>
       <SiteHeader compact />
       <main>
         <section className="site-container grid items-center gap-10 py-14 md:grid-cols-[1.08fr_.92fr] md:py-20">

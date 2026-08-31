@@ -3,9 +3,9 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 
 export default function GameNotFound() {
   return (
-    <div className="site-shell">
+    <div className="site-shell mobile-page">
       <SiteHeader compact />
-      <main className="site-container flex min-h-[70vh] flex-col items-start justify-center">
+      <main className="site-container flex min-h-[70dvh] min-w-0 flex-col items-start justify-center py-12">
         <p className="section-kicker">404</p>
         <h1 className="section-heading">そのゲームは、まだ準備中です。</h1>
         <p className="mt-5 text-[var(--muted)]">現在遊べるゲームから選んでください。</p>

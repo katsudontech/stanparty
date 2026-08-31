@@ -18,12 +18,12 @@ export function LegalPageLayout({
   children,
 }: LegalPageLayoutProps) {
   return (
-    <div className="site-shell">
+    <div className="site-shell mobile-page">
       <SiteHeader compact />
       <main>
         <section className="site-container py-14 sm:py-20">
           <p className="section-kicker">{eyebrow}</p>
-          <h1 className="mt-4 max-w-4xl text-[clamp(3rem,8vw,5.6rem)] font-black leading-[.95] tracking-[-.07em]">
+          <h1 className="mt-4 max-w-4xl text-[clamp(2.5rem,8vw,5.6rem)] font-black leading-[.95] tracking-[-.07em]">
             {title}
           </h1>
           <p className="mt-8 max-w-3xl text-base font-medium leading-8 text-[var(--muted)] sm:text-lg">

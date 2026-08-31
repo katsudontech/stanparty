@@ -65,10 +65,10 @@ export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
     };
 
     return (
-        <div className="site-shell">
+        <div className="site-shell mobile-page">
             <SiteHeader compact />
-            <main className="site-container grid min-h-[calc(100vh-72px)] place-items-center py-12">
-            <div className="paper-card w-full max-w-md p-6 text-center sm:p-9">
+            <main className="site-container grid min-h-[calc(100dvh-72px)] place-items-center py-8 sm:py-12">
+            <div className="paper-card w-full min-w-0 max-w-md p-5 text-center sm:p-9">
                 <p className="section-kicker">Invitation</p>
                 <h2 className="mb-3 mt-3 text-3xl font-black tracking-[-.05em]">ルームに参加</h2>
                 <p className="mb-7 text-sm leading-6 text-[var(--muted)]">表示する名前とアイコンを確認してください。</p>

@@ -61,7 +61,7 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
 
   if (state.phase === 'rule_setting') {
     return (
-      <main className="paper-card mx-auto max-w-2xl p-6 sm:p-10">
+      <main className="paper-card mx-auto min-w-0 max-w-2xl p-5 sm:p-10">
         <p className="section-kicker">AI DRAWING GAME</p>
         <h1 className="mt-2 text-3xl font-black">AIにバレるな！お絵かき版</h1>
         <p className="mt-4 leading-7 text-[var(--muted)]">
@@ -92,13 +92,13 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
         : 'ゲーム終了';
 
   return (
-    <main className="mx-auto max-w-3xl space-y-5">
-      <header className="paper-card p-5 sm:p-7">
-        <div className="flex items-center justify-between">
+    <main className="mx-auto min-w-0 max-w-3xl space-y-5">
+      <header className="paper-card min-w-0 p-5 sm:p-7">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="section-kicker">ROUND {state.round}</p>
           <span className="rounded-full bg-[var(--yellow)] px-3 py-1 text-xs font-black">{phaseLabel}</span>
         </div>
-        <h1 className="mt-2 text-3xl font-black">AIにバレるな！お絵かき版</h1>
+        <h1 className="mt-2 text-[clamp(1.75rem,8vw,1.875rem)] font-black">AIにバレるな！お絵かき版</h1>
         <p className="mt-2 text-sm font-bold text-[var(--muted)]">描く人：{drawer?.name ?? '決定中'}</p>
         {state.phase === 'drawing' && (
           <p className="mt-3 font-bold text-[var(--muted)]">

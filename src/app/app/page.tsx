@@ -11,7 +11,7 @@ export default function AppHome() {
   const { profile, loading } = useGuestAuth();
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6">
+    <main className="mobile-page mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6">
       <header className="flex items-center justify-between gap-4" aria-label="アプリヘッダー">
         <Link href="/app" className="site-brand" aria-label="StanParty プレイホーム">
           <span className="site-brand__mark" aria-hidden="true">SP</span>
@@ -25,7 +25,7 @@ export default function AppHome() {
         </Link>
       </header>
 
-      <section className="mt-8 flex items-center gap-3 border-b-2 border-[var(--line)] pb-6" aria-labelledby="player-heading">
+      <section className="mt-8 flex min-w-0 items-center gap-3 border-b-2 border-[var(--line)] pb-6" aria-labelledby="player-heading">
         {loading ? (
           <span className="h-14 w-14 animate-pulse rounded-full bg-[var(--paper-deep)]" aria-label="プレイヤーを読み込み中" />
         ) : (
@@ -37,11 +37,11 @@ export default function AppHome() {
             {loading ? 'プレイヤーを確認中…' : `${profile?.name || 'ゲスト'}さん`}
           </h1>
         </div>
-        <span className="ml-auto rounded-full bg-[var(--green)] px-3 py-1 text-[.68rem] font-black text-white">登録不要</span>
+        <span className="ml-auto shrink-0 rounded-full bg-[var(--green)] px-3 py-1 text-[.68rem] font-black text-white">登録不要</span>
       </section>
 
       <section className="mt-6" aria-labelledby="actions-heading">
-        <div className="mb-3 flex items-end justify-between">
+        <div className="mb-3 flex min-w-0 flex-wrap items-end justify-between gap-x-3 gap-y-2">
           <div>
             <p className="section-kicker">Let&apos;s play</p>
             <h2 id="actions-heading" className="mt-2 text-3xl font-black tracking-[-.06em]">なにして遊ぶ？</h2>

@@ -102,9 +102,9 @@ export function ResultPhase({ roomId, myUserId, players, gameState, isHost, onRe
               return (
                 <div 
                   key={player.userId}
-                  className="flex items-center justify-between bg-slate-800 p-4 rounded border border-slate-600"
+                  className="flex min-w-0 flex-wrap items-center justify-between gap-3 bg-slate-800 p-4 rounded border border-slate-600"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <Avatar
                       avatarUrl={player.avatarUrl}
                       name={player.name}
@@ -113,7 +113,7 @@ export function ResultPhase({ roomId, myUserId, players, gameState, isHost, onRe
                       decorative
                     />
                     <div className="h-3 w-3 rounded-full" style={{ backgroundColor: playerColor }} aria-hidden="true" />
-                    <span className="text-lg font-black" style={{ color: playerColor }}>{player.name}</span>
+                    <span className="max-w-40 truncate text-lg font-black" style={{ color: playerColor }}>{player.name}</span>
                   </div>
                   <div>
                     {getRoleBadge(role)}

@@ -50,8 +50,8 @@ export function ShowdownPhase({
     <section className="space-y-6">
       <div>
         <p className="text-sm font-black uppercase tracking-[0.25em] text-amber-300">Showdown</p>
-        <h2 className="mt-2 text-3xl font-black text-white">小さい順にオープン！</h2>
-        <p className="mt-2 font-bold text-slate-400">お題：{gameState.selectedTheme}</p>
+        <h2 className="mt-2 text-[clamp(1.75rem,8vw,1.875rem)] font-black text-white">小さい順にオープン！</h2>
+        <p className="mt-2 break-words font-bold text-slate-400">お題：{gameState.selectedTheme}</p>
       </div>
 
       <div className="mx-auto max-w-xl space-y-3 rounded-3xl border border-white/10 bg-slate-900/70 p-4 sm:p-6">
@@ -66,7 +66,7 @@ export function ShowdownPhase({
               key={card.id}
               className={`rounded-2xl border p-4 transition-all duration-500 ${isIncorrect ? 'border-rose-400 bg-rose-400/15' : isRevealed ? 'border-cyan-300/40 bg-cyan-400/10' : 'border-white/10 bg-slate-950'}`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <Avatar
                   avatarUrl={owner?.avatarUrl}
                   name={owner?.name ?? '退出したプレイヤー'}
@@ -80,7 +80,7 @@ export function ShowdownPhase({
                   </p>
                   <p className="truncate text-sm text-slate-400">{card.hint || 'たとえは口頭で共有'}</p>
                 </div>
-                <span className={`min-w-14 text-center text-3xl font-black ${isIncorrect ? 'text-rose-300' : 'text-white'}`}>
+                <span className={`min-w-12 shrink-0 text-center text-2xl font-black sm:min-w-14 sm:text-3xl ${isIncorrect ? 'text-rose-300' : 'text-white'}`}>
                   {isRevealed ? card.value : '🂠'}
                 </span>
               </div>

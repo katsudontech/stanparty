@@ -170,7 +170,7 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onUndoStrok
           </div>
         </div>
         
-        <div className="bg-indigo-900/40 border border-indigo-500/30 px-6 py-4 rounded-xl text-center shadow-inner min-w-[200px] w-full sm:w-auto self-start sm:self-stretch flex flex-col justify-center">
+        <div className="bg-indigo-900/40 border border-indigo-500/30 px-6 py-4 rounded-xl text-center shadow-inner min-w-0 w-full sm:min-w-[200px] sm:w-auto self-start sm:self-stretch flex flex-col justify-center">
           <p className="text-indigo-300 text-sm font-medium mb-1">
             現在のターン (ラウンド {gameState.currentLap}/{gameState.ruleSettings.roundLimit})
           </p>

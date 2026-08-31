@@ -11,13 +11,13 @@ export const metadata: Metadata = {
 
 export default function GamesPage() {
   return (
-    <div className="site-shell">
+    <div className="site-shell mobile-page">
       <SiteHeader compact />
       <main>
         <section className="site-container py-16 sm:py-20">
           <p className="section-kicker">Game guide</p>
           <div className="mt-4 flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
-            <h1 className="max-w-3xl text-[clamp(3rem,8vw,6rem)] font-black leading-[.95] tracking-[-.07em]">
+              <h1 className="max-w-3xl text-[clamp(2.5rem,8vw,6rem)] font-black leading-[.95] tracking-[-.07em]">
               遊べるゲームを<br />じっくり選ぶ。
             </h1>
             <p className="max-w-md border-l-2 border-[var(--line)] pl-5 leading-7 text-[var(--muted)]">
@@ -43,4 +43,3 @@ export default function GamesPage() {
     </div>
   );
 }
-

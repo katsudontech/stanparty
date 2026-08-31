@@ -79,16 +79,16 @@ export default function CreateRoomPage() {
 
     if (checkingAuth) {
         return (
-            <div className="site-shell flex min-h-screen items-center justify-center">
+            <div className="site-shell mobile-page flex min-h-dvh items-center justify-center">
                 <div className="h-9 w-9 animate-spin rounded-full border-4 border-[var(--paper-deep)] border-t-[var(--orange)]" />
             </div>
         )
     }
 
     return (
-        <div className="site-shell">
+        <div className="site-shell mobile-page">
             <SiteHeader compact />
-            <main className="site-container grid gap-12 py-12 lg:grid-cols-[.8fr_1.2fr] lg:py-16">
+            <main className="site-container grid min-w-0 gap-12 py-10 sm:py-12 lg:grid-cols-[.8fr_1.2fr] lg:py-16">
                 <div className="lg:pt-8">
                     <p className="section-kicker">Create a room</p>
                     <h1 className="mt-4 text-[clamp(3rem,7vw,5.2rem)] font-black leading-[.95] tracking-[-.07em]">まずは、<br />遊ぶ場所をつくる。</h1>
@@ -100,7 +100,7 @@ export default function CreateRoomPage() {
                     </ol>
                 </div>
 
-                <div className="paper-card mx-auto w-full max-w-xl p-6 sm:p-9">
+                <div className="paper-card mx-auto w-full min-w-0 max-w-xl p-5 sm:p-9">
                     <div className="mb-7 border-b-2 border-[var(--line)] pb-5">
                         <p className="text-xs font-black tracking-[.13em] text-[var(--orange)]">ROOM TICKET</p>
                         <h2 className="mt-2 text-3xl font-black tracking-[-.05em]">部屋の設定</h2>

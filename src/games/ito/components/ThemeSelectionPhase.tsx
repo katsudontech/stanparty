@@ -41,9 +41,9 @@ export function ThemeSelectionPhase({
         <p className="mt-2 text-sm text-slate-400">全員が話しやすいお題を選んでください。</p>
       </div>
 
-      <div className="rounded-3xl border border-fuchsia-400/20 bg-fuchsia-400/10 p-6">
+      <div className="rounded-3xl border border-fuchsia-400/20 bg-fuchsia-400/10 p-4 sm:p-6">
         <p className="text-xs font-black uppercase tracking-widest text-fuchsia-300">ランダムなお題</p>
-        <p className="my-6 min-h-16 text-2xl font-black text-white">
+        <p className="my-5 min-h-16 break-words text-2xl font-black text-white sm:my-6">
           {themeCandidate ?? 'お題を引いてください'}
         </p>
         {isHost && (
@@ -69,7 +69,7 @@ export function ThemeSelectionPhase({
       </div>
 
       {isHost ? (
-        <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6 text-left">
+        <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-4 text-left sm:p-6">
           <label className="block">
             <span className="mb-2 block text-sm font-black text-slate-200">ホストがお題を入力</span>
             <input

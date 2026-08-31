@@ -26,8 +26,8 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
     };
 
     return (
-        <div className="max-w-3xl mx-auto w-full">
-            <div className="text-white mt-8 bg-slate-800/80 backdrop-blur-sm p-8 rounded-2xl border border-slate-600 shadow-xl">
+        <div className="mx-auto w-full min-w-0 max-w-3xl">
+            <div className="mt-8 rounded-2xl border border-slate-600 bg-slate-800/80 p-4 text-white shadow-xl backdrop-blur-sm sm:p-8">
                 <div className="border-b border-slate-600 pb-4 mb-6">
                     <h3 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
                         ゲーム設定
@@ -39,7 +39,7 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
 
                 <div className="space-y-8">
                     {/* 議論時間設定 */}
-                    <div className="bg-slate-700/30 p-6 rounded-xl border border-slate-600/50">
+                    <div className="rounded-xl border border-slate-600/50 bg-slate-700/30 p-4 sm:p-6">
                         <h4 className="text-xl font-bold mb-4 flex items-center gap-2">
                             <span className="text-blue-400">⏱</span> 議論時間
                         </h4>
@@ -58,7 +58,7 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
                     </div>
 
                     {/* 役職設定（仮） */}
-                    <div className="bg-slate-700/30 p-6 rounded-xl border border-slate-600/50">
+                    <div className="rounded-xl border border-slate-600/50 bg-slate-700/30 p-4 sm:p-6">
                         <h4 className="text-xl font-bold mb-4 flex items-center gap-2">
                             <span className="text-purple-400">🎭</span> 役職設定（開発中）
                         </h4>

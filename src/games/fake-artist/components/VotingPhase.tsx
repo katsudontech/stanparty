@@ -58,7 +58,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
   return (
     <div className="text-white mt-8">
       <div className="max-w-2xl mx-auto bg-slate-700/50 p-6 sm:p-8 rounded-xl border border-slate-600 mb-8">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-2xl font-bold">投票</h3>
           <span className="bg-slate-600 px-4 py-1 rounded-full text-sm font-bold">
             投票状況: {votedPlayersCount} / {players.length}人{isFinalizing ? '（集計中）' : ''}
@@ -73,7 +73,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
                 type="button"
                 onClick={() => void retryFinalization()}
                 disabled={isFinalizing}
-                className="mt-3 rounded-md bg-rose-600 px-4 py-2 text-white disabled:opacity-50"
+                className="mt-3 min-h-11 max-w-full rounded-md bg-rose-600 px-4 py-2 text-white disabled:opacity-50"
               >
                 投票結果の集計を再試行
               </button>
@@ -102,7 +102,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
                 key={player.userId}
                 disabled={!isSyncReady || myUserId === player.userId || hasVoted || isSubmitting}
                 onClick={() => setSelectedPlayerId(player.userId)}
-                className={`flex items-center gap-3 px-5 py-3 rounded-md transition-all border-2 font-bold ${isSelected
+                className={`flex min-w-0 items-center gap-3 px-4 py-3 rounded-md transition-all border-2 font-bold ${isSelected
                     ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/50 scale-105'
                     : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600 hover:border-slate-500'
                   } ${myUserId === player.userId ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -114,7 +114,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
                   size="sm"
                   decorative
                 />
-                <span className="font-black" style={{ color: player.color }}>{player.name}</span>
+                <span className="max-w-40 truncate font-black" style={{ color: player.color }}>{player.name}</span>
               </button>
             );
           })}

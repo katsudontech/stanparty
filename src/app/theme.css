@@ -266,6 +266,43 @@ button, input, select, textarea { font: inherit; }
 
 .fake-artist-canvas-frame { width: 100%; }
 
+/* Every route other than the marketing home opts into this small-screen
+   containment layer. Keeping it scoped avoids changing the landing page's
+   intentionally editorial layout while preventing long labels and game
+   surfaces from widening the document on phones. */
+.mobile-page,
+.party-game {
+  min-height: 100dvh;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.mobile-page .site-container,
+.mobile-page main,
+.party-game main,
+.paper-game {
+  min-width: 0;
+}
+
+.mobile-page input,
+.mobile-page select,
+.mobile-page textarea,
+.party-game input,
+.party-game select,
+.party-game textarea {
+  max-width: 100%;
+}
+
+.party-game {
+  min-height: 100dvh;
+  padding-bottom: max(.5rem, env(safe-area-inset-bottom));
+}
+
+.party-game button,
+.paper-game button {
+  min-height: 44px;
+}
+
 @media (max-width: 639px) {
   .fake-artist-game[data-phase="drawing"] {
     position: fixed;
@@ -273,6 +310,7 @@ button, input, select, textarea { font: inherit; }
     z-index: 40;
     height: 100vh;
     height: 100svh;
+    height: 100dvh;
     padding-top: max(.5rem, env(safe-area-inset-top));
     padding-right: max(.5rem, env(safe-area-inset-right));
     padding-bottom: max(.5rem, env(safe-area-inset-bottom));
@@ -286,6 +324,42 @@ button, input, select, textarea { font: inherit; }
   .fake-artist-canvas-frame {
     width: min(100%, calc(75vh - 6.5rem));
     width: min(100%, calc(75svh - 6.5rem));
+  }
+
+  .party-game {
+    padding-top: max(.5rem, env(safe-area-inset-top));
+    padding-right: max(.5rem, env(safe-area-inset-right));
+    padding-left: max(.5rem, env(safe-area-inset-left));
+  }
+
+  .paper-game {
+    padding: .75rem;
+  }
+
+  .paper-game [class~="p-8"] { padding: 1rem; }
+  .paper-game [class~="p-7"] { padding: 1rem; }
+  .paper-game [class~="p-6"] { padding: 1rem; }
+  .paper-game [class~="p-5"] { padding: .875rem; }
+  .paper-game [class~="text-5xl"] { font-size: 2.25rem; line-height: 1.1; }
+  .paper-game [class~="text-4xl"] { font-size: 2rem; line-height: 1.1; }
+
+  .mobile-page .site-header {
+    padding-inline: 0;
+  }
+
+  .mobile-page .rules-dialog {
+    width: calc(100% - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 12px;
+    box-shadow: 4px 4px 0 var(--line);
+  }
+
+  .mobile-page .rules-dialog > div {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .mobile-page .rules-dialog section {
+    min-width: 0;
   }
 }
 .ito-game { --game-accent: var(--blue); }

@@ -25,8 +25,8 @@ export function GameStatus({ players, currentPhase, gameState, myUserId }: GameS
   return (
     <div className="w-full max-w-2xl mb-8 flex flex-col space-y-4">
       {/* プレイヤー一覧 */}
-      <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600 w-full shadow-lg">
-        <div className="flex justify-between items-center mb-4">
+      <div className="w-full rounded-xl border border-slate-600 bg-slate-700/50 p-4 shadow-lg sm:p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <p className="text-slate-400 font-medium text-sm">参加プレイヤー ({players.length}人)</p>
           <p className="text-slate-400 font-medium text-sm">現在のフェーズ: <span className="text-blue-400 font-bold ml-1">{PHASE_LABELS[currentPhase] || currentPhase}</span></p>
         </div>
@@ -41,7 +41,7 @@ export function GameStatus({ players, currentPhase, gameState, myUserId }: GameS
             return (
               <div 
                 key={p.userId} 
-                className={`flex items-center space-x-2 bg-slate-800 px-3 py-2 rounded-lg border ${isMe ? 'border-indigo-500 shadow-indigo-500/20' : 'border-slate-600'} shadow-sm transition-all`}
+                className={`flex min-w-0 items-center space-x-2 bg-slate-800 px-3 py-2 rounded-lg border ${isMe ? 'border-indigo-500 shadow-indigo-500/20' : 'border-slate-600'} shadow-sm transition-all`}
               >
                 <Avatar
                   avatarUrl={p.avatarUrl}
@@ -55,7 +55,7 @@ export function GameStatus({ players, currentPhase, gameState, myUserId }: GameS
                   style={{ backgroundColor: color }}
                   aria-hidden="true"
                 />
-                <span className="text-sm font-black" style={{ color }}>
+                <span className="max-w-40 truncate text-sm font-black" style={{ color }}>
                   {p.name}
                 </span>
                 {isQuestioner && (

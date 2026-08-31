@@ -138,7 +138,7 @@ export function GameSelectionMenu({ games, value, onChange, browseOnly = false }
           id={listboxId}
           role="listbox"
           aria-label="遊ぶゲーム"
-          className="absolute inset-x-0 top-[calc(100%+8px)] z-20 max-h-80 overflow-y-auto border-2 border-[var(--line)] bg-[var(--surface)] p-2 shadow-[5px_5px_0_var(--line)]"
+          className="absolute inset-x-0 top-[calc(100%+8px)] z-20 max-h-[50dvh] overflow-y-auto overscroll-contain border-2 border-[var(--line)] bg-[var(--surface)] p-2 shadow-[5px_5px_0_var(--line)] sm:max-h-80"
         >
           {games.map((game, index) => (
             <button

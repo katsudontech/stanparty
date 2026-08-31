@@ -116,7 +116,7 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, on
             </p>
             <p className="text-lg mb-6 text-slate-300">本当のお題（{gameState.theme}）と合っていますか？</p>
             
-            <div className="flex gap-4">
+            <div className="grid w-full gap-3 sm:grid-cols-2 sm:gap-4">
               <button
                 onClick={() => void handleJudgeSubmit(true)}
                 disabled={isSubmitting}

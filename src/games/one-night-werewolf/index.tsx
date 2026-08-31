@@ -74,8 +74,8 @@ export function OneNightWerewolfGame({ roomState, myUserId, onBackToLobby }: One
 
     // 合体
     return (
-        <div>
-            <h1>{renderPhaseHeader(gameState.phase)}</h1>
+        <div className="min-w-0">
+            <h1 className="break-words text-2xl font-black sm:text-3xl">{renderPhaseHeader(gameState.phase)}</h1>
             {renderCurrentPhase()}
         </div>
     );

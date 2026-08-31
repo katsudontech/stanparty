@@ -162,16 +162,16 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                 <h1 className="mb-6 mt-2 text-center text-5xl font-black tracking-[-.06em] text-[var(--ink)]">コヨーテ！</h1>
 
                 <div className="paper-card w-full p-5 sm:p-6">
-                    <div className="flex flex-row justify-center gap-12 mb-8">
+                    <div className="mb-8 grid grid-cols-2 gap-4 sm:gap-12">
                         <div>
                             <h2 className="mb-2 text-center text-sm font-bold text-[var(--muted)]">全員の合計</h2>
-                            <div className="text-center text-7xl font-black">
+                            <div className="text-center text-6xl font-black sm:text-7xl">
                                 {gameState.coyoteTotalValue !== undefined ? gameState.coyoteTotalValue : "-"}
                             </div>
                         </div>
                         <div>
                             <h2 className="mb-2 text-center text-sm font-bold text-[var(--muted)]">自分のカード</h2>
-                            <div className="text-center text-7xl font-black">
+                            <div className="text-center text-6xl font-black sm:text-7xl">
                                 {formatCardForCoyoteResult(myCard, gameState.questionRevealedCard)}
                             </div>
                         </div>
@@ -203,14 +203,14 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                                         disabled={!isCoyoteCaller || !isAlive}
                                         className="hidden"
                                     />
-                                    <div className="flex-1 flex justify-between items-center">
-                                        <div className="flex min-w-0 items-center gap-2 font-black">
+                                    <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3">
+                                        <div className="flex min-w-0 flex-1 items-center gap-2 font-black">
                                                 <Avatar avatarUrl={p.avatarUrl} name={p.name} color={p.color} size="sm" decorative />
                                                 <span className="truncate">{p.name}</span>
                                                 {p.userId === myUserId && <span className="text-xs font-bold text-[var(--green)]">(あなた)</span>}
                                                 {p.userId === gameState.coyoteCallerId && <span className="text-xs font-bold text-[var(--orange)]">(宣言者)</span>}
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex shrink-0 items-center gap-2">
                                             <span className="border border-[var(--line)] bg-[var(--paper-deep)] px-3 py-1.5 text-xs font-bold">
                                                 HP: {hp}
                                             </span>
@@ -249,7 +249,7 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
 
     return (
         <div 
-            className="coyote-playfield flex min-h-[72vh] flex-col items-center justify-center border-2 border-[var(--line)] bg-[var(--ink)] p-4 text-white shadow-[5px_5px_0_#d79a24] select-none"
+            className="coyote-playfield flex min-h-[72dvh] flex-col items-center justify-center border-2 border-[var(--line)] bg-[var(--ink)] p-4 text-white shadow-[5px_5px_0_#d79a24] select-none"
             onDoubleClick={handleDoubleClick}
         >
             <h1 className="mb-2 text-2xl font-black tracking-[-.04em] text-white">Coyote</h1>
@@ -266,8 +266,8 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
             {showCard && (
                 <div className="text-center animate-[popIn_0.3s_ease-out]">
                     <p className="mb-4 mt-4 text-sm font-bold uppercase tracking-widest text-[#d7d0c0]">あなたのおでこの数字</p>
-                    <div className="relative flex h-96 w-72 items-center justify-center overflow-hidden border-[12px] border-[#d79a24] bg-[#fffaf0] shadow-[8px_8px_0_#d79a24]">
-                        <span className="relative z-10 text-[10rem] font-black text-[var(--ink)]">
+                    <div className="relative flex aspect-[3/4] h-auto w-[min(18rem,calc(100vw-3rem))] max-h-[70svh] items-center justify-center overflow-hidden border-8 border-[#d79a24] bg-[#fffaf0] shadow-[6px_6px_0_#d79a24] sm:h-96 sm:w-72 sm:border-[12px] sm:shadow-[8px_8px_0_#d79a24]">
+                        <span className="relative z-10 text-[6rem] font-black text-[var(--ink)] sm:text-[10rem]">
                             {formatCardForCoyoteResult(myCard)}
                         </span>
                     </div>

@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 
 export default function CreditsPage() {
   return (
-    <div className="site-shell">
+    <div className="site-shell mobile-page">
       <SiteHeader compact />
       <main>
         <section className="site-container py-14 sm:py-20">
           <p className="section-kicker">Credits & rights</p>
-          <h1 className="mt-4 max-w-4xl text-[clamp(3rem,8vw,5.6rem)] font-black leading-[.95] tracking-[-.07em]">
+          <h1 className="mt-4 max-w-4xl text-[clamp(2.5rem,8vw,5.6rem)] font-black leading-[.95] tracking-[-.07em]">
             権利表記
           </h1>
           <div className="mt-8 max-w-3xl space-y-4 text-base font-medium leading-8 text-[var(--muted)] sm:text-lg">

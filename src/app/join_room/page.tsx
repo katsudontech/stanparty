@@ -92,17 +92,17 @@ export default function RoomsListPage() {
 
     if (authLoading) {
         return (
-            <div className="site-shell flex min-h-screen items-center justify-center">
+            <div className="site-shell mobile-page flex min-h-dvh items-center justify-center">
                 <div className="h-9 w-9 animate-spin rounded-full border-4 border-[var(--paper-deep)] border-t-[var(--orange)]" />
             </div>
         )
     }
 
     return (
-        <div className="site-shell">
+        <div className="site-shell mobile-page">
             <SiteHeader compact />
             <main className="site-container py-12 sm:py-16">
-                <div className="mb-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+                    <div className="mb-10 flex min-w-0 flex-col justify-between gap-6 sm:flex-row sm:items-end">
                     <div>
                         <p className="section-kicker">Open rooms</p>
                         <h1 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-6xl">参加できる公開ルーム</h1>
@@ -151,10 +151,10 @@ export default function RoomsListPage() {
                                 <Link
                                     key={room.id}
                                     href={`/room/${room.id}`}
-                                    className="group paper-card flex items-center justify-between gap-4 p-5 transition hover:translate-x-1 hover:shadow-[3px_3px_0_var(--line)] sm:p-7"
+                                    className="group paper-card flex min-w-0 items-center justify-between gap-3 p-4 transition hover:translate-x-1 hover:shadow-[3px_3px_0_var(--line)] sm:gap-4 sm:p-7"
                                 >
                                     <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-3 mb-3">
+                                        <div className="mb-3 flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
                                             <h2 className="line-clamp-1 text-xl font-black tracking-[-.03em] sm:text-2xl">
                                                 {roomName}
                                             </h2>

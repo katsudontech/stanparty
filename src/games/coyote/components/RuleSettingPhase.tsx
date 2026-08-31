@@ -26,10 +26,10 @@ export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp, o
                 </h2>
                 <ul className="space-y-3 text-left mb-8">
                     {players.map((p) => (
-                        <li key={p.userId} className="flex items-center justify-between border-b border-[#c8c6b9] p-3 last:border-0">
-                            <div className="flex items-center gap-3">
+                        <li key={p.userId} className="flex min-w-0 items-center justify-between gap-2 border-b border-[#c8c6b9] p-3 last:border-0">
+                            <div className="flex min-w-0 items-center gap-3">
                                 <Avatar avatarUrl={p.avatarUrl} name={p.name} color={p.color} size="sm" decorative />
-                                <span className="font-black">{p.name}</span>
+                                <span className="truncate font-black">{p.name}</span>
                             </div>
                             {p.isHost && (
                                 <span className="border border-[var(--line)] bg-[var(--yellow)] px-2 py-1 text-[10px] font-black">
