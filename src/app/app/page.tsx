@@ -11,7 +11,7 @@ export default function AppHome() {
   const { profile, loading } = useGuestAuth();
 
   return (
-    <main className="mobile-page app-page mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6">
+    <main className="mobile-page mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6">
       <header className="flex items-center justify-between gap-4" aria-label="アプリヘッダー">
         <Link href="/app" className="site-brand" aria-label="StanParty プレイホーム">
           <span className="site-brand__mark" aria-hidden="true">SP</span>
@@ -25,7 +25,7 @@ export default function AppHome() {
         </Link>
       </header>
 
-      <section className="app-page__profile mt-8 flex min-w-0 items-center gap-3 border-b-2 border-[var(--line)] pb-6" aria-labelledby="player-heading">
+      <section className="mt-8 flex min-w-0 items-center gap-3 border-b-2 border-[var(--line)] pb-6" aria-labelledby="player-heading">
         {loading ? (
           <span className="h-14 w-14 animate-pulse rounded-full bg-[var(--paper-deep)]" aria-label="プレイヤーを読み込み中" />
         ) : (
@@ -40,7 +40,7 @@ export default function AppHome() {
         <span className="ml-auto shrink-0 rounded-full bg-[var(--green)] px-3 py-1 text-[.68rem] font-black text-white">登録不要</span>
       </section>
 
-      <section className="app-page__actions mt-6" aria-labelledby="actions-heading">
+      <section className="mt-6" aria-labelledby="actions-heading">
         <div className="mb-3 flex min-w-0 flex-wrap items-end justify-between gap-x-3 gap-y-2">
           <div>
             <p className="section-kicker">Let&apos;s play</p>
@@ -60,7 +60,7 @@ export default function AppHome() {
         </div>
       </section>
 
-      <section className="app-page__games mt-8" aria-labelledby="games-heading">
+      <section className="mt-8" aria-labelledby="games-heading">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="section-kicker">Playable now</p>
@@ -68,12 +68,12 @@ export default function AppHome() {
           </div>
           <Link href="/games" className="text-link shrink-0 text-sm">すべて見る →</Link>
         </div>
-        <div className="app-page__game-rail grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {GAME_CATALOG.map((game) => (
             <Link
               key={game.id}
               href={`/games/${game.id}`}
-              className="app-page__game-card group overflow-hidden rounded-xl border-2 border-[var(--line)] bg-[var(--surface)] shadow-[3px_3px_0_var(--line)] transition-transform hover:-translate-y-0.5"
+              className="group overflow-hidden rounded-xl border-2 border-[var(--line)] bg-[var(--surface)] shadow-[3px_3px_0_var(--line)] transition-transform hover:-translate-y-0.5"
               style={{ '--game-accent': game.accent, '--game-soft': game.softColor } as CSSProperties}
             >
               <div className="flex h-28 items-center justify-center bg-[var(--game-soft)] px-4 text-[var(--game-accent)] sm:h-32">

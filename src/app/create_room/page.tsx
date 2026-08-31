@@ -86,10 +86,10 @@ export default function CreateRoomPage() {
     }
 
     return (
-        <div className="site-shell mobile-page mobile-page--finite">
+        <div className="site-shell mobile-page mobile-page--finite create-room-page">
             <SiteHeader compact />
-            <main className="site-container mobile-page__main grid min-w-0 gap-12 py-10 sm:py-12 lg:grid-cols-[.8fr_1.2fr] lg:py-16">
-                <div className="lg:pt-8">
+            <main className="site-container mobile-page__main create-room__main grid min-w-0 gap-12 py-10 sm:py-12 lg:grid-cols-[.8fr_1.2fr] lg:py-16">
+                <div className="create-room__intro lg:pt-8">
                     <p className="section-kicker">Create a room</p>
                     <h1 className="mt-4 text-[clamp(3rem,7vw,5.2rem)] font-black leading-[.95] tracking-[-.07em]">まずは、<br />遊ぶ場所をつくる。</h1>
                     <p className="mt-6 max-w-md leading-8 text-[var(--muted)]">名前と部屋名を決めたら準備完了。遊ぶゲームは、友達が集まってから選べます。</p>
@@ -100,13 +100,13 @@ export default function CreateRoomPage() {
                     </ol>
                 </div>
 
-                <div className="paper-card mobile-page__panel mx-auto w-full min-w-0 max-w-xl p-5 sm:p-9">
+                <div className="paper-card mobile-page__panel create-room__panel mx-auto w-full min-w-0 max-w-xl p-5 sm:p-9">
                     <div className="mb-7 border-b-2 border-[var(--line)] pb-5">
                         <p className="text-xs font-black tracking-[.13em] text-[var(--orange)]">ROOM TICKET</p>
                         <h2 className="mt-2 text-3xl font-black tracking-[-.05em]">部屋の設定</h2>
                     </div>
 
-                    <div className="mb-7">
+                    <div className="create-room__profile mb-7">
                         <ProfileInput
                             name={resolvedHostName}
                             onChangeName={setHostName}
@@ -117,7 +117,7 @@ export default function CreateRoomPage() {
                         />
                     </div>
 
-                    <form onSubmit={handleCreateRoom} className="space-y-6">
+                    <form onSubmit={handleCreateRoom} className="create-room__form space-y-6">
                             <div>
                                 <label className="form-label">
                                     ルーム名
@@ -132,7 +132,7 @@ export default function CreateRoomPage() {
                                 />
                             </div>
 
-                            <label className="flex cursor-pointer items-start gap-4 border-2 border-[var(--line)] bg-[var(--paper-deep)] p-4">
+                            <label className="create-room__visibility flex cursor-pointer items-start gap-4 border-2 border-[var(--line)] bg-[var(--paper-deep)] p-4">
                                 <div className="relative mt-0.5 flex items-center">
                                     <input
                                         type="checkbox"
@@ -155,7 +155,7 @@ export default function CreateRoomPage() {
                             <button
                                 type="submit"
                                 disabled={loading || !roomName.trim()}
-                                className="button-primary w-full text-lg"
+                                className="button-primary create-room__submit w-full text-lg"
                             >
                                 <span className="flex items-center gap-2">
                                     {loading ? (
@@ -168,7 +168,7 @@ export default function CreateRoomPage() {
                                     )}
                                 </span>
                             </button>
-                            <p className="text-center text-xs leading-5 text-[var(--muted)]">
+                            <p className="create-room__legal text-center text-xs leading-5 text-[var(--muted)]">
                                 部屋を作成すると、<Link href="/terms" className="font-black underline underline-offset-4">利用規約</Link>と<Link href="/privacy" className="font-black underline underline-offset-4">プライバシーポリシー</Link>に同意したものとみなします。
                             </p>
                     </form>

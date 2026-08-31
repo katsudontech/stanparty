@@ -51,10 +51,10 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
   };
 
   return (
-    <div className="site-shell mobile-page mobile-page--finite">
+    <div className="site-shell mobile-page mobile-page--finite waiting-room-page">
       <SiteHeader compact />
-      <main className="site-container mobile-page__main py-10 sm:py-14">
-        <div className="mb-9 flex min-w-0 flex-col justify-between gap-5 sm:flex-row sm:items-end">
+      <main className="site-container mobile-page__main waiting-room__main py-10 sm:py-14">
+        <div className="waiting-room__top mb-9 flex min-w-0 flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div className="min-w-0"><p className="section-kicker">Waiting room</p><h1 className="mt-2 text-[clamp(2.25rem,10vw,3rem)] font-black tracking-[-.055em] sm:text-5xl">みんなを待っています。</h1></div>
           <div className="waiting-room__invite-actions flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
             <button
@@ -88,7 +88,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
           </div>
         </div>
 
-        <div className="grid gap-7 lg:grid-cols-[.9fr_1.1fr]">
+        <div className="waiting-room__content grid gap-7 lg:grid-cols-[.9fr_1.1fr]">
           <section className="paper-card waiting-room__panel waiting-room__panel--players min-w-0 p-5 sm:p-7">
           <div className="mb-5 flex items-end justify-between gap-3 border-b-2 border-[var(--line)] pb-4">
             <h2 className="text-xl font-black">参加者</h2>
