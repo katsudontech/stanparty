@@ -13,7 +13,7 @@ interface GameWrapperProps {
 
 export function GameWrapper({ children, players, myUserId, showPlayerBar = true }: GameWrapperProps) {
   return (
-    <div className="party-game min-h-screen overflow-x-hidden bg-[var(--paper)] p-2 text-[var(--ink)] sm:p-4">
+    <div className="party-game min-h-screen overflow-x-clip bg-[var(--paper)] p-2 text-[var(--ink)] sm:p-4">
       <div className="mx-auto w-full max-w-6xl">
         <header className="mb-3 flex items-center border-b-2 border-[var(--line)] px-1 pb-3 sm:mb-5 sm:pb-4">
           <div className="flex items-center gap-2 sm:gap-3">

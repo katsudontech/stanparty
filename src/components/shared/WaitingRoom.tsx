@@ -51,12 +51,12 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
   };
 
   return (
-    <div className="site-shell mobile-page">
+    <div className="site-shell mobile-page mobile-page--finite">
       <SiteHeader compact />
-      <main className="site-container py-10 sm:py-14">
+      <main className="site-container mobile-page__main py-10 sm:py-14">
         <div className="mb-9 flex min-w-0 flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div className="min-w-0"><p className="section-kicker">Waiting room</p><h1 className="mt-2 text-[clamp(2.25rem,10vw,3rem)] font-black tracking-[-.055em] sm:text-5xl">みんなを待っています。</h1></div>
-          <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
+          <div className="waiting-room__invite-actions flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
             <button
               type="button"
               onClick={handleLineInvite}
@@ -89,13 +89,13 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
         </div>
 
         <div className="grid gap-7 lg:grid-cols-[.9fr_1.1fr]">
-          <section className="paper-card min-w-0 p-5 sm:p-7">
+          <section className="paper-card waiting-room__panel waiting-room__panel--players min-w-0 p-5 sm:p-7">
           <div className="mb-5 flex items-end justify-between gap-3 border-b-2 border-[var(--line)] pb-4">
             <h2 className="text-xl font-black">参加者</h2>
             <span className="text-sm font-bold text-[var(--muted)]">{players.length}人</span>
           </div>
 
-          <ul className="space-y-2">
+          <ul className="waiting-room__players space-y-2">
             {players.map((player, index) => (
               <li key={player.userId || index} className="flex min-w-0 items-center gap-3 border-b border-[#c8c6b9] p-3 last:border-0 sm:gap-4">
                 <Avatar
@@ -130,7 +130,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
           </ul>
           </section>
 
-          <section className="paper-card min-w-0 p-5 sm:p-7">
+          <section className="paper-card waiting-room__panel waiting-room__panel--game min-w-0 p-5 sm:p-7">
           <p className="text-xs font-black tracking-[.14em] text-[var(--orange)]">PLAY NEXT</p>
           <h2 className="mt-2 text-2xl font-black tracking-[-.04em]">遊ぶゲームを選ぶ</h2>
           <div className="mt-6 border-y-2 border-[var(--line)] py-5">
