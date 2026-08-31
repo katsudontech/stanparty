@@ -213,6 +213,126 @@ button, input, select, textarea { font: inherit; }
 .text-link { color: var(--ink); font-size: .86rem; font-weight: 900; text-decoration: underline; text-decoration-color: var(--game-accent, var(--orange)); text-decoration-thickness: 3px; text-underline-offset: 4px; }
 .text-link:hover { color: var(--game-accent, var(--orange)); }
 
+/* The waiting-room catalog uses the same printed cards as the landing page,
+   but presents them in a native dialog so the chooser is always in the top
+   layer and never gets clipped by the room layout. */
+.game-selection-dialog {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: var(--ink);
+  background: rgb(23 35 29 / 76%);
+  border: 0;
+}
+.game-selection-dialog[open] { display: grid; place-items: center; }
+.game-selection-dialog::backdrop { background: rgb(23 35 29 / 76%); backdrop-filter: blur(3px); }
+.game-selection-dialog__panel {
+  width: min(1120px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 8px 8px 0 var(--line);
+}
+.game-selection-dialog__header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 2px solid var(--line);
+  background: var(--surface);
+}
+.game-selection-dialog__header h2 { margin-top: .35rem; font-size: clamp(1.5rem, 4vw, 2.25rem); font-weight: 950; letter-spacing: -.05em; }
+.game-selection-dialog__hint { margin-top: .35rem; color: var(--muted); font-size: .78rem; font-weight: 700; line-height: 1.5; }
+.game-selection-dialog__close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--paper-deep);
+  font-size: 1.6rem;
+  font-weight: 950;
+  line-height: 1;
+  cursor: pointer;
+}
+.game-selection-dialog__close:hover { background: var(--yellow); }
+.game-selection-dialog__close:focus-visible,
+.game-selection-card__button:focus-visible { outline: 0; box-shadow: inset 0 0 0 4px var(--yellow); }
+.game-selection-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 1.25rem; background: var(--paper-deep); }
+.game-selection-card {
+  position: relative;
+  width: 100%;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.game-selection-card:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--line); }
+.game-selection-card.is-selected { border-width: 3px; box-shadow: 0 0 0 3px var(--game-accent), 6px 6px 0 var(--line); }
+.game-selection-card.is-selected:hover { box-shadow: 0 0 0 3px var(--game-accent), 4px 4px 0 var(--line); }
+.game-selection-card.is-browse-only:not(.is-selected) { opacity: .86; }
+.game-selection-card__button {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  color: transparent;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.game-selection-card__button[aria-disabled="true"] { cursor: default; }
+.game-selection-card__status {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--ink);
+  font-size: .86rem;
+  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-color: var(--game-accent);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+.game-selection-card.is-selected .game-selection-card__status { color: var(--game-accent); }
+
+@media (max-width: 900px) {
+  .game-selection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .game-selection-dialog { padding: max(.5rem, env(safe-area-inset-top)) max(.5rem, env(safe-area-inset-right)) max(.5rem, env(safe-area-inset-bottom)) max(.5rem, env(safe-area-inset-left)); }
+  .game-selection-dialog__panel { border-radius: 12px; box-shadow: 4px 4px 0 var(--line); }
+  .game-selection-grid { grid-template-columns: 1fr; gap: 16px; padding: .75rem; }
+  .game-selection-card { display: flex; }
+  .game-selection-card .game-card__topline { display: flex; }
+  .game-selection-card .game-card__art { height: 165px; min-height: 0; }
+}
+
+@media (max-width: 420px) {
+  .game-selection-dialog__header { padding: .8rem .75rem; }
+  .game-selection-dialog__hint { max-width: 17rem; }
+  .game-selection-grid { gap: 12px; padding: .55rem; }
+}
+
 .form-label { display: block; margin-bottom: 8px; color: var(--ink); font-size: .78rem; font-weight: 900; }
 .form-input, .form-select {
   width: 100%; min-height: 52px; padding: 12px 14px; color: var(--ink); background: #fffdf7;

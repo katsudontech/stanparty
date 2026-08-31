@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
+import { GameArtwork } from '@/components/site/GameArtwork';
 import type { GameCatalogEntry, PlayableGameId } from '@/games/catalog';
 
 interface GameSelectionMenuProps {
@@ -13,100 +15,90 @@ interface GameSelectionMenuProps {
 
 export function GameSelectionMenu({ games, value, onChange, browseOnly = false }: GameSelectionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(() =>
-    Math.max(0, games.findIndex((game) => game.id === value)),
-  );
   const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const listboxId = useId();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogId = useId();
+  const titleId = useId();
   const helperId = useId();
+  const dialogHintId = useId();
   const selectedIndex = games.findIndex((game) => game.id === value);
   const selectedGame = selectedIndex >= 0 ? games[selectedIndex] : undefined;
 
   useEffect(() => {
-    if (!isOpen) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
 
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (!menuRef.current?.contains(target) && !triggerRef.current?.contains(target)) {
-        setIsOpen(false);
-      }
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setIsOpen(false);
-        triggerRef.current?.focus();
-      }
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen) {
-      optionRefs.current[highlightedIndex]?.focus();
+    if (isOpen && !dialog.open) {
+      dialog.showModal();
+      optionRefs.current[selectedIndex >= 0 ? selectedIndex : 0]?.focus();
+    } else if (!isOpen && dialog.open) {
+      dialog.close();
     }
-  }, [highlightedIndex, isOpen]);
+  }, [isOpen, selectedIndex]);
+
+  const closeMenu = () => {
+    setIsOpen(false);
+    if (dialogRef.current?.open) dialogRef.current.close();
+    triggerRef.current?.focus();
+  };
 
   const openMenu = () => {
-    setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
     setIsOpen(true);
   };
 
   const chooseGame = (gameId: PlayableGameId) => {
+    if (browseOnly) return;
+
     onChange(gameId);
-    setIsOpen(false);
-    triggerRef.current?.focus();
+    closeMenu();
   };
 
-  const handleTriggerKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+  const handleTriggerKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       openMenu();
     }
   };
 
-  const handleOptionKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      setHighlightedIndex((index + 1) % games.length);
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      setHighlightedIndex((index - 1 + games.length) % games.length);
+  const handleOptionKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (games.length === 0) return;
+
+    let nextIndex: number | undefined;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (index + 1) % games.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (index - 1 + games.length) % games.length;
     } else if (event.key === 'Home') {
-      event.preventDefault();
-      setHighlightedIndex(0);
+      nextIndex = 0;
     } else if (event.key === 'End') {
-      event.preventDefault();
-      setHighlightedIndex(games.length - 1);
-    } else if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      if (!browseOnly) {
-        chooseGame(games[index].id);
-      }
+      nextIndex = games.length - 1;
     }
+
+    if (nextIndex !== undefined) {
+      event.preventDefault();
+      optionRefs.current[nextIndex]?.focus();
+    }
+  };
+
+  const handleBackdropClick = (event: MouseEvent<HTMLDialogElement>) => {
+    if (event.target !== event.currentTarget) return;
+    closeMenu();
   };
 
   if (games.length === 0) return null;
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative">
       <button
         type="button"
         ref={triggerRef}
         className="form-select flex cursor-pointer items-center justify-between gap-4 text-left"
-        aria-haspopup="listbox"
+        aria-haspopup="dialog"
         aria-expanded={isOpen}
-        aria-controls={listboxId}
+        aria-controls={dialogId}
         aria-describedby={browseOnly ? helperId : undefined}
-        onClick={() => (isOpen ? setIsOpen(false) : openMenu())}
+        onClick={() => (isOpen ? closeMenu() : openMenu())}
         onKeyDown={handleTriggerKeyDown}
       >
         <span className="min-w-0">
@@ -129,50 +121,91 @@ export function GameSelectionMenu({ games, value, onChange, browseOnly = false }
 
       {browseOnly && (
         <p id={helperId} className="mt-2 text-xs font-bold text-[var(--muted)]">
-          ホストのみゲームを変更できます。
+          ホストのみゲームを変更できます。ゲームカードを見て選び方を確認できます。
         </p>
       )}
 
-      {isOpen && (
-        <div
-          id={listboxId}
-          role="listbox"
-          aria-label="遊ぶゲーム"
-          className="absolute inset-x-0 top-[calc(100%+8px)] z-20 max-h-[50dvh] overflow-y-auto overscroll-contain border-2 border-[var(--line)] bg-[var(--surface)] p-2 shadow-[5px_5px_0_var(--line)] sm:max-h-80"
-        >
-          {games.map((game, index) => (
+      <dialog
+        id={dialogId}
+        ref={dialogRef}
+        className="game-selection-dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={dialogHintId}
+        onCancel={(event) => {
+          event.preventDefault();
+          closeMenu();
+        }}
+        onClose={() => {
+          setIsOpen(false);
+          triggerRef.current?.focus();
+        }}
+        onClick={handleBackdropClick}
+      >
+        <div className="game-selection-dialog__panel" onClick={(event) => event.stopPropagation()}>
+          <header className="game-selection-dialog__header">
+            <div className="min-w-0">
+              <p className="section-kicker">Choose a game</p>
+              <h2 id={titleId}>遊ぶゲームを選ぶ</h2>
+              <p id={dialogHintId} className="game-selection-dialog__hint">
+                {browseOnly ? 'カードを見て遊び方を確認できます。変更はホストだけができます。' : '遊びたいゲームをカードから選んでください。'}
+              </p>
+            </div>
             <button
-              key={game.id}
-              ref={(element) => {
-                optionRefs.current[index] = element;
-              }}
               type="button"
-              role="option"
-              aria-selected={game.id === value}
-              aria-disabled={browseOnly}
-              className={`flex w-full items-start justify-between gap-3 px-3 py-3 text-left transition-colors ${
-                index === highlightedIndex ? 'bg-[var(--paper-deep)]' : 'bg-transparent hover:bg-[var(--paper-deep)]'
-              }`}
-              onClick={() => {
-                if (!browseOnly) {
-                  chooseGame(game.id);
-                }
-              }}
-              onKeyDown={(event) => handleOptionKeyDown(event, index)}
+              className="game-selection-dialog__close"
+              onClick={closeMenu}
+              aria-label="ゲーム選択を閉じる"
             >
-              <span className="min-w-0">
-                <span className="block font-black text-[var(--ink)]">{game.shortName}</span>
-                <span className="mt-1 block text-xs font-bold leading-5 text-[var(--muted)]">{game.summary}</span>
-              </span>
-              {game.id === value && (
-                <svg className="mt-0.5 h-5 w-5 shrink-0 text-[var(--green)]" viewBox="0 0 20 20" fill="currentColor" aria-label="選択中">
-                  <path fillRule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.25 7.25a1 1 0 01-1.416 0l-3.75-3.75a1 1 0 011.414-1.42l3.043 3.043 6.543-6.543a1 1 0 011.416 0z" clipRule="evenodd" />
-                </svg>
-              )}
+              <span aria-hidden="true">×</span>
             </button>
-          ))}
+          </header>
+
+          <div className="game-selection-grid" aria-label="ゲーム一覧">
+            {games.map((game, index) => {
+              const isSelected = game.id === value;
+
+              return (
+                <article
+                  key={game.id}
+                  className={`game-card game-selection-card ${isSelected ? 'is-selected' : ''} ${browseOnly ? 'is-browse-only' : ''}`}
+                  style={{ '--game-accent': game.accent, '--game-soft': game.softColor } as CSSProperties}
+                >
+                  <div className="game-card__topline">
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <span>{game.duration}</span>
+                  </div>
+                  <GameArtwork gameId={game.id} className="game-card__art" />
+                  <div className="game-card__body">
+                    <p className="game-card__mood">{game.mood}</p>
+                    <h3>{game.shortName}</h3>
+                    <p>{game.summary}</p>
+                    <dl className="game-facts">
+                      <div><dt>人数</dt><dd>{game.players}</dd></div>
+                      <div><dt>難しさ</dt><dd>{game.difficulty}</dd></div>
+                    </dl>
+                    <span className="game-selection-card__status" aria-hidden="true">
+                      {isSelected ? '選択中 ✓' : browseOnly ? 'ホストが選択します' : 'このゲームを選ぶ'}
+                    </span>
+                  </div>
+                  <button
+                    ref={(element) => {
+                      optionRefs.current[index] = element;
+                    }}
+                    type="button"
+                    className="game-selection-card__button"
+                    aria-label={`${game.shortName}。${game.summary}。${isSelected ? '選択中。' : browseOnly ? 'ホストのみ変更できます。' : 'このゲームを選ぶ。'}`}
+                    aria-pressed={isSelected}
+                    aria-disabled={browseOnly}
+                    onClick={() => chooseGame(game.id)}
+                    onKeyDown={(event) => handleOptionKeyDown(event, index)}
+                  />
+                </article>
+              );
+            })}
+          </div>
         </div>
-      )}
+      </dialog>
     </div>
   );
 }
