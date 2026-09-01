@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const game = getGameById(slug);
   if (!game) return {};
-  const canonical = `/games/${game.id}`;
+  const canonical = new URL(`/games/${game.id}`, SITE_URL).toString();
   return {
     title: game.seo.title,
     description: game.seo.description,
@@ -26,12 +26,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: game.seo.title,
       description: game.seo.description,
       url: canonical,
-      images: [],
+      siteName: 'StanParty',
+      locale: 'ja_JP',
+      type: 'website',
     },
     twitter: {
+      card: 'summary_large_image',
       title: game.seo.title,
       description: game.seo.description,
-      images: [],
     },
   };
 }
