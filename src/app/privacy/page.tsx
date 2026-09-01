@@ -13,7 +13,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy policy"
       title="プライバシーポリシー"
       lead="StanPartyで扱う情報、保存場所、利用目的を、できるだけ分かりやすく説明します。"
-      lastUpdated="2026年8月28日"
+      lastUpdated="2026年9月2日"
     >
       <section>
         <h2>1. 基本方針</h2>
@@ -67,6 +67,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Supabase：</strong>匿名認証、データベース、リアルタイム通信</li>
           <li><strong>DiceBear：</strong>アバター画像の生成・配信。画像取得時に、接続元のIPアドレスなどがDiceBearへ送信される場合があります</li>
+          <li><strong>Vercel Web Analytics：</strong>ページビューなどのアクセス状況を匿名・集計形式で確認するためのアクセス解析。アクセス解析に必要な情報がVercelへ送信される場合があります。招待ルーム（<code>/room/</code> 以下）のページビューは送信しません</li>
         </ul>
         <p>
           各サービスでの情報の取扱いは、各事業者の規約やプライバシーに関する説明もご確認ください。

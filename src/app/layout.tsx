@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
+import { WebAnalytics } from "@/components/site/WebAnalytics";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import "./theme.css";
@@ -63,6 +64,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <ServiceWorkerRegistration />
+        <WebAnalytics />
       </body>
     </html>
   );
