@@ -1,8 +1,17 @@
 export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing';
 
+export interface GameSeoCopy {
+  title: string;
+  description: string;
+  heading: string;
+  intro: string;
+  ctaLabel: string;
+}
+
 export interface GameCatalogEntry {
   id: PlayableGameId;
   name: string;
+  seo: GameSeoCopy;
   officialPublisher?: string;
   officialProductUrl?: string;
   shortName: string;
@@ -27,6 +36,13 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   {
     id: 'fake-artist',
     name: 'エセ芸術家 ニューヨークへ行く',
+    seo: {
+      title: 'エセ芸術家 Web版｜スマホ・ブラウザで友達と遊べる',
+      description: '「エセ芸術家 ニューヨークへ行く」をスマホのブラウザで遊べます。3〜10人対応、アカウント登録不要。みんなで絵を描きながら、エセ芸術家を見つけよう。',
+      heading: 'エセ芸術家',
+      intro: 'スマホのブラウザですぐに遊べます。アプリのインストールもアカウント登録もいりません。',
+      ctaLabel: 'エセ芸術家',
+    },
     officialPublisher: 'オインクゲームズ',
     officialProductUrl: 'https://oinkgames.com/ja/games/analog/a-fake-artist-goes-to-new-york/',
     shortName: 'エセ芸術家',
@@ -61,6 +77,13 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   {
     id: 'coyote',
     name: 'Coyote Online Forehead',
+    seo: {
+      title: 'コヨーテ Web版｜スマホ・ブラウザで友達と遊べる',
+      description: 'カードゲーム「コヨーテ」をスマホのブラウザで遊べます。2〜10人対応、アカウント登録不要。友達とルームを作ってリアルタイムでプレイできます。',
+      heading: 'コヨーテ（Coyote）',
+      intro: 'コヨーテはスマホのブラウザで遊べます。アプリのインストールやアカウント登録は不要です。',
+      ctaLabel: 'コヨーテ',
+    },
     officialPublisher: 'ニューゲームズオーダー',
     officialProductUrl: 'https://www.newgamesorder.jp/games/coyote',
     shortName: 'Coyote',
@@ -96,6 +119,13 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   {
     id: 'ito',
     name: 'ito クモノイト2.0',
+    seo: {
+      title: 'ito Web版｜スマホ・ブラウザで友達と遊べる',
+      description: 'カードゲーム「ito」をスマホのブラウザで遊べます。2〜14人対応、アカウント登録不要。数字を言葉にして、みんなで小さい順に並べよう。',
+      heading: 'ito',
+      intro: 'itoはスマホのブラウザで楽しめます。インストールもアカウント登録もなく、集まったらすぐ始められます。',
+      ctaLabel: 'ito',
+    },
     officialPublisher: 'アークライトゲームズ',
     officialProductUrl: 'https://arclightgames.jp/product/705rainbow/',
     shortName: 'ito',
@@ -130,6 +160,13 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   },
   {
     id: 'ai-barenai', name: 'AIにバレるな！', shortName: 'AIにバレるな！',
+    seo: {
+      title: 'AIにバレるな！ Web版｜スマホ・ブラウザで友達と遊べる',
+      description: '「AIにバレるな！」をスマホのブラウザで遊べます。2〜14人対応、アカウント登録不要。ヒントを出して、AIより先にお題を当てよう。',
+      heading: 'AIにバレるな！',
+      intro: 'スマホのブラウザだけで遊べる、AIとの読み合いゲームです。アプリもアカウント登録も必要ありません。',
+      ctaLabel: 'AIにバレるな！',
+    },
     catchphrase: 'ヒントだけで、お題をAIに悟らせるな。',
     summary: 'みんなでヒントを出し、AIより先にお題を当てる協力型の読み合いゲーム。',
     description: ['1人だけがお題を知らない回答者。ほかの人はお題を直接言わずにヒントを出し、AIに悟られないようにします。', 'ヒントが揃ったら人間とAIがそれぞれ回答。AIが正解すれば、どれだけ惜しくてもAIの勝利です。'],
@@ -142,6 +179,13 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   },
   {
     id: 'ai-barenai-drawing', name: 'AIにバレるな！お絵かき版', shortName: 'AIにバレるな！お絵かき版',
+    seo: {
+      title: 'AIにバレるな！お絵かき版｜Webで友達と遊べる',
+      description: '「AIにバレるな！お絵かき版」をスマホのブラウザで遊べます。2〜14人対応、アカウント登録不要。絵を描いて、人間とAIの推理を楽しもう。',
+      heading: 'AIにバレるな！お絵かき版',
+      intro: 'お絵かき版もスマホのブラウザでプレイできます。面倒なインストールやアカウント登録なしで始められます。',
+      ctaLabel: 'AIにバレるな！お絵かき版',
+    },
     catchphrase: '人間には伝わる、AIにはまだ伝わらない絵を描け。',
     summary: '1人が絵を描き、AIと人間の回答者が同時にお題を推測するゲーム。',
     description: ['描く人だけがお題を知り、Canvasに絵を描きます。ほかのプレイヤーは絵からお題を推測します。', '人間が正解する前にAIに見破られないよう、絵を足すタイミングを見極めましょう。'],

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { GameArtwork } from '@/components/site/GameArtwork';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { GAME_CATALOG, getGameById } from '@/games/catalog';
+import { SITE_URL } from '@/lib/site';
 
 export function generateStaticParams() {
   return GAME_CATALOG.map((game) => ({ slug: game.id }));
@@ -14,17 +15,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const game = getGameById(slug);
   if (!game) return {};
+  const canonical = `/games/${game.id}`;
   return {
-    title: game.shortName,
-    description: game.summary,
+    title: game.seo.title,
+    description: game.seo.description,
+    alternates: {
+      canonical,
+    },
     openGraph: {
-      title: game.shortName,
-      description: game.summary,
+      title: game.seo.title,
+      description: game.seo.description,
+      url: canonical,
       images: [],
     },
     twitter: {
-      title: game.shortName,
-      description: game.summary,
+      title: game.seo.title,
+      description: game.seo.description,
       images: [],
     },
   };
@@ -34,16 +40,30 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const game = getGameById(slug);
   if (!game) notFound();
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: game.seo.ctaLabel,
+    description: game.seo.description,
+    url: new URL(`/games/${game.id}`, SITE_URL).toString(),
+    applicationCategory: 'GameApplication',
+    operatingSystem: 'Any',
+  };
 
   return (
     <div className="site-shell mobile-page" style={{ '--game-accent': game.accent, '--game-soft': game.softColor } as CSSProperties}>
       <SiteHeader compact />
       <main>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+        />
         <section className="site-container grid items-center gap-10 py-14 md:grid-cols-[1.08fr_.92fr] md:py-20">
           <div>
             <Link href="/games" className="text-link">← ゲーム一覧に戻る</Link>
             <p className="mt-12 text-xs font-black tracking-[.16em] text-[var(--game-accent)]">{game.mood}</p>
-            <h1 className="mt-3 text-[clamp(3rem,8vw,6.2rem)] font-black leading-[.92] tracking-[-.07em]">{game.shortName}</h1>
+            <h1 className="mt-3 text-[clamp(3rem,8vw,6.2rem)] font-black leading-[.92] tracking-[-.07em]">{game.seo.heading}</h1>
+            <p className="mt-5 max-w-xl text-sm font-bold leading-7 text-[var(--muted)] sm:text-base">{game.seo.intro}</p>
             <p className="mt-6 max-w-2xl text-xl font-black leading-8 sm:text-2xl">{game.catchphrase}</p>
           </div>
           <div className="paper-card rotate-[1.5deg] overflow-hidden bg-[var(--game-soft)] p-6">
@@ -120,9 +140,13 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
 
         <section className="border-t-2 border-[var(--line)] bg-[var(--yellow)] py-14">
           <div className="site-container flex flex-col items-start justify-between gap-7 sm:flex-row sm:items-center">
-            <div><p className="text-sm font-black">遊びたくなったら</p><h2 className="mt-1 text-3xl font-black tracking-[-.05em]">みんなを部屋に呼ぼう。</h2></div>
+            <div>
+              <p className="text-sm font-black">遊びたくなったら</p>
+              <h2 className="mt-1 text-3xl font-black tracking-[-.05em]">{game.seo.ctaLabel}をWebで遊ぶ</h2>
+              <p className="mt-3 max-w-xl text-sm font-bold leading-6 text-[var(--muted)]">StanPartyでルームを作り、URLを共有するだけ。友達もスマホのブラウザから参加できます。</p>
+            </div>
             <div className="flex w-full flex-col items-start gap-4 sm:w-auto sm:items-end">
-              <Link href="/create_room" className="button-secondary bg-white">遊ぶ部屋をつくる →</Link>
+              <Link href="/create_room" className="button-secondary bg-white">無料でルームをつくる →</Link>
               {game.officialProductUrl && game.officialPublisher ? <a href={game.officialProductUrl} target="_blank" rel="noreferrer" className="text-link">
                 {game.officialPublisher}の公式商品ページ ↗
               </a> : <span className="text-sm font-bold text-[var(--muted)]">StanPartyオリジナルゲーム</span>}

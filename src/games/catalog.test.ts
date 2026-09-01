@@ -10,6 +10,28 @@ describe('game catalog details', () => {
       expect(game.tips.length).toBeGreaterThanOrEqual(3);
     });
   });
+
+  it('各ゲームに固有のSEOコピーがある', () => {
+    const seoCopies = GAME_CATALOG.map((game) => game.seo);
+
+    expect(new Set(seoCopies.map((seo) => seo.title)).size).toBe(GAME_CATALOG.length);
+    expect(new Set(seoCopies.map((seo) => seo.description)).size).toBe(GAME_CATALOG.length);
+    expect(new Set(seoCopies.map((seo) => seo.heading)).size).toBe(GAME_CATALOG.length);
+    seoCopies.forEach((seo) => {
+      expect(seo.title).toContain('Web');
+      expect(seo.description).toContain('スマホ');
+      expect(seo.intro).toContain('ブラウザ');
+      expect(seo.ctaLabel.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('コヨーテのSEOコピーは検索結果向けに定義されている', () => {
+    const coyote = GAME_CATALOG.find((game) => game.id === 'coyote');
+
+    expect(coyote?.seo.title).toBe('コヨーテ Web版｜スマホ・ブラウザで友達と遊べる');
+    expect(coyote?.seo.description).toBe('カードゲーム「コヨーテ」をスマホのブラウザで遊べます。2〜10人対応、アカウント登録不要。友達とルームを作ってリアルタイムでプレイできます。');
+    expect(coyote?.seo.heading).toContain('コヨーテ（Coyote）');
+  });
 });
 
 describe('game player count', () => {
