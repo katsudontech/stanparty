@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Avatar } from '@/components/shared/Avatar';
 import { GameSelectionMenu } from '@/components/shared/GameSelectionMenu';
 import { GameRulesDialog } from '@/components/shared/GameRulesDialog';
+import { RoomQrDialog } from '@/components/shared/RoomQrDialog';
 import { buildLineInviteUrl } from '@/components/shared/lineInvite';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { GAME_CATALOG, getGameById, getGamePlayerCountError } from '@/games/catalog';
@@ -22,6 +23,7 @@ interface WaitingRoomProps {
 export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStartGame, onChangeGame }: WaitingRoomProps) {
   const [copied, setCopied] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [isQrOpen, setIsQrOpen] = useState(false);
   const onlineUserIdSet = new Set(onlineUserIds);
 
   const handleCopyUrl = async () => {
@@ -67,6 +69,18 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 11.5a8.38 8.38 0 01-9 8.5 9.5 9.5 0 01-4.5-1.1L3 20l1.35-3.6A8.1 8.1 0 013 11.5C3 6.8 7 3 12 3s9 3.8 9 8.5z" />
               </svg>
               LINEで招待
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsQrOpen(true)}
+              className="button-secondary shrink-0"
+              aria-haspopup="dialog"
+              aria-expanded={isQrOpen}
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-6v-2h4zM14 18h2v2h-2z" />
+              </svg>
+              QRコードを表示
             </button>
             <button
               type="button"
@@ -186,6 +200,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
           onClose={() => setIsRulesOpen(false)}
         />
       )}
+      <RoomQrDialog isOpen={isQrOpen} onClose={() => setIsQrOpen(false)} />
     </div>
   );
 }
