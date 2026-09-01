@@ -7,6 +7,11 @@ import {
   SUPPORT_ISSUES_URL,
 } from '@/lib/site';
 
+// GitHubでの受付を再開するときは、このフラグを有効にする。
+const GITHUB_SUPPORT_LINKS_ENABLED = false;
+const SUPPORT_EMAIL = 'katsudon1428@gmail.com';
+const SUPPORT_EMAIL_URL = `mailto:${SUPPORT_EMAIL}`;
+
 export const metadata: Metadata = {
   title: '問い合わせ・不具合報告',
   description: 'StanPartyの不具合報告、権利・プライバシーに関する連絡方法です。',
@@ -23,7 +28,15 @@ export default function ContactPage() {
             問い合わせ・<br />不具合報告
           </h1>
           <p className="mt-8 max-w-3xl text-base font-medium leading-8 text-[var(--muted)] sm:text-lg">
-            不具合はGitHub Issuesで受け付けています。報告前に、同じ問題が登録されていないかご確認ください。
+            {GITHUB_SUPPORT_LINKS_ENABLED ? (
+              '不具合はGitHub Issuesで受け付けています。報告前に、同じ問題が登録されていないかご確認ください。'
+            ) : (
+              <>
+                問い合わせ・不具合報告は、
+                <a href={SUPPORT_EMAIL_URL} className="text-link">{SUPPORT_EMAIL}</a>
+                で受け付けています。
+              </>
+            )}
           </p>
         </section>
 
@@ -35,25 +48,39 @@ export default function ContactPage() {
               <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
                 発生した画面、操作手順、期待していた動作、実際の動作、端末とブラウザを記載してください。
               </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <a href={SUPPORT_ISSUE_URL} target="_blank" rel="noreferrer" className="button-primary">
-                  新しく報告する ↗
+              {GITHUB_SUPPORT_LINKS_ENABLED ? (
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <a href={SUPPORT_ISSUE_URL} target="_blank" rel="noreferrer" className="button-primary">
+                    新しく報告する ↗
+                  </a>
+                  <a href={SUPPORT_ISSUES_URL} target="_blank" rel="noreferrer" className="button-secondary">
+                    既存の報告を見る ↗
+                  </a>
+                </div>
+              ) : (
+                <a href={SUPPORT_EMAIL_URL} className="button-primary mt-7">
+                  メールで報告する
                 </a>
-                <a href={SUPPORT_ISSUES_URL} target="_blank" rel="noreferrer" className="button-secondary">
-                  既存の報告を見る ↗
-                </a>
-              </div>
+              )}
             </article>
 
             <article className="paper-card p-6 sm:p-8">
               <p className="text-xs font-black tracking-[.12em] text-[var(--blue)]">OTHER CONTACT</p>
               <h2 className="mt-3 text-2xl font-black tracking-[-.04em]">権利・プライバシーの連絡</h2>
               <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-                権利に関する連絡、データの取扱いに関する相談など、公開Issueに適さない内容は運営者のGitHubプロフィールに掲載されている連絡手段をご利用ください。
+                {GITHUB_SUPPORT_LINKS_ENABLED
+                  ? '権利に関する連絡、データの取扱いに関する相談など、公開Issueに適さない内容は運営者のGitHubプロフィールに掲載されている連絡手段をご利用ください。'
+                  : '権利に関する連絡や、データの取扱いに関する相談はメールで受け付けています。'}
               </p>
-              <a href={OPERATOR_PROFILE_URL} target="_blank" rel="noreferrer" className="button-secondary mt-7">
-                運営者プロフィールを見る ↗
-              </a>
+              {GITHUB_SUPPORT_LINKS_ENABLED ? (
+                <a href={OPERATOR_PROFILE_URL} target="_blank" rel="noreferrer" className="button-secondary mt-7">
+                  運営者プロフィールを見る ↗
+                </a>
+              ) : (
+                <a href={SUPPORT_EMAIL_URL} className="button-secondary mt-7">
+                  {SUPPORT_EMAIL}
+                </a>
+              )}
             </article>
           </div>
         </section>
@@ -63,10 +90,19 @@ export default function ContactPage() {
             <p className="section-kicker">Before reporting</p>
             <h2 className="section-heading">報告するときのお願い</h2>
             <ul className="mt-7 space-y-4 font-bold leading-7 text-[var(--muted)]">
-              <li>● GitHub Issuesは誰でも閲覧できる公開ページです。</li>
-              <li>● 本名、メールアドレス、ルームの招待URL、匿名ID、認証情報は書かないでください。</li>
+              {GITHUB_SUPPORT_LINKS_ENABLED && <li>● GitHub Issuesは誰でも閲覧できる公開ページです。</li>}
+              <li>
+                ● {GITHUB_SUPPORT_LINKS_ENABLED
+                  ? '本名、メールアドレス、ルームの招待URL、匿名ID、認証情報は書かないでください。'
+                  : '本名、ルームの招待URL、匿名ID、認証情報など、調査に不要な個人情報は送らないでください。'}
+              </li>
               <li>● スクリーンショットを添付するときは、表示名やルームIDを隠してください。</li>
-              <li>● 権利侵害やセキュリティ問題は、公開Issueではなく個別の連絡手段をご利用ください。</li>
+              <li>
+                ● 権利侵害やセキュリティ問題は、
+                {GITHUB_SUPPORT_LINKS_ENABLED
+                  ? '公開Issueではなく個別の連絡手段をご利用ください。'
+                  : '公開の場に投稿せずメールでご連絡ください。'}
+              </li>
             </ul>
           </div>
           <aside className="paper-card self-start p-6 sm:p-8">
