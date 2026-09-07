@@ -844,6 +844,19 @@ button, input, select, textarea { font: inherit; }
 }
 .ito-game { --game-accent: var(--blue); }
 .fake-artist-game { --game-accent: var(--orange); }
+
+.pinch-game { --game-accent: var(--orange); }
+.pinch-reveal-button { transition: transform .14s ease, box-shadow .14s ease; }
+.pinch-reveal-button:disabled { opacity: .55; cursor: wait; }
+@keyframes pinch-item-pop {
+  0% { opacity: 0; transform: scale(.82) translateY(12px); }
+  65% { opacity: 1; transform: scale(1.04) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.pinch-item-pop { animation: pinch-item-pop .34s cubic-bezier(.2,.8,.25,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .pinch-reveal-button, .pinch-item-pop { transition: none; animation: none; }
+}
 .ito-game input,
 .ito-game textarea,
 .fake-artist-game input,

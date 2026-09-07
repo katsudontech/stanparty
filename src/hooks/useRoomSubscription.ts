@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { authenticateRealtime } from '@/lib/supabase/realtime';
 
 import type { RoomState, Player } from '@/games/core/types';
+import { shouldAcceptRoomSnapshot } from './roomSnapshot';
 
 function toError(value: unknown, fallbackMessage: string): Error {
   if (value instanceof Error) return value;
@@ -34,19 +35,33 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const roomStateRef = useRef<RoomState | null>(null);
+  const snapshotGenerationRef = useRef(0);
+  const fetchRequestRef = useRef(0);
+
+  const applyRoomState = useCallback((nextRoom: RoomState | null) => {
+    if (!shouldAcceptRoomSnapshot(roomStateRef.current, nextRoom)) return false;
+    roomStateRef.current = nextRoom;
+    snapshotGenerationRef.current += 1;
+    setRoomState(nextRoom);
+    setPlayers(nextRoom?.players ?? []);
+    return true;
+  }, []);
 
   const refreshRoom = useCallback(async () => {
+    const requestId = ++fetchRequestRef.current;
+    const generationAtStart = snapshotGenerationRef.current;
     try {
       const nextRoom = await loadRoom(roomId);
-      setRoomState(nextRoom);
-      setPlayers(nextRoom?.players ?? []);
+      if (requestId !== fetchRequestRef.current || generationAtStart !== snapshotGenerationRef.current) return;
+      applyRoomState(nextRoom);
       setError(null);
     } catch (roomError) {
       setError(toError(roomError, 'ルームの取得に失敗しました'));
     } finally {
       setLoading(false);
     }
-  }, [roomId]);
+  }, [applyRoomState, roomId]);
 
   useEffect(() => {
     if (!myUserId) return;
@@ -57,12 +72,14 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
     let roomChannel: ReturnType<typeof supabase.channel> | null = null;
 
     const fetchInitialRoom = async () => {
+      const requestId = ++fetchRequestRef.current;
+      const generationAtStart = snapshotGenerationRef.current;
       try {
         const nextRoom = await loadRoom(roomId);
         if (!isMounted) return;
+        if (requestId !== fetchRequestRef.current || generationAtStart !== snapshotGenerationRef.current) return;
 
-        setRoomState(nextRoom);
-        setPlayers(nextRoom?.players ?? []);
+        applyRoomState(nextRoom);
         setError(null);
       } catch (roomError) {
         if (isMounted) {
@@ -91,14 +108,12 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
             if (!isMounted) return;
 
             if (payload.eventType === 'DELETE') {
-              setRoomState(null);
-              setPlayers([]);
+              applyRoomState(null);
               return;
             }
 
             const nextRoom = payload.new as RoomState;
-            setRoomState(nextRoom);
-            setPlayers(nextRoom.players ?? []);
+            applyRoomState(nextRoom);
           }
         )
         .subscribe((status) => {
@@ -125,7 +140,7 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
       isMounted = false;
       if (roomChannel) void supabase.removeChannel(roomChannel);
     };
-  }, [myUserId, roomId]);
+  }, [applyRoomState, myUserId, roomId]);
 
   const isRoomMember = Boolean(
     myUserId &&

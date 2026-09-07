@@ -14,6 +14,7 @@ import { OneNightWerewolfGame } from '@/games/one-night-werewolf';
 import { ItoGame } from '@/games/ito';
 import { AiBarenaiGame } from '@/games/ai-barenai';
 import { AiBarenaiDrawingGame } from '@/games/ai-barenai-drawing';
+import { PinchHintGame } from '@/games/pinch-hint';
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
     const { roomId } = use(params);
@@ -134,6 +135,12 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
                 <GameWrapper players={players} myUserId={myUserId} showPlayerBar={false} hideBrandHeader gameClassName="ai-barenai-drawing-wrapper">
                     <AiBarenaiDrawingGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
                 </GameWrapper>
+            );
+        }
+
+        if (roomState.game_type === 'pinch-hint') {
+            return (
+                <PinchHintGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} onRefreshRoom={refreshRoom} />
             );
         }
     }

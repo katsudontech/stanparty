@@ -57,6 +57,19 @@ export function GameArtwork({ gameId, className = '' }: GameArtworkProps) {
     );
   }
 
+  if (gameId === 'pinch-hint') {
+    return (
+      <svg className={className} viewBox="0 0 240 180" role="img" aria-label="ひらめきとアイテムカードのイラスト">
+        <path d="M120 22c-25 0-45 19-45 43 0 17 9 27 20 38 5 5 7 12 7 20h36c0-8 2-15 7-20 11-11 20-21 20-38 0-24-20-43-45-43z" fill="#f3c85b" stroke="currentColor" strokeWidth="5" />
+        <path d="M105 137h30m-26 12h22" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+        <rect x="25" y="87" width="53" height="70" rx="5" fill="#fffaf0" stroke="currentColor" strokeWidth="5" transform="rotate(-12 51 122)" />
+        <text x="51" y="130" textAnchor="middle" fontSize="30" fontWeight="900" fill="#e85d3f">?</text>
+        <rect x="162" y="87" width="53" height="70" rx="5" fill="#fffaf0" stroke="currentColor" strokeWidth="5" transform="rotate(12 189 122)" />
+        <text x="189" y="130" textAnchor="middle" fontSize="28" fontWeight="900" fill="#e85d3f">!</text>
+      </svg>
+    );
+  }
+
   return (
     <svg className={className} viewBox="0 0 240 180" role="img" aria-label="糸でつながった数字のイラスト">
       <path d="M25 115c20-70 56-70 73-18s42 50 56 6 36-56 61-12" fill="none" stroke="#3978a8" strokeWidth="7" strokeLinecap="round" />

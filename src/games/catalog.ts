@@ -1,4 +1,4 @@
-export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing';
+export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint';
 
 export interface GameSeoCopy {
   title: string;
@@ -195,6 +195,33 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     goodFor: ['絵の上手さに関係なく遊びたい', 'AIとの読み合いを遊びたい', '短時間で盛り上がりたい'],
     steps: [{title:'描く人を決める',body:'1人が描く人になり、お題を確認します。'}, {title:'絵を描く',body:'描く人がCanvasに自由に絵を描きます。'}, {title:'判定する',body:'描く人が好きなタイミングで判定します。'}, {title:'同時に回答',body:'人間とAIの回答を公開し、結果を確認します。'}],
     tips: ['最初は特徴を1つだけ描く', 'リセットで今の絵を描き直す', 'AIの確信度を見ながら描き足す'],
+  },
+  {
+    id: 'pinch-hint', name: 'ピンチにひらめき！', shortName: 'ピンチにひらめき！',
+    seo: {
+      title: 'ピンチにひらめき！ Web版｜スマホ・ブラウザで友達と遊べる',
+      description: '「ピンチにひらめき！」をスマホのブラウザで遊べます。2〜10人対応、アカウント登録不要。アイテムを使った解決策を発表して、みんなのアリを勝ち取ろう。',
+      heading: 'ピンチにひらめき！',
+      intro: 'ピンチにひらめき！はスマホのブラウザですぐ遊べます。アイテムを選び、順番に公開しながら解決策を発表します。',
+      ctaLabel: 'ピンチにひらめき！',
+    },
+    catchphrase: 'ひらめきを順番に公開して、ピンチを切り抜けろ。',
+    summary: '限られたアイテムでピンチの解決策を発表し、みんなでアリかナシかを決めるゲーム。',
+    description: [
+      '回答者は手札から指定されたアイテムを選び、使う順番を決めてから、ひとつずつ公開しながら解決策を説明します。',
+      'ほかのプレイヤーは説明を聞いてアリかナシかを投票。アリが多ければポイントを獲得します。',
+    ],
+    players: '2〜10人', minPlayers: 2, maxPlayers: 10, duration: '約15分', difficulty: 'かんたん', mood: '発想・プレゼン',
+    accent: '#e85d3f', softColor: '#f6d7c8',
+    funPoints: ['公開のたびに解決策が広がる', '同じ手札でも発想の違いが出る', '短い説明でみんなを納得させる'],
+    goodFor: ['会話で盛り上がりたい', '自由な発想を楽しみたい', '2人から遊びたい'],
+    steps: [
+      { title: 'ピンチを確認', body: '全員に今回のピンチと、使うアイテムの数が表示されます。' },
+      { title: '手札を選ぶ', body: '回答者はアイテムを選び、使う順番を決めて回答を開始します。' },
+      { title: 'ひとつずつ発表', body: '説明しながら画面をタップ。選んだアイテムが全員に公開されます。' },
+      { title: 'アリかナシか投票', body: '回答者以外が投票し、アリが多ければ1ポイントです。' },
+    ],
+    tips: ['順番に意味が生まれるように話す', '意外なアイテムほど説明で輝かせる', '同数は失敗なので最後まで説得する'],
   },
 ] as const;
 

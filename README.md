@@ -186,9 +186,23 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPABASE_SERVICE_ROLE_KEY=
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-3.5-flash-lite
+CRON_SECRET=
 ```
 
 本番環境では`NEXT_PUBLIC_SITE_URL`へ、`https://`から始まる実際の公開URLを設定してください。この値はOG画像、`sitemap.xml`、`robots.txt`に利用します。Vercelでは未設定の場合、Production Deployment URLを使用します。
+
+### cron-job.orgによるSupabase Keep-alive
+
+Supabaseプロジェクトの停止を避けるため、デプロイ後にcron-job.orgからKeep-aliveエンドポイントを定期的に呼び出せます。Vercelの本番環境へ、`NEXT_PUBLIC_SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`CRON_SECRET`を環境変数として設定してください。`CRON_SECRET`は十分に長くランダムな値にし、URLやリポジトリへ含めないでください。
+
+cron-job.orgでは次のようにジョブを作成します。
+
+- 実行間隔: 6時間ごと（1日4回）
+- URL: `https://stanparty.katsudon.app/api/keep-alive`
+- メソッド: `GET`
+- ヘッダー: `Authorization: Bearer <CRON_SECRET>`（`<CRON_SECRET>`はVercelと同じ値）
+
+成功時はHTTP 200で`{"ok":true}`が返ります。401の場合はヘッダーまたはシークレットの不一致、500の場合はVercelのSupabase設定、503の場合は一時的なSupabase障害を確認してください。
 
 Supabaseでは匿名認証を有効にし、ルーム、ユーザー、ゲームイベントを保存するデータベースを用意します。
 
@@ -210,6 +224,7 @@ supabase/migrations/20260829020000_ai_barenai_answer_history.sql
 supabase/migrations/20260829030000_ai_barenai_ai_reaction.sql
 supabase/migrations/20260830000000_ai_barenai_drawing.sql
 supabase/migrations/20260831000000_fix_ai_barenai_drawing_progression.sql
+supabase/migrations/20260907000000_add_pinch_hint.sql
 ```
 
 `20260828010000_schedule_stale_data_cleanup.sql` はSupabase Cronを有効にし、毎時17分（UTC）に次のデータを自動削除します。
@@ -238,9 +253,19 @@ npm run build
 
 ## 制約・今後の改善
 
+### ピンチにひらめき！
+
+「ピンチにひらめき！」は2〜10人、1〜3ラウンドで遊べるStanPartyオリジナルゲームです。回答者が手札から1〜3個のアイテムを順番に選び、公開しながら解決策を説明します。ほかの参加者がアリ／ナシで投票し、アリが多ければ回答者に1点入ります。同数は失敗です。
+
+手札・未公開の選択順・投票内容は `private.pinch_hint_player_state` に保存し、本人向けのRPC以外では読めません。ルームの `game_state` には公開済みアイテム、投票済み人数、集計結果、得点だけを保存します。導入時は `supabase/migrations/20260907000000_add_pinch_hint.sql` を適用してください。固定のお題とアイテムは `src/games/pinch-hint/content.json` を単一の原稿として管理し、SQLのプールは生成スクリプトで更新します。
+
+固定コンテンツの更新候補は `node scripts/generate-pinch-content.mjs` で確認できます。出力は新しいSupabaseマイグレーションとして保存し、適用済みマイグレーションを書き換えないでください。DBのルールテストは通常の `npm test` に含まれます。
+
+手動の複数端末確認では、回答者の順番選択が他端末に出ないこと、公開タップが全端末に同じ順で表示されること、回答者以外の全員が投票するまで集計されないこと、同数が失敗になること、途中でブラウザを閉じて再接続しても手札と公開済み状態が復元されることを確認してください。
+
 ### 現在の制約
 
-- 現在遊べるゲームは「エセ芸術家 ニューヨークへ行く」「Coyote Online Forehead」「ito」「AIにバレるな！」の4種類です。
+- 現在遊べるゲームは「エセ芸術家 ニューヨークへ行く」「Coyote Online Forehead」「ito」「AIにバレるな！」「AIにバレるな！お絵かき版」「ピンチにひらめき！」の6種類です。
 - ワンナイト人狼は基本的な画面構成のみ実装しており、ゲームとして遊べる状態にはなっていません。
 - ゲーム進行中の人数変更には対応していないため、ゲーム画面には途中退出の操作を設けていません。
 - 匿名認証のユーザー情報はブラウザのセッションに依存するため、別の端末やブラウザから同じ利用者として再参加することはできません。
@@ -248,7 +273,6 @@ npm run build
 - Coyoteとitoのルール処理には単体テストがありますが、エセ芸術家や共通ルーム機能の自動テストは未導入です。
 - GitHub ActionsによるCIは未導入です。
 - 新しいSupabase環境をゼロから構築するための初期テーブル定義が、マイグレーションとして整備されていません。
-- `.env.example`はまだ用意していません。
 
 ### 今後の改善
 
