@@ -24,7 +24,6 @@ export function useVotingSync({ roomId, myUserId, isHost, playersCount, onAllVot
   const voterIdsRef = useRef<Set<string>>(new Set());
   const bufferedEventsRef = useRef<VoteEvent[]>([]);
   const initialLoadCompleteRef = useRef(false);
-  const initialLoadStartedRef = useRef(false);
   const finalizationStartedRef = useRef(false);
   const onAllVotedRef = useRef(onAllVoted);
   const isHostRef = useRef(isHost);
@@ -67,12 +66,13 @@ export function useVotingSync({ roomId, myUserId, isHost, playersCount, onAllVot
 
     const supabase = createClient();
     let isMounted = true;
+    let snapshotRequest = 0;
+    let subscribed = false;
 
     seenEventIdsRef.current = new Set();
     voterIdsRef.current = new Set();
     bufferedEventsRef.current = [];
     initialLoadCompleteRef.current = false;
-    initialLoadStartedRef.current = false;
     finalizationStartedRef.current = false;
 
     const reconcileVoteState = () => {
@@ -93,8 +93,8 @@ export function useVotingSync({ roomId, myUserId, isHost, playersCount, onAllVot
     };
 
     const fetchInitialVotes = async () => {
-      if (initialLoadCompleteRef.current || initialLoadStartedRef.current) return;
-      initialLoadStartedRef.current = true;
+      const request = ++snapshotRequest;
+      setIsSyncReady(false);
 
       const { data, error } = await supabase
         .from('game_events')
@@ -103,10 +103,9 @@ export function useVotingSync({ roomId, myUserId, isHost, playersCount, onAllVot
         .eq('event_type', 'vote')
         .order('created_at', { ascending: true });
 
-      if (!isMounted) return;
+      if (!isMounted || request !== snapshotRequest) return;
 
       if (error) {
-        initialLoadStartedRef.current = false;
         setSyncError(error.message || '投票状況の取得に失敗しました');
         return;
       }
@@ -120,7 +119,7 @@ export function useVotingSync({ roomId, myUserId, isHost, playersCount, onAllVot
       for (const event of bufferedEvents) applyVoteEvent(event);
 
       setSyncError(null);
-      setIsSyncReady(true);
+      setIsSyncReady(subscribed);
       reconcileVoteState();
     };
 
@@ -146,13 +145,12 @@ export function useVotingSync({ roomId, myUserId, isHost, playersCount, onAllVot
         if (!isMounted) return;
 
         if (status === 'SUBSCRIBED') {
-          if (initialLoadCompleteRef.current) {
-            setSyncError(null);
-            setIsSyncReady(true);
-          } else {
-            void fetchInitialVotes();
-          }
+          subscribed = true;
+          void fetchInitialVotes();
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          subscribed = false;
+          snapshotRequest += 1;
+          setIsSyncReady(false);
           setSyncError('投票のリアルタイム同期に接続できませんでした');
         }
       });

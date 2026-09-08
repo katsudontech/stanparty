@@ -68,7 +68,6 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
 
     const supabase = createClient();
     let isMounted = true;
-    let initialLoadComplete = false;
     let roomChannel: ReturnType<typeof supabase.channel> | null = null;
 
     const fetchInitialRoom = async () => {
@@ -119,7 +118,7 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
         .subscribe((status) => {
           if (!isMounted) return;
 
-          if (status === 'SUBSCRIBED' && initialLoadComplete) {
+          if (status === 'SUBSCRIBED') {
             void fetchInitialRoom();
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
             console.error(`ルームのRealtime購読に失敗しました: ${status}`);
@@ -127,7 +126,6 @@ export function useRoomSubscription(roomId: string, myUserId?: string | null) {
         });
 
       await fetchInitialRoom();
-      initialLoadComplete = true;
     };
 
     void connectToRoom().catch((connectionError: unknown) => {
