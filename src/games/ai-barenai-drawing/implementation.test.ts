@@ -38,10 +38,10 @@ describe('AIにバレるな！お絵かき版の実装回帰', () => {
     const roomPageSource = readProjectFile('src/app/room/[roomId]/page.tsx');
 
     expect(roomPageSource).toContain(
-      'showPlayerBar={false} hideBrandHeader gameClassName="ai-barenai-drawing-wrapper"',
+      'showPlayerBar={false} gameClassName="ai-barenai-drawing-wrapper"',
     );
     expect(roomPageSource).toContain(
-      '<GameWrapper players={players} myUserId={myUserId} showPlayerBar={false}>',
+      '<GameWrapper headerActions={headerActions} players={players} myUserId={myUserId} showPlayerBar={false}>',
     );
   });
 

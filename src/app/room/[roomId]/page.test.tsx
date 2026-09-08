@@ -19,14 +19,14 @@ vi.mock('@/hooks/useHostAutoKick', () => ({ useHostAutoKick: () => {} }));
 vi.mock('@/hooks/useRoomControls', () => ({ useRoomControls: () => ({}) }));
 vi.mock('@/components/shared/JoinRoomScreen', () => ({ JoinRoomScreen: () => null }));
 vi.mock('@/components/shared/WaitingRoom', () => ({ WaitingRoom: () => null }));
-vi.mock('@/games/core/GameWrapper', () => ({ GameWrapper: () => null }));
+vi.mock('@/games/core/GameWrapper', () => ({ GameWrapper: ({ headerActions }: { headerActions?: import('react').ReactNode }) => headerActions }));
 vi.mock('@/games/fake-artist', () => ({ FakeArtistGame: () => null }));
 vi.mock('@/games/coyote', () => ({ CoyoteGame: () => null }));
 vi.mock('@/games/one-night-werewolf', () => ({ OneNightWerewolfGame: () => null }));
 vi.mock('@/games/ito', () => ({ ItoGame: () => null }));
 vi.mock('@/games/ai-barenai', () => ({ AiBarenaiGame: () => null }));
 vi.mock('@/games/ai-barenai-drawing', () => ({ AiBarenaiDrawingGame: () => null }));
-vi.mock('@/games/pinch-hint', () => ({ PinchHintGame: () => null }));
+vi.mock('@/games/pinch-hint', () => ({ PinchHintGame: ({ headerActions }: { headerActions?: import('react').ReactNode }) => headerActions }));
 import RoomPage from './page';
 
 it('shows a retry action instead of an endless spinner when authentication fails', () => {

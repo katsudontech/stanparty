@@ -9,9 +9,9 @@ import type { PinchGameState } from './types';
 import type { PinchItem } from './items';
 import { getSharedRank } from './rules';
 
-interface Props { roomState: RoomState; myUserId: string; onBackToLobby: () => Promise<void>; onRefreshRoom?: () => Promise<void> }
+interface Props { headerActions?: React.ReactNode; roomState: RoomState; myUserId: string; onBackToLobby: () => Promise<void>; onRefreshRoom?: () => Promise<void> }
 
-export function PinchHintGame({ roomState, myUserId, onBackToLobby, onRefreshRoom }: Props) {
+export function PinchHintGame({ roomState, myUserId, onBackToLobby, onRefreshRoom, headerActions }: Props) {
   const { state, privateState, privateLoading, error, setError, initialize, prepare, reveal, finishPresentation, vote, nextTurn } = usePinchHintGame(roomState);
   const [rounds, setRounds] = useState<1 | 2 | 3>(state.rounds as 1 | 2 | 3);
   const [selected, setSelected] = useState<string[]>(privateState.selection ?? []);
@@ -71,7 +71,7 @@ export function PinchHintGame({ roomState, myUserId, onBackToLobby, onRefreshRoo
   };
 
   if (state.phase === 'rule_setting') return (
-    <GameWrapper players={roomState.players} myUserId={myUserId}>
+    <GameWrapper headerActions={headerActions} players={roomState.players} myUserId={myUserId}>
       <section className="pinch-game mx-auto w-full max-w-2xl border-2 border-[var(--line)] bg-[var(--surface)] p-4 shadow-[5px_5px_0_var(--line)] sm:p-7">
         <GameHeading subtitle="PINCH &amp; HINT">ピンチにひらめき！</GameHeading>
         <div className="mt-6 border-2 border-[var(--line)] bg-[var(--yellow)] p-4 sm:p-6">
@@ -86,13 +86,13 @@ export function PinchHintGame({ roomState, myUserId, onBackToLobby, onRefreshRoo
   );
 
   if (state.phase === 'finished') return (
-    <GameWrapper players={roomState.players} myUserId={myUserId}>
+    <GameWrapper headerActions={headerActions} players={roomState.players} myUserId={myUserId}>
       <section className="pinch-game mx-auto w-full max-w-2xl border-2 border-[var(--line)] bg-[var(--surface)] p-4 shadow-[5px_5px_0_var(--line)] sm:p-7"><GameHeading subtitle="FINAL SCORE">最終ランキング</GameHeading><Ranking state={state} players={roomState.players} />{isHost && <button type="button" onClick={() => void onBackToLobby()} className="button-primary mt-6 min-h-12 w-full">ロビーへ戻る</button>}</section>
     </GameWrapper>
   );
 
   return (
-    <GameWrapper players={roomState.players} myUserId={myUserId} showPlayerBar={state.phase !== 'presenting' && state.phase !== 'voting'} hideBrandHeader={state.phase === 'presenting'}>
+    <GameWrapper headerActions={headerActions} players={roomState.players} myUserId={myUserId} showPlayerBar={state.phase !== 'presenting' && state.phase !== 'voting'}>
       <section className="pinch-game mx-auto w-full max-w-3xl border-2 border-[var(--line)] bg-[var(--surface)] p-3 shadow-[5px_5px_0_var(--line)] sm:p-7">
         <header className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-[var(--line)] pb-4"><div><p className="text-xs font-black tracking-[.2em] text-[var(--orange)]">PINCH &amp; HINT</p><h1 className="mt-1 text-2xl font-black tracking-[-.05em] sm:text-3xl">ピンチにひらめき！</h1></div><div className="text-right text-sm font-black text-[var(--muted)]">{state.round} / {state.rounds}ラウンド<br />{state.turnIndex + 1} / {state.totalTurns}ターン</div></header>
         <div className="mt-4 flex items-center justify-between gap-2 border-b border-[#c8c6b9] pb-3 text-sm font-black"><span>回答者：<strong>{playerName(state.currentPlayerId)}</strong></span><span>使用 {state.requiredCount}個</span></div>

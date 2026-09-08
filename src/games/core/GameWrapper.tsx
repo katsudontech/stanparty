@@ -6,6 +6,7 @@ import type { Player } from '@/games/core/types';
 
 interface GameWrapperProps {
   children: ReactNode;
+  headerActions?: ReactNode;
   players: Player[];
   myUserId: string | null;
   showPlayerBar?: boolean;
@@ -15,6 +16,7 @@ interface GameWrapperProps {
 
 export function GameWrapper({
   children,
+  headerActions,
   players,
   myUserId,
   showPlayerBar = true,
@@ -25,13 +27,14 @@ export function GameWrapper({
     <div className={`party-game min-h-screen overflow-x-hidden bg-[var(--paper)] p-2 text-[var(--ink)] sm:p-4 ${gameClassName}`}>
       <div className="mx-auto w-full max-w-6xl">
         {!hideBrandHeader && (
-          <header className="mb-3 flex items-center border-b-2 border-[var(--line)] px-1 pb-3 sm:mb-5 sm:pb-4">
+          <header className="mb-3 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b-2 border-[var(--line)] px-1 pb-3 sm:mb-5 sm:pb-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="site-brand__mark">
                 SP
               </div>
               <h1 className="text-base font-black tracking-[-.03em] sm:text-lg">StanParty</h1>
             </div>
+            {headerActions}
           </header>
         )}
 
