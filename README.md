@@ -225,7 +225,14 @@ supabase/migrations/20260829030000_ai_barenai_ai_reaction.sql
 supabase/migrations/20260830000000_ai_barenai_drawing.sql
 supabase/migrations/20260831000000_fix_ai_barenai_drawing_progression.sql
 supabase/migrations/20260907000000_add_pinch_hint.sql
+supabase/migrations/20260915000000_room_reactions.sql
 ```
+
+`20260915000000_room_reactions.sql` はSupabase RealtimeのBroadcast読み取りポリシーとクライアントの直接送信を拒否するポリシーを追加します。利用開始前に開発・検証用DBでマイグレーションを適用し、Realtimeが有効であることを確認してください。既存の`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`に加え、サーバー環境の`SUPABASE_SERVICE_ROLE_KEY`が必要です。リアクション送信はこのキーを使うサーバーAPIだけが行い、キーをブラウザへ公開しません。
+
+リアクションは送信時点の参加者一覧に含まれる各ユーザーの非公開チャンネルへ配信します。受信権限は本人のチャンネルかつ参加中のルームに限定します。退出後のユーザーは次の送信の宛先に含めないため、接続中にキャッシュされた受信権限への依存を避けています。履歴は保存せず、[Broadcast REST API](https://supabase.com/docs/guides/realtime/broadcast#broadcast-using-the-rest-api)を使います（メッセージをDBに保存する`realtime.send()`は使いません）。再接続や途中参加で過去のスタンプは再配信しません。
+
+送信UIとサーバープロセスで約1秒の送信間隔を設け、受信側は最大3件を約3秒だけ表示します。プロセス内の送信制限は単一サーバーインスタンスの範囲で、複数インスタンス間では共有されません。実Supabaseでの最終確認には2つの独立したブラウザセッションで同じルームへ参加し、送信者自身にも1回だけ表示されること、退出後の送信拒否、再接続時に履歴が戻らないことを確認してください。
 
 `20260828010000_schedule_stale_data_cleanup.sql` はSupabase Cronを有効にし、毎時17分（UTC）に次のデータを自動削除します。
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useRef, useState } from 'react';
+import { use, useRef, useState, type ReactNode } from 'react';
 import { useRoomSubscription } from '@/hooks/useRoomSubscription';
 import { useGuestAuth } from '@/hooks/useGuestAuth';
 import { useHostAutoKick } from '@/hooks/useHostAutoKick';
@@ -15,6 +15,7 @@ import { ItoGame } from '@/games/ito';
 import { AiBarenaiGame } from '@/games/ai-barenai';
 import { AiBarenaiDrawingGame } from '@/games/ai-barenai-drawing';
 import { PinchHintGame } from '@/games/pinch-hint';
+import { RoomReactionHeaderActions, RoomReactionsProvider } from '../../../components/shared/RoomReactions';
 
 function EndGameButton({ onEnd }: { onEnd: () => Promise<void> }) {
     const [ending, setEnding] = useState(false);
@@ -39,6 +40,13 @@ function EndGameButton({ onEnd }: { onEnd: () => Promise<void> }) {
             {ending ? '終了中…' : 'ゲームを終了'}
         </button>
     );
+}
+
+function RoomHeaderActions({ isHost, onEnd }: { isHost: boolean; onEnd?: () => Promise<void> }) {
+    return <div className="room-header-actions ml-auto flex min-w-0 shrink-0 items-center gap-2">
+        {isHost && onEnd && <EndGameButton onEnd={onEnd} />}
+        <RoomReactionHeaderActions />
+    </div>;
 }
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
@@ -100,8 +108,15 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         return <JoinRoomScreen roomId={roomId} onJoined={refreshRoom} />;
     }
 
+    const reactionUserId = myUserId;
+    const withReactions = (content: ReactNode) => (
+        <RoomReactionsProvider key={`${roomId}:${reactionUserId}`} roomId={roomId} myUserId={reactionUserId} players={players}>
+            {content}
+        </RoomReactionsProvider>
+    );
+
     if (roomState.status === 'waiting') {
-        return (
+        return withReactions(
             <WaitingRoom
                 roomState={roomState}
                 players={players}
@@ -109,14 +124,15 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
                 isHost={isHost}
                 onStartGame={handleStartGame}
                 onChangeGame={handleChangeGame}
+                headerActions={<RoomHeaderActions isHost={false} />}
             />
         );
     }
 
     if (roomState.status === 'playing') {
-        const headerActions = isHost ? <EndGameButton onEnd={handleBackToLobby} /> : null;
+        const headerActions = <RoomHeaderActions isHost={isHost} onEnd={handleBackToLobby} />;
         if (roomState.game_type === 'fake-artist') {
-            return (
+            return withReactions(
                 <GameWrapper headerActions={headerActions} players={players} myUserId={myUserId} showPlayerBar={false}>
                     <FakeArtistGame
                         roomState={roomState}
@@ -128,7 +144,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
 
         if (roomState.game_type === 'coyote') {
-            return (
+            return withReactions(
                 <GameWrapper headerActions={headerActions} players={players} myUserId={myUserId}>
                     <CoyoteGame
                         roomState={roomState}
@@ -140,7 +156,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
 
         if (roomState.game_type === 'one-night-werewolf') {
-            return (
+            return withReactions(
                 <GameWrapper headerActions={headerActions} players={players} myUserId={myUserId}>
                     <OneNightWerewolfGame
                         roomState={roomState}
@@ -152,7 +168,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
 
         if (roomState.game_type === 'ito') {
-            return (
+            return withReactions(
                 <GameWrapper headerActions={headerActions} players={players} myUserId={myUserId}>
                     <ItoGame
                         roomState={roomState}
@@ -164,7 +180,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
 
         if (roomState.game_type === 'ai-barenai') {
-            return (
+            return withReactions(
                 <GameWrapper headerActions={headerActions} players={players} myUserId={myUserId} showPlayerBar={false} gameClassName="ai-barenai-wrapper">
                     <AiBarenaiGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
                 </GameWrapper>
@@ -172,7 +188,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
 
         if (roomState.game_type === 'ai-barenai-drawing') {
-            return (
+            return withReactions(
                 <GameWrapper headerActions={headerActions} players={players} myUserId={myUserId} showPlayerBar={false} gameClassName="ai-barenai-drawing-wrapper">
                     <AiBarenaiDrawingGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
                 </GameWrapper>
@@ -180,11 +196,15 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
 
         if (roomState.game_type === 'pinch-hint') {
-            return (
+            return withReactions(
                 <PinchHintGame headerActions={headerActions} roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} onRefreshRoom={refreshRoom} />
             );
         }
     }
 
-    return <div className="site-shell mobile-page flex min-h-dvh items-center justify-center px-4"><p className="text-center text-xl font-black">ゲームは終了しました。</p></div>;
+    return withReactions(
+        <GameWrapper headerActions={<RoomHeaderActions isHost={isHost} onEnd={handleBackToLobby} />} players={players} myUserId={reactionUserId}>
+            <div className="flex min-h-[60vh] items-center justify-center px-4"><p className="text-center text-xl font-black">ゲームは終了しました。</p></div>
+        </GameWrapper>
+    );
 }

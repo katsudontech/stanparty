@@ -16,9 +16,9 @@ vi.mock('@/hooks/useRoomSubscription', () => ({
   useRoomSubscription: () => ({ roomState: { host_id: 'host', players: [{ userId: 'guest' }], game_type: state.game, status: state.status }, players: [], onlineUserIds: [], loading: false, error: null }),
 }));
 vi.mock('@/hooks/useHostAutoKick', () => ({ useHostAutoKick: () => {} }));
-vi.mock('@/hooks/useRoomControls', () => ({ useRoomControls: () => ({}) }));
+vi.mock('@/hooks/useRoomControls', () => ({ useRoomControls: () => ({ handleBackToLobby: async () => {} }) }));
 vi.mock('@/components/shared/JoinRoomScreen', () => ({ JoinRoomScreen: () => null }));
-vi.mock('@/components/shared/WaitingRoom', () => ({ WaitingRoom: () => null }));
+vi.mock('@/components/shared/WaitingRoom', () => ({ WaitingRoom: ({ headerActions }: { headerActions?: import('react').ReactNode }) => headerActions }));
 vi.mock('@/games/core/GameWrapper', () => ({ GameWrapper: ({ headerActions }: { headerActions?: import('react').ReactNode }) => headerActions }));
 vi.mock('@/games/fake-artist', () => ({ FakeArtistGame: () => null }));
 vi.mock('@/games/coyote', () => ({ CoyoteGame: () => null }));
@@ -36,18 +36,35 @@ it('shows a retry action instead of an endless spinner when authentication fails
   expect(html).not.toContain('ルームを読み込んでいます');
 });
 
-const games = ['fake-artist', 'coyote', 'ito', 'ai-barenai', 'ai-barenai-drawing', 'pinch-hint'];
+const games = ['fake-artist', 'coyote', 'one-night-werewolf', 'ito', 'ai-barenai', 'ai-barenai-drawing', 'pinch-hint'];
 it.each(games)('shows the end button only to the host in %s', (game) => {
   state.game = game;
   state.userId = 'host';
   const render = () => renderToStaticMarkup(createElement(RoomPage, { params: Promise.resolve({ roomId: 'room' }) }));
   expect(render()).toContain('ゲームを終了して待機ルームへ戻る');
+  expect(render()).toContain('aria-label="リアクションを送る"');
   state.userId = 'guest';
   expect(render()).not.toContain('ゲームを終了して待機ルームへ戻る');
+  expect(render()).toContain('aria-label="リアクションを送る"');
 });
 it('does not show the end button in the waiting room', () => {
   state.userId = 'host';
   state.status = 'waiting';
   const html = renderToStaticMarkup(createElement(RoomPage, { params: Promise.resolve({ roomId: 'room' }) }));
   expect(html).not.toContain('ゲームを終了して待機ルームへ戻る');
+  expect(html).toContain('aria-label="リアクションを送る"');
+});
+
+it('keeps reaction and host controls available in the finished fallback', () => {
+  state.userId = 'host';
+  state.status = 'finished';
+  const html = renderToStaticMarkup(createElement(RoomPage, { params: Promise.resolve({ roomId: 'room' }) }));
+  expect(html).toContain('aria-label="リアクションを送る"');
+  expect(html).toContain('ゲームを終了して待機ルームへ戻る');
+});
+
+it('does not mount reaction controls before joining a room', () => {
+  state.userId = 'outsider';
+  const html = renderToStaticMarkup(createElement(RoomPage, { params: Promise.resolve({ roomId: 'room' }) }));
+  expect(html).not.toContain('リアクションを送る');
 });

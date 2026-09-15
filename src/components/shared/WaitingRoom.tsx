@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Avatar } from '@/components/shared/Avatar';
 import { GameSelectionMenu } from '@/components/shared/GameSelectionMenu';
 import { GameRulesDialog } from '@/components/shared/GameRulesDialog';
@@ -18,9 +18,10 @@ interface WaitingRoomProps {
   isHost: boolean;
   onStartGame: () => void;
   onChangeGame: (gameId: string) => void;
+  headerActions?: ReactNode;
 }
 
-export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStartGame, onChangeGame }: WaitingRoomProps) {
+export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStartGame, onChangeGame, headerActions }: WaitingRoomProps) {
   const [copied, setCopied] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
@@ -54,7 +55,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
 
   return (
     <div className="site-shell mobile-page mobile-page--finite waiting-room-page">
-      <SiteHeader compact />
+      <SiteHeader compact headerActions={headerActions} />
       <main className="site-container mobile-page__main waiting-room__main py-10 sm:py-14">
         <div className="waiting-room__top mb-9 flex min-w-0 flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div className="min-w-0"><p className="section-kicker">Waiting room</p><h1 className="mt-2 text-[clamp(2.25rem,10vw,3rem)] font-black tracking-[-.055em] sm:text-5xl">みんなを待っています。</h1></div>
