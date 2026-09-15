@@ -1,8 +1,15 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.katsudon.stanparty",
-        "sha256_cert_fingerprints": ["FE:A0:98:C9:14:79:6F:BF:EA:96:89:23:7F:FD:36:43:4E:E1:1A:EE:CF:55:74:AE:00:F8:F1:33:D8:65:FA:98"]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.katsudon.stanparty",
+      "sha256_cert_fingerprints": [
+        "FE:A0:98:C9:14:79:6F:BF:EA:96:89:23:7F:FD:36:43:4E:E1:1A:EE:CF:55:74:AE:00:F8:F1:33:D8:65:FA:98",
+        "25:39:E3:F8:83:89:06:4B:30:31:57:B5:E9:33:AD:2F:B4:4A:D1:A0:B4:57:E7:FA:46:52:9A:5E:BF:7B:27:FE"
+      ]
+    }
+  }
+]
