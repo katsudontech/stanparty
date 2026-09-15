@@ -20,9 +20,10 @@ export default function GamesPage() {
               <h1 className="max-w-3xl text-[clamp(2.5rem,8vw,6rem)] font-black leading-[.95] tracking-[-.07em]">
               遊べるゲームを<br />じっくり選ぶ。
             </h1>
-            <p className="max-w-md border-l-2 border-[var(--line)] pl-5 leading-7 text-[var(--muted)]">
-              人数や気分に合うゲームを探して、ルールと楽しみ方を確認できます。今後も少しずつ追加予定です。
-            </p>
+            <div className="max-w-md border-l-2 border-[var(--line)] pl-5 leading-7 text-[var(--muted)]">
+              <p>人数や気分に合うゲームを探して、ルールと楽しみ方を確認できます。今後も少しずつ追加予定です。</p>
+              <Link href="/games/fake-artist/topics" className="mt-3 inline-block text-link">エセ芸術家のお題の例を見る →</Link>
+            </div>
           </div>
         </section>
 

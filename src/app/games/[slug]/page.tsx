@@ -64,7 +64,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
           <div>
             <Link href="/games" className="text-link">← ゲーム一覧に戻る</Link>
             <p className="mt-12 text-xs font-black tracking-[.16em] text-[var(--game-accent)]">{game.mood}</p>
-            <h1 className="mt-3 text-[clamp(3rem,8vw,6.2rem)] font-black leading-[.92] tracking-[-.07em]">{game.seo.heading}</h1>
+            <h1 className="mt-3 text-[clamp(2.6rem,8vw,5.5rem)] font-black leading-[1.02] tracking-[-.07em]">{game.seo.heading}</h1>
             <p className="mt-5 max-w-xl text-sm font-bold leading-7 text-[var(--muted)] sm:text-base">{game.seo.intro}</p>
             <p className="mt-6 max-w-2xl text-xl font-black leading-8 sm:text-2xl">{game.catchphrase}</p>
           </div>
@@ -96,6 +96,13 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
             <div className="mt-7 space-y-5 text-base font-medium leading-8 text-[var(--muted)] sm:text-lg">
               {game.description.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
             </div>
+            {game.id === 'fake-artist' && (
+              <div className="mt-8 border-l-4 border-[var(--game-accent)] pl-5">
+                <h3 className="text-lg font-black">エセ芸術家のお題を決める</h3>
+                <p className="mt-2 text-sm font-medium leading-7 text-[var(--muted)]">手動設定で使える、ジャンル別のお題の例と選び方をまとめました。</p>
+                <Link href="/games/fake-artist/topics" className="mt-3 inline-block text-link">お題の例を見る →</Link>
+              </div>
+            )}
           </div>
           <aside className="paper-card self-start p-6 sm:p-8">
             <p className="text-xs font-black tracking-[.14em] text-[var(--game-accent)]">このゲームの面白さ</p>

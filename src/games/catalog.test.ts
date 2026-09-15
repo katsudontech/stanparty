@@ -28,9 +28,9 @@ describe('game catalog details', () => {
   it('コヨーテのSEOコピーは検索結果向けに定義されている', () => {
     const coyote = GAME_CATALOG.find((game) => game.id === 'coyote');
 
-    expect(coyote?.seo.title).toBe('コヨーテ Web版｜スマホ・ブラウザで友達と遊べる');
-    expect(coyote?.seo.description).toBe('カードゲーム「コヨーテ」をスマホのブラウザで遊べます。2〜10人対応、アカウント登録不要。友達とルームを作ってリアルタイムでプレイできます。');
-    expect(coyote?.seo.heading).toContain('コヨーテ（Coyote）');
+    expect(coyote?.seo.title).toBe('コヨーテ Web版｜ブラウザで遊べるカードゲーム');
+    expect(coyote?.seo.description).toBe('カードゲーム「コヨーテ」をスマホのブラウザで遊べます。2〜10人対応、登録やアプリは不要。見えない自分のカードを読み合い、数字を宣言してコヨーテを狙います。');
+    expect(coyote?.seo.heading).toContain('コヨーテ（Web版）');
   });
 });
 

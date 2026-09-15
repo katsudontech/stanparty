@@ -75,7 +75,10 @@ export default function Home() {
                 <p className="section-kicker">Games</p>
                 <h2 className="section-heading">今日は、なにして遊ぶ？</h2>
               </div>
-              <Link href="/games" className="text-link">ゲーム一覧を開く →</Link>
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                <Link href="/games" className="text-link">ゲーム一覧を開く →</Link>
+                <Link href="/games/fake-artist/topics" className="text-link">エセ芸術家のお題の例 →</Link>
+              </div>
             </div>
             <div className="game-grid">
               {GAME_CATALOG.map((game, index) => <GameCard key={game.id} game={game} index={index + 1} />)}
