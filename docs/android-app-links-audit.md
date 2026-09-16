@@ -4,7 +4,26 @@
 
 対象 URL は `https://stanparty.katsudon.app/room/{roomId}` です。結論から言うと、配布物にはこのホスト全体を受ける `https` App Links フィルタがあり、`autoVerify=true` も設定されています。`roomId` の path と query を TWA がそのまま扱える設計上の根拠もあります。実機での cold/warm の表示確認は、この環境に Android 端末がないため未実施です。下記の手順で実機確認してください。
 
-今回の変更はこの手順書の追加のみです。Web 側の本番反映と App Links のための AAB 再提出は、静的調査の範囲では不要です。Android ソースがないためビルドは未実施です。端末のドメイン検証、未起動・起動中の遷移、未インストール時のプレイ、Play 内部テストと LINE 経由は未検証です。
+今回の変更はこの手順書のみです。Web 側の本番反映と App Links のための AAB 再提出は、現在の確認範囲では不要です。Android ソースがないためビルドは未実施です。未起動・起動中それぞれの遷移と query 保持、未インストール時のプレイ、Play 内部テストと LINE 経由は未検証です。
+
+## 追加確認: Galaxy S21 の実機結果
+
+ユーザー提供の adb 出力から、インストール版の署名は登録済みの旧 Play 鍵（末尾 `:C6:E8`）と一致しています。最初のドメイン検証状態は `1024` で、手動選択が Enabled の状態ではリンクが開いたとの報告がありました。`pm verify-app-links --re-verify` 実行後は次の状態になりました。
+
+```text
+Domain verification state:
+  stanparty.katsudon.app: verified
+Verification link handling allowed: true
+Selection state:
+  Disabled:
+    stanparty.katsudon.app
+```
+
+これはドメイン検証成功です。`Selection state` は手動選択の一覧であり、そこにある `Disabled` だけを根拠に、検証済みドメインの起動も禁止されていると判断してはいけません。Android はリンク処理の許可を確認した後、検証済みドメインを手動選択より優先して判定します。以前の「この状態では手動でオンに戻す必要がある」という案内は誤りです。[Android の判定実装](https://android.googlesource.com/platform/frameworks/base/+/master/services/core/java/com/android/server/pm/verify/domain/DomainVerificationService.java)
+
+新規インストール時は既存の `autoVerify=true` により Android が非同期で検証を行います。成功すればユーザーによるドメイン選択は不要です。今回の再検証成功は初回インストール時の成功を実証したものではなく、元の `1024` の原因も未確定です。[公式検証手順](https://developer.android.com/training/app-links/verify-applinks)
+
+次は現在の設定を変更せず、実在する招待 URL を通常の外部リンクとして開いて確認します。新規ユーザー相当の確認には、過去の設定を引き継いでいない別端末などで Play 内部テスト版を新規インストールし、ネット接続したまま数分待ち、手動選択・adb による再検証を行う前に `verified` とリンク起動を確認します。LINE 内ブラウザでの表示は別途確認します。
 
 ## 1. 監査対象と取り扱い
 
