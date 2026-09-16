@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { Player } from '@/games/core/types';
 import type { FakeArtistGameState } from '../types';
 import { Canvas } from './Canvas';
+import { VoteBreakdown } from './VoteBreakdown';
+import { FakeArtistReveal } from './FakeArtistReveal';
 
 interface GuessingPhaseProps {
   roomId: string;
@@ -65,9 +67,13 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, on
   };
 
   return (
-    <div className="text-white mt-8">
-      <div className="max-w-2xl mx-auto bg-slate-700/50 p-6 sm:p-8 rounded-xl border border-slate-600">
-        <h3 className="text-2xl font-bold mb-4 text-orange-400">エセ芸術家の逆転チャレンジ</h3>
+    <div className="text-white mt-3 sm:mt-8">
+      <div className="max-w-2xl mx-auto bg-slate-700/50 p-3 sm:p-6 rounded-xl border border-slate-600">
+        <div className="mb-4 flex flex-col gap-3">
+          <FakeArtistReveal players={players} gameState={gameState} />
+          <VoteBreakdown players={players} gameState={gameState} />
+        </div>
+        <h3 className="text-xl sm:text-2xl font-bold mb-4 text-orange-400">エセ芸術家の逆転チャレンジ</h3>
         
         {/* エセ芸術家の画面 */}
         {isFakeArtist && !hasGuessed && (

@@ -5,6 +5,8 @@ import type { Player } from '@/games/core/types';
 import { Avatar } from '@/components/shared/Avatar';
 import type { FakeArtistGameState } from '../types';
 import { Canvas } from './Canvas';
+import { VoteBreakdown } from './VoteBreakdown';
+import { FakeArtistReveal } from './FakeArtistReveal';
 
 interface ResultPhaseProps {
   roomId: string;
@@ -33,7 +35,7 @@ export function ResultPhase({ roomId, myUserId, players, gameState, isHost, onRe
       setIsResetting(false);
     }
   };
-  
+
   // 勝敗に応じたメッセージと色を設定
   let winnerText = "結果発表";
   let winnerColor = "text-white";
@@ -61,29 +63,65 @@ export function ResultPhase({ roomId, myUserId, players, gameState, isHost, onRe
   const getRoleBadge = (role: string | null) => {
     switch (role) {
       case 'fake_artist':
-        return <span className="bg-orange-600/30 text-orange-400 border border-orange-600 px-3 py-1 rounded-full text-sm font-bold ml-2">エセ芸術家</span>;
+        return <span className="bg-orange-600/30 text-orange-400 border border-orange-600 px-2 py-0.5 rounded-full text-[10px] font-bold">エセ芸術家</span>;
       case 'questioner':
-        return <span className="bg-purple-600/30 text-purple-400 border border-purple-600 px-3 py-1 rounded-full text-sm font-bold ml-2">出題者</span>;
+        return <span className="bg-purple-600/30 text-purple-400 border border-purple-600 px-2 py-0.5 rounded-full text-[10px] font-bold">出題者</span>;
       case 'artist':
-        return <span className="bg-green-600/30 text-green-400 border border-green-600 px-3 py-1 rounded-full text-sm font-bold ml-2">芸術家</span>;
+        return <span className="bg-green-600/30 text-green-400 border border-green-600 px-2 py-0.5 rounded-full text-[10px] font-bold">芸術家</span>;
       default:
         return null;
     }
   };
 
   return (
-    <div className="text-white mt-8">
-      <div className="max-w-2xl mx-auto bg-slate-700/50 p-6 sm:p-8 rounded-xl border border-slate-600 flex flex-col items-center mb-8">
-        <h3 className={`text-4xl font-bold mb-4 ${winnerColor} animate-bounce`}>
+    <div className="text-white mt-3 sm:mt-8">
+      <div className="max-w-2xl mx-auto bg-slate-700/50 p-3 sm:p-6 rounded-xl border border-slate-600 flex flex-col items-center mb-8">
+        <h3 className={`text-2xl sm:text-3xl font-bold mb-2 ${winnerColor}`}>
           {winnerText}
         </h3>
-        <p className="text-lg text-slate-300 mb-8">{description}</p>
+        <p className="text-sm text-slate-300 mb-4">{description}</p>
 
+        <div className="mb-4 flex w-full flex-col gap-3">
+          <FakeArtistReveal players={players} gameState={gameState} />
+          <VoteBreakdown players={players} gameState={gameState} />
+        </div>
+
+        {/* プレイヤーの役職一覧 */}
+        <div className="w-full">
+          <h4 className="text-sm font-bold mb-2 text-slate-200 border-b border-slate-600 pb-2">プレイヤーの役職</h4>
+          <div className="grid gap-1 sm:grid-cols-2 mb-4">
+            {players.map(player => {
+              const role = gameState.playerStates[player.userId]?.role;
+              const playerColor = gameState.playerStates[player.userId]?.color || player.color;
+              return (
+                <div
+                  key={player.userId}
+                  className="flex min-w-0 items-center justify-between gap-2 bg-slate-800 p-2 rounded border border-slate-600"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Avatar
+                      avatarUrl={player.avatarUrl}
+                      name={player.name}
+                      color={playerColor}
+                      size="xs"
+                      decorative
+                    />
+                    <div className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: playerColor }} aria-hidden="true" />
+                    <span className="min-w-0 truncate text-xs font-black" style={{ color: playerColor }}>{player.name}</span>
+                  </div>
+                  <div className="shrink-0">
+                    {getRoleBadge(role)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
         {/* お題の正解発表 */}
-        <div className="bg-slate-800/80 p-6 rounded-lg border border-slate-600 w-full max-w-md mb-8 text-center">
+        <div className="bg-slate-800/80 p-3 rounded-lg border border-slate-600 w-full mb-4 text-center">
           <p className="text-slate-400 text-sm mb-2">本当のお題（ジャンル：{gameState.themeGenre}）</p>
-          <p className="text-3xl font-bold text-white mb-4">{gameState.theme}</p>
-          
+          <p className="text-2xl font-bold text-white mb-4">{gameState.theme}</p>
+
           {gameState.fakeArtistGuess && (
             <div className="mt-4 pt-4 border-t border-slate-600">
               <p className="text-slate-400 text-sm mb-1">エセ芸術家の推測</p>
@@ -92,42 +130,11 @@ export function ResultPhase({ roomId, myUserId, players, gameState, isHost, onRe
           )}
         </div>
 
-        {/* プレイヤーの役職一覧 */}
-        <div className="w-full max-w-md">
-          <h4 className="text-xl font-bold mb-4 text-slate-200 border-b border-slate-600 pb-2">プレイヤーの役職</h4>
-          <div className="flex flex-col gap-3">
-            {players.map(player => {
-              const role = gameState.playerStates[player.userId]?.role;
-              const playerColor = gameState.playerStates[player.userId]?.color || player.color;
-              return (
-                <div 
-                  key={player.userId}
-                  className="flex min-w-0 flex-wrap items-center justify-between gap-3 bg-slate-800 p-4 rounded border border-slate-600"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar
-                      avatarUrl={player.avatarUrl}
-                      name={player.name}
-                      color={playerColor}
-                      size="md"
-                      decorative
-                    />
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: playerColor }} aria-hidden="true" />
-                    <span className="max-w-40 truncate text-lg font-black" style={{ color: playerColor }}>{player.name}</span>
-                  </div>
-                  <div>
-                    {getRoleBadge(role)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
       <div className="w-full flex flex-col items-center mb-8">
         <h4 className="text-xl font-bold mb-4 text-slate-300">完成した絵</h4>
-        <Canvas 
+        <Canvas
           roomId={roomId}
           players={players}
           currentTurnPlayerId={null}
