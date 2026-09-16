@@ -1,5 +1,25 @@
+'use client';
+
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useSyncExternalStore, type ReactNode } from 'react';
+
+const appDisplayMode = '(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)';
+
+function subscribeToDisplayMode(onChange: () => void) {
+  const query = window.matchMedia(appDisplayMode);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+
+function isAppDisplayMode() {
+  return window.matchMedia(appDisplayMode).matches
+    || (navigator as Navigator & { standalone?: boolean }).standalone === true
+    || document.referrer.startsWith('android-app://');
+}
+
+function getServerAppDisplayMode() {
+  return false;
+}
 
 interface SiteHeaderProps {
   compact?: boolean;
@@ -7,9 +27,11 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ compact = false, headerActions }: SiteHeaderProps) {
+  const isApp = useSyncExternalStore(subscribeToDisplayMode, isAppDisplayMode, getServerAppDisplayMode);
+
   return (
     <header data-room-header={headerActions ? true : undefined} className={`site-header ${compact ? 'site-header--compact' : ''} ${headerActions ? 'site-header--room' : ''}`}>
-      <Link href="/" className="site-brand" aria-label="StanParty ホーム">
+      <Link href={isApp ? '/app' : '/'} className="site-brand" aria-label="StanParty ホーム">
         <span className="site-brand__mark" aria-hidden="true">SP</span>
         <span>StanParty</span>
       </Link>
