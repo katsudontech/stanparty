@@ -1,16 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Avatar } from '@/components/shared/Avatar';
+import { GuestNameInput } from '@/components/shared/GuestNameInput';
 import { GameArtwork } from '@/components/site/GameArtwork';
 import { GameCard } from '@/components/site/GameCard';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { GAME_CATALOG } from '@/games/catalog';
-import { useGuestAuth } from '@/hooks/useGuestAuth';
 
 export default function Home() {
-  const { profile, loading } = useGuestAuth();
-
   return (
     <div className="site-shell">
       <SiteHeader />
@@ -34,16 +31,8 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="mt-10 flex items-center gap-3 border-t border-[var(--line)] pt-5 sm:max-w-md">
-              {loading ? (
-                <span className="h-10 w-10 animate-pulse rounded-full bg-[var(--paper-deep)]" />
-              ) : (
-                <Avatar avatarUrl={profile?.avatar} name={profile?.name ?? 'ゲスト'} size="md" />
-              )}
-              <div>
-                <p className="text-[.68rem] font-black tracking-[.12em] text-[var(--muted)]">この端末のプレイヤー</p>
-                <p className="font-black">{loading ? '読み込み中…' : profile?.name || 'ゲスト'}</p>
-              </div>
+            <div className="mt-10 border-t border-[var(--line)] pt-5 sm:max-w-md">
+              <GuestNameInput />
             </div>
           </div>
 

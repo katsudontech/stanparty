@@ -2,14 +2,11 @@
 
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import { Avatar } from '@/components/shared/Avatar';
+import { GuestNameInput } from '@/components/shared/GuestNameInput';
 import { GameArtwork } from '@/components/site/GameArtwork';
 import { GAME_CATALOG } from '@/games/catalog';
-import { useGuestAuth } from '@/hooks/useGuestAuth';
 
 export default function AppHome() {
-  const { profile, loading } = useGuestAuth();
-
   return (
     <main className="mobile-page mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6">
       <header className="flex items-center justify-between gap-4" aria-label="アプリヘッダー">
@@ -25,26 +22,15 @@ export default function AppHome() {
         </Link>
       </header>
 
-      <section className="mt-8 flex min-w-0 items-center gap-3 border-b-2 border-[var(--line)] pb-6" aria-labelledby="player-heading">
-        {loading ? (
-          <span className="h-14 w-14 animate-pulse rounded-full bg-[var(--paper-deep)]" aria-label="プレイヤーを読み込み中" />
-        ) : (
-          <Avatar avatarUrl={profile?.avatar} name={profile?.name ?? 'ゲスト'} size="lg" />
-        )}
-        <div className="min-w-0">
-          <p className="text-xs font-black tracking-[.12em] text-[var(--muted)]">WELCOME BACK</p>
-          <h1 id="player-heading" className="truncate text-2xl font-black tracking-[-.05em]">
-            {loading ? 'プレイヤーを確認中…' : `${profile?.name || 'ゲスト'}さん`}
-          </h1>
-        </div>
-        <span className="ml-auto shrink-0 rounded-full bg-[var(--green)] px-3 py-1 text-[.68rem] font-black text-white">登録不要</span>
+      <section className="mt-8 min-w-0 border-b-2 border-[var(--line)] pb-6" aria-label="プレイヤー設定">
+        <GuestNameInput />
       </section>
 
       <section className="mt-6" aria-labelledby="actions-heading">
         <div className="mb-3 flex min-w-0 flex-wrap items-end justify-between gap-x-3 gap-y-2">
           <div>
             <p className="section-kicker">Let&apos;s play</p>
-            <h2 id="actions-heading" className="mt-2 text-3xl font-black tracking-[-.06em]">なにして遊ぶ？</h2>
+            <h1 id="actions-heading" className="mt-2 text-3xl font-black tracking-[-.06em]">なにして遊ぶ？</h1>
           </div>
           <span className="text-xs font-bold text-[var(--muted)]">すぐ開始できます</span>
         </div>
