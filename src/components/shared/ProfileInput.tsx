@@ -1,6 +1,6 @@
 import React from 'react';
 import { Avatar } from '@/components/shared/Avatar';
-import { AvatarPicker } from '@/components/shared/AvatarPicker';
+import { AvatarEditor } from '@/components/shared/AvatarEditor';
 
 interface ProfileInputProps {
     name: string;
@@ -34,7 +34,9 @@ export function ProfileInput({
         return (
             <div className="flex flex-col gap-4 border-y-2 border-[var(--line)] py-5">
                 <div className="flex items-center gap-4">
-                    {avatarUrl && <Avatar avatarUrl={avatarUrl} name={name || 'プレイヤー'} size="lg" />}
+                    {avatarUrl && (onChangeAvatar
+                        ? <AvatarEditor value={avatarUrl} name={name} onChange={onChangeAvatar} />
+                        : <Avatar avatarUrl={avatarUrl} name={name || 'プレイヤー'} size="lg" />)}
                     <div className="flex-1">
                         <label className="form-label">{label}</label>
                         <input
@@ -48,9 +50,6 @@ export function ProfileInput({
                         />
                     </div>
                 </div>
-                {avatarUrl && onChangeAvatar && (
-                    <AvatarPicker value={avatarUrl} onChange={onChangeAvatar} />
-                )}
             </div>
         );
     }
@@ -60,7 +59,9 @@ export function ProfileInput({
         <div className="flex flex-col items-center w-full">
             {avatarUrl && (
                 <div className="mb-6 flex justify-center">
-                    <Avatar avatarUrl={avatarUrl} name={name || 'プレイヤー'} size="xl" />
+                    {onChangeAvatar
+                        ? <AvatarEditor value={avatarUrl} name={name} onChange={onChangeAvatar} size="xl" />
+                        : <Avatar avatarUrl={avatarUrl} name={name || 'プレイヤー'} size="xl" />}
                 </div>
             )}
             {label && (
@@ -75,9 +76,6 @@ export function ProfileInput({
                 required
                 className="form-input mb-6 text-center text-lg"
             />
-            {avatarUrl && onChangeAvatar && (
-                <AvatarPicker value={avatarUrl} onChange={onChangeAvatar} />
-            )}
         </div>
     );
 }

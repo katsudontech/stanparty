@@ -14,7 +14,7 @@ export function AvatarPicker({ value, onChange }: AvatarPickerProps) {
       <p className="mb-3 text-center text-xs font-black tracking-wider text-[var(--muted)]">
         アイコンを選ぶ
       </p>
-      <div className="grid grid-cols-4 gap-3" role="group" aria-label="アイコンテンプレート">
+      <div className="grid grid-cols-3 gap-3 min-[400px]:grid-cols-4" role="group" aria-label="アイコンテンプレート">
         {AVATAR_TEMPLATES.map((template) => {
           const isSelected = template.url === value;
 
