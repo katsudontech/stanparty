@@ -226,6 +226,8 @@ supabase/migrations/20260830000000_ai_barenai_drawing.sql
 supabase/migrations/20260831000000_fix_ai_barenai_drawing_progression.sql
 supabase/migrations/20260907000000_add_pinch_hint.sql
 supabase/migrations/20260915000000_room_reactions.sql
+supabase/migrations/20260917000000_persist_fake_artist_votes.sql
+supabase/migrations/20260917010000_fix_stale_data_cleanup.sql
 ```
 
 `20260915000000_room_reactions.sql` はSupabase RealtimeのBroadcast読み取りポリシーとクライアントの直接送信を拒否するポリシーを追加します。利用開始前に開発・検証用DBでマイグレーションを適用し、Realtimeが有効であることを確認してください。既存の`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`に加え、サーバー環境の`SUPABASE_SERVICE_ROLE_KEY`が必要です。リアクション送信はこのキーを使うサーバーAPIだけが行い、キーをブラウザへ公開しません。
@@ -234,12 +236,44 @@ supabase/migrations/20260915000000_room_reactions.sql
 
 送信UIとサーバープロセスで約1秒の送信間隔を設け、受信側は最大3件を約3秒だけ表示します。プロセス内の送信制限は単一サーバーインスタンスの範囲で、複数インスタンス間では共有されません。実Supabaseでの最終確認には2つの独立したブラウザセッションで同じルームへ参加し、送信者自身にも1回だけ表示されること、退出後の送信拒否、再接続時に履歴が戻らないことを確認してください。
 
-`20260828010000_schedule_stale_data_cleanup.sql` はSupabase Cronを有効にし、毎時17分（UTC）に次のデータを自動削除します。
+`20260828010000_schedule_stale_data_cleanup.sql` はSupabase Cronを有効にし、毎時17分（UTC）に次のデータを自動削除します。既存環境では、続けて`20260917010000_fix_stale_data_cleanup.sql`も適用してください。このフォワードマイグレーションは、過去のマイグレーションを編集せずにクリーンアップ関数を修正し、Cronジョブを重複登録しません。
 
-- 最後のルーム更新またはゲームイベントから24時間が経過したルームと、そのゲームイベント
-- 最終利用から30日が経過し、残っているルームから参照されていない匿名ユーザーとプロフィール
+- 最後のルーム更新から24時間を超え、直近24時間のゲームイベントもないルームと、そのゲームイベント
+- 最終利用から30日を超え、残っているルームから参照されていない匿名ユーザーとプロフィール
 
-既存ルームの`last_activity_at`と既存ユーザーの`last_seen_at`はマイグレーション適用時刻で初期化されるため、適用直後に古いデータが削除されることはありません。実行状況はSupabase DashboardのCron履歴で確認できます。SQL Editorから`select * from public.cleanup_stale_stanparty_data();`を実行すると、期限を超えたデータがその場で削除され、削除件数が返ります。
+最初の`20260828010000_schedule_stale_data_cleanup.sql`を適用したときだけ、既存ルームの`last_activity_at`と既存ユーザーの`last_seen_at`が適用時刻で初期化されます。そのため、新規導入直後に古いデータが削除されることはありません。既存環境へ修正マイグレーションだけを適用する場合は既存データを初期化せず、次回のCron実行から期限切れデータを削除できます。
+
+デプロイ時は、Supabase CLIでプロジェクトをリンクしたあと、保留中のマイグレーションを適用します。適用済みのマイグレーションファイルは書き換えず、新しいマイグレーションを追加してください。
+
+```bash
+supabase link --project-ref <PROJECT_REF>
+supabase db push --dry-run
+supabase db push
+```
+
+新規環境では`supabase db push`が`20260828010000_schedule_stale_data_cleanup.sql`によるCron登録と、続く`20260917010000_fix_stale_data_cleanup.sql`による関数修正をファイル名順に適用します。既存環境では保留中のマイグレーションだけが適用されるため、すでに登録済みのCronジョブは再登録されません。適用前に`supabase db push --dry-run`で対象マイグレーションを確認してください。適用後は、次のSQLでCron登録を読み取り専用で確認できます。これは登録を作成・変更しません。結果はスケジュールが`17 * * * *`、`active`が`true`であることを確認します。
+
+```sql
+select jobid, jobname, schedule, command, active
+from cron.job
+where jobname = 'stanparty-cleanup-stale-data';
+```
+
+実行履歴も次の読み取り専用SQLで確認できます。
+
+```sql
+select runid, status, return_message, start_time, end_time
+from cron.job_run_details
+where jobid = (
+  select jobid
+  from cron.job
+  where jobname = 'stanparty-cleanup-stale-data'
+)
+order by start_time desc
+limit 20;
+```
+
+`select * from public.cleanup_stale_stanparty_data();`は読み取り専用の確認ではありません。この関数は期限を超えたルーム、ゲームイベント、未参照の匿名ユーザーを実際に削除し、削除件数を返します。削除動作を手動で確認する場合だけ、検証用DBで実行してください。
 
 開発サーバーを起動します。
 
