@@ -6,3 +6,25 @@
   --font-sans: var(--font-geist-sans), "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
+
+/* Async feedback must remain visible in both site and game themes. */
+button:disabled { cursor: not-allowed; }
+button[aria-busy="true"] { cursor: wait; opacity: .7; }
+a:has([data-link-pending="true"]) { cursor: wait; }
+.navigation-status[data-link-pending="false"] { display: none; }
+.navigation-status[data-link-pending="true"] {
+  position: fixed;
+  z-index: 1000;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: .75rem 1.25rem;
+  border: 2px solid var(--line);
+  background: var(--paper, #fffaf0);
+  color: var(--ink, #222);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  pointer-events: none;
+}

@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { notFound } from 'next/navigation';
 import { GameArtwork } from '@/components/site/GameArtwork';
 import { SiteHeader } from '@/components/site/SiteHeader';
@@ -156,9 +156,9 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
             </div>
             <div className="flex w-full flex-col items-start gap-4 sm:w-auto sm:items-end">
               <Link href="/create_room" className="button-secondary bg-white">無料でルームをつくる →</Link>
-              {game.officialProductUrl && game.officialPublisher ? <a href={game.officialProductUrl} target="_blank" rel="noreferrer" className="text-link">
+              {game.officialProductUrl && game.officialPublisher ? <Link href={game.officialProductUrl} target="_blank" rel="noreferrer" className="text-link">
                 {game.officialPublisher}の公式商品ページ ↗
-              </a> : <span className="text-sm font-bold text-[var(--muted)]">StanPartyオリジナルゲーム</span>}
+              </Link> : <span className="text-sm font-bold text-[var(--muted)]">StanPartyオリジナルゲーム</span>}
             </div>
           </div>
         </section>

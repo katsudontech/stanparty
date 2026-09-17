@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { PendingLink as Link } from '@/components/shared/PendingLink'
 import { createClient } from '@/lib/supabase/client'
 import { useGuestAuth } from '@/hooks/useGuestAuth'
 import { Avatar } from '@/components/shared/Avatar'

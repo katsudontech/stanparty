@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { GameCard } from '@/components/site/GameCard';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { GAME_CATALOG } from '@/games/catalog';

@@ -1,5 +1,7 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useAsyncAction } from '@/hooks/useAsyncAction';
 import { useMemo } from "react";
 import type { Player } from "@/games/core/types";
 import { Avatar } from "@/components/shared/Avatar";
@@ -13,6 +15,7 @@ type EndProps = {
 };
 
 export function End({ playerId, isHost, winnerId, players, onBackToLobby }: EndProps) {
+    const { pending: busy, error, run } = useAsyncAction();
     const isWinner = playerId === winnerId;
     const winner = players.find(p => p.userId === winnerId);
 
@@ -35,13 +38,14 @@ export function End({ playerId, isHost, winnerId, players, onBackToLobby }: EndP
                 </div>
                 {!isWinner && <p className="mb-6 font-bold text-[var(--muted)]">次は勝てる！</p>}
 
+                {error && <p role="alert" className="mb-3 text-red-600">{error}</p>}
                 {isHost ? (
-                    <button
-                        onClick={onBackToLobby}
+                    <PendingButton busy={busy}
+                        onClick={() => void run(onBackToLobby)}
                         className="button-primary w-full text-lg"
                     >
                         ロビーに戻る
-                    </button>
+                    </PendingButton>
                 ) : (
                     <div className="mt-2 border-2 border-dashed border-[#b9b5a8] bg-[var(--paper-deep)] p-3 text-center text-[var(--muted)]">
                         ホストがロビーに戻るのを待っています...

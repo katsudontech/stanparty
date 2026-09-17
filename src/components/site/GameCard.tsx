@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import type { GameCatalogEntry } from '@/games/catalog';
 import { GameArtwork } from '@/components/site/GameArtwork';
 

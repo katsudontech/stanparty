@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useState } from 'react';
 import type { RuleSettings } from '@/games/fake-artist/types';
 
@@ -13,49 +16,48 @@ interface RuleSettingPhaseProps {
 
 export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost, onBackToLobby }: RuleSettingPhaseProps) {
   const [hostRuleSettings, setRuleSettings] = useState<RuleSettings>(propRuleSettings);
-  const [isSaving, setIsSaving] = useState(false);
+  const { pending: isSaving, acquire: acquireIsSaving, release: releaseIsSaving } = useActionLock();
   const [saveError, setSaveError] = useState<string | null>(null);
   const ruleSettings = isHost ? hostRuleSettings : propRuleSettings;
 
-  const persistRuleSettings = (newSettings: RuleSettings) => {
+  const persistRuleSettings = async (newSettings: RuleSettings) => {
+    if (!acquireIsSaving()) return;
+    setRuleSettings(newSettings);
     setSaveError(null);
-    void onChangeRules(newSettings).catch((error: unknown) => {
-      setSaveError(error instanceof Error ? error.message : 'ルールを保存できませんでした');
-    });
+    try { await onChangeRules(newSettings); }
+    catch (error) { setSaveError(error instanceof Error ? error.message : 'ルールを保存できませんでした'); }
+    finally { releaseIsSaving(); }
   };
 
   const handleRoundLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isHost) return;
+    if (!isHost || isSaving) return;
     const newSettings = { ...ruleSettings, roundLimit: Number(e.target.value) };
-    setRuleSettings(newSettings);
-    persistRuleSettings(newSettings);
+    void persistRuleSettings(newSettings);
   };
 
   const handleAutoThemeSelectionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isHost) return;
+    if (!isHost || isSaving) return;
     const newSettings = { ...ruleSettings, autoThemeSelection: e.target.checked };
-    setRuleSettings(newSettings);
-    persistRuleSettings(newSettings);
+    void persistRuleSettings(newSettings);
   };
 
   const handleQuestionerDrawsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isHost) return;
+    if (!isHost || isSaving) return;
     const newSettings = { ...ruleSettings, questionerDraws: e.target.checked };
-    setRuleSettings(newSettings);
-    persistRuleSettings(newSettings);
+    void persistRuleSettings(newSettings);
   };
 
-  const handleSaveRules = async () => {
+  const handleSaveRules = async (action = () => onSaveRules(ruleSettings)) => {
     if (!isHost || isSaving) return;
 
-    setIsSaving(true);
+    if (!acquireIsSaving()) return;
     setSaveError(null);
     try {
-      await onSaveRules(ruleSettings);
+      await action();
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'ゲームを開始できませんでした');
     } finally {
-      setIsSaving(false);
+      releaseIsSaving();
     }
   };
 
@@ -73,7 +75,7 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
               max="10"
               value={ruleSettings.roundLimit}
               onChange={handleRoundLimitChange}
-              disabled={!isHost}
+              disabled={!isHost || isSaving}
               className={`bg-slate-800 text-white border border-slate-600 rounded px-3 py-2 w-24 ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
             <span className="text-slate-300">回答ラウンド数</span>
@@ -86,7 +88,7 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
               type="checkbox"
               checked={ruleSettings.autoThemeSelection}
               onChange={handleAutoThemeSelectionChange}
-              disabled={!isHost}
+              disabled={!isHost || isSaving}
               className={`form-checkbox h-5 w-5 text-blue-600 bg-slate-800 border-slate-600 rounded ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
             <span className="text-slate-300">自動お題選択</span>
@@ -100,7 +102,7 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
                 type="checkbox"
                 checked={ruleSettings.questionerDraws}
                 onChange={handleQuestionerDrawsChange}
-                disabled={!isHost}
+                disabled={!isHost || isSaving}
                 className={`form-checkbox h-5 w-5 text-blue-600 bg-slate-800 border-slate-600 rounded ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               <span className="text-slate-300">出題者も絵を描く</span>
@@ -113,20 +115,21 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
 
       {isHost ? (
         <div className="mt-6 space-y-3">
-          <button
+          <PendingButton busy={isSaving}
             onClick={() => void handleSaveRules()}
             disabled={isSaving}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full"
           >
-            {isSaving ? 'ゲームを開始中...' : 'ルールを確定してゲーム開始'}
-          </button>
-          <button
+            ルールを確定してゲーム開始
+          </PendingButton>
+          <PendingButton busy={isSaving}
             type="button"
-            onClick={() => void onBackToLobby()}
+            onClick={() => void handleSaveRules(onBackToLobby)}
+            disabled={isSaving}
             className="w-full rounded-lg border border-slate-600 bg-slate-800 px-6 py-2 font-bold text-slate-200 transition-colors hover:bg-slate-700"
           >
             ロビーへ戻る
-          </button>
+          </PendingButton>
         </div>
       ) : (
         <div className="mt-6 text-slate-300 bg-slate-800 p-4 rounded-lg text-center">

@@ -1,5 +1,6 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ReactSketchCanvas,
@@ -269,23 +270,23 @@ export function Canvas({ roomId, players, drawerId, myUserId, canDraw, onJudge }
 
       {canDraw && (
         <div className="aibd-canvas-controls mt-3 flex flex-wrap gap-2">
-          <button
+          <PendingButton busy={busy}
             type="button"
             className="button-secondary"
             disabled={busy || !syncAllowsActions}
             onClick={() => void resetCanvas()}
           >
             絵をリセット
-          </button>
+          </PendingButton>
           {onJudge && (
-            <button
+            <PendingButton busy={busy}
               type="button"
               className="button-primary"
               disabled={busy || !syncAllowsActions || pathCount === 0}
               onClick={() => void judgeCanvas()}
             >
               この絵で判定する
-            </button>
+            </PendingButton>
           )}
           <span className="aibd-canvas-note self-center text-xs font-bold text-[var(--muted)]">
             リセットは現在の絵だけを消します

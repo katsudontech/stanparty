@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useState } from 'react';
 import type { Player } from '@/games/core/types';
 import type { FakeArtistGameState } from '../types';
@@ -19,7 +22,7 @@ interface GuessingPhaseProps {
 
 export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, onGuessSubmit, onJudgeSubmit }: GuessingPhaseProps) {
   const [guessInput, setGuessInput] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { pending: isSubmitting, acquire: acquireIsSubmitting, release: releaseIsSubmitting } = useActionLock();
   const [actionError, setActionError] = useState<string | null>(null);
 
   // エセ芸術家のIDを特定
@@ -41,28 +44,28 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, on
     e.preventDefault();
     if (!guessInput.trim() || isSubmitting) return;
 
-    setIsSubmitting(true);
+    if (!acquireIsSubmitting()) return;
     setActionError(null);
     try {
       await onGuessSubmit(guessInput.trim());
     } catch (error) {
       setActionError(error instanceof Error ? error.message : '回答を送信できませんでした');
     } finally {
-      setIsSubmitting(false);
+      releaseIsSubmitting();
     }
   };
 
   const handleJudgeSubmit = async (isCorrect: boolean) => {
     if (isSubmitting) return;
 
-    setIsSubmitting(true);
+    if (!acquireIsSubmitting()) return;
     setActionError(null);
     try {
       await onJudgeSubmit(isCorrect);
     } catch (error) {
       setActionError(error instanceof Error ? error.message : '判定結果を送信できませんでした');
     } finally {
-      setIsSubmitting(false);
+      releaseIsSubmitting();
     }
   };
 
@@ -88,13 +91,13 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, on
                 className="px-4 py-3 rounded bg-slate-800 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 text-center text-xl"
                 required
               />
-              <button
+              <PendingButton busy={isSubmitting} pendingLabel="送信中…"
                 type="submit"
                 disabled={isSubmitting}
                 className="px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg transition-colors"
               >
-                {isSubmitting ? '回答を送信中...' : '回答を送信する'}
-              </button>
+                回答を送信する
+              </PendingButton>
             </form>
           </div>
         )}
@@ -123,20 +126,20 @@ export function GuessingPhase({ roomId, players, gameState, myUserId, hostId, on
             <p className="text-lg mb-6 text-slate-300">本当のお題（{gameState.theme}）と合っていますか？</p>
             
             <div className="grid w-full gap-3 sm:grid-cols-2 sm:gap-4">
-              <button
+              <PendingButton busy={isSubmitting} pendingLabel="送信中…"
                 onClick={() => void handleJudgeSubmit(true)}
                 disabled={isSubmitting}
                 className="px-6 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors flex-1"
               >
                 正解！（エセ芸術家の逆転勝利）
-              </button>
-              <button
+              </PendingButton>
+              <PendingButton busy={isSubmitting} pendingLabel="送信中…"
                 onClick={() => void handleJudgeSubmit(false)}
                 disabled={isSubmitting}
                 className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg transition-colors flex-1"
               >
                 不正解（芸術家チームの勝利）
-              </button>
+              </PendingButton>
             </div>
           </div>
         )}

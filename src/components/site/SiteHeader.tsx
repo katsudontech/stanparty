@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { useSyncExternalStore, type ReactNode } from 'react';
 
 const appDisplayMode = '(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)';

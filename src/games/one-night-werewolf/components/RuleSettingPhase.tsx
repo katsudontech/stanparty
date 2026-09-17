@@ -1,5 +1,7 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useAsyncAction } from '@/hooks/useAsyncAction';
 import { useState } from "react";
 import type { OneNightRuleSettings } from "../types";
 
@@ -13,8 +15,9 @@ interface RuleSettingPhaseProps {
     onBackToLobby: () => Promise<void>;
 }
 
-export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, onChangeRules, isHost, onBackToLobby }: RuleSettingPhaseProps) {
+export function RuleSettingPhase({ ruleSettings: propRuleSettings, onChangeRules, isHost, onBackToLobby }: RuleSettingPhaseProps) {
 
+    const { pending: busy, error, run } = useAsyncAction();
     const [hostRuleSettings, setRuleSettings] = useState<OneNightRuleSettings>(propRuleSettings);
     const ruleSettings = isHost ? hostRuleSettings : propRuleSettings;
 
@@ -72,27 +75,29 @@ export function RuleSettingPhase({ ruleSettings: propRuleSettings, onSaveRules, 
                                 </div>
                             ))}
                         </div>
-                        <p className="text-sm text-slate-400 mt-4 text-center">※役職の変更機能は現在準備中です。このままの構成でプレイできます。</p>
+                        <p className="text-sm text-slate-400 mt-4 text-center">※役職の変更機能は現在準備中です。ゲームの公開までお待ちください。</p>
                     </div>
                 </div>
 
+                <p id="werewolf-unavailable" className="mt-5 text-slate-300">このゲームは準備中のため、まだ開始できません。</p>
+                {error && <p role="alert">{error}</p>}
                 {/* アクションボタン */}
                 <div className="mt-10 flex flex-col justify-center gap-3">
                     <button 
-                        onClick={() => onSaveRules(ruleSettings)}
-                        disabled={!isHost}
+                        disabled
+                        aria-describedby="werewolf-unavailable"
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-12 rounded-full transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(59,130,246,0.4)] disabled:shadow-none disabled:transform-none text-lg"
                     >
-                        {isHost ? 'ゲームを開始する' : 'ホストの設定待ち...'}
+                        準備中
                     </button>
                     {isHost && (
-                        <button
+                        <PendingButton busy={busy}
                             type="button"
-                            onClick={() => void onBackToLobby()}
+                            onClick={() => void run(onBackToLobby)}
                             className="w-full rounded-full border border-slate-600 bg-slate-800 px-6 py-3 font-bold text-slate-200 transition-colors hover:bg-slate-700"
                         >
                             ロビーへ戻る
-                        </button>
+                        </PendingButton>
                     )}
                 </div>
             </div>

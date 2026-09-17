@@ -38,6 +38,7 @@ interface ReactionsContextValue {
   received: ReceivedReaction[];
   sendReaction: (emoji: ReactionEmoji) => Promise<void>;
   canSend: boolean;
+  sending: boolean;
   online: boolean;
   connected: boolean;
   error: string | null;
@@ -227,7 +228,7 @@ export function RoomReactionsProvider({ roomId, myUserId, players, children }: P
   }, [roomId]);
 
   const canSend = connected && online && !cooldown && !sending;
-  const value = useMemo(() => ({ received, sendReaction, canSend, online, connected, error }), [canSend, connected, error, online, received, sendReaction]);
+  const value = useMemo(() => ({ received, sendReaction, canSend, sending, online, connected, error }), [sending, canSend, connected, error, online, received, sendReaction]);
   return <ReactionsContext.Provider value={value}><div ref={rootRef} className="room-reactions-root">{children}<ReactionOverlay reactions={received} /></div></ReactionsContext.Provider>;
 }
 
@@ -238,7 +239,7 @@ export function useRoomReactions() {
 }
 
 export function RoomReactionHeaderActions() {
-  const { sendReaction, canSend, online: onlineStatus, connected: connectedStatus, error } = useRoomReactions();
+  const { sendReaction, canSend, sending, online: onlineStatus, connected: connectedStatus, error } = useRoomReactions();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -278,7 +279,7 @@ export function RoomReactionHeaderActions() {
     if (next !== null) { event.preventDefault(); buttons[next]?.focus(); }
   };
 
-  const statusMessage = !onlineStatus ? 'オフライン' : !connectedStatus ? '接続中…' : null;
+  const statusMessage = sending ? '送信中…' : !onlineStatus ? 'オフライン' : !connectedStatus ? '接続中…' : null;
   return <div className="room-reaction-control relative shrink-0">
     <button ref={buttonRef} type="button" className="button-secondary min-h-11 min-w-11 px-3 text-xl" aria-label="リアクションを送る" aria-expanded={open} onClick={() => setOpen((value) => !value)}>😊</button>
     {open && <div ref={menuRef} onKeyDown={handleMenuKeyDown} className="room-reaction-menu absolute right-0 top-[calc(100%+8px)] z-50 grid w-56 grid-cols-2 gap-2 border-2 border-[var(--line)] bg-[var(--surface)] p-2 shadow-[4px_4px_0_var(--line)]" role="group" aria-label="リアクション一覧">

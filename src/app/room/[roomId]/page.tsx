@@ -36,7 +36,7 @@ function EndGameButton({ onEnd }: { onEnd: () => Promise<void> }) {
     };
 
     return (
-        <button type="button" aria-label="ゲームを終了して待機ルームへ戻る" title="ゲームを終了して待機ルームへ戻る" className="button-secondary min-h-11 shrink-0 text-sm" disabled={ending} onClick={() => void handleEnd()}>
+        <button type="button" aria-label="ゲームを終了して待機ルームへ戻る" title="ゲームを終了して待機ルームへ戻る" className="button-secondary min-h-11 shrink-0 text-sm" disabled={ending} aria-busy={ending} onClick={(event) => { if (event.detail < 2) void handleEnd(); }}>
             {ending ? '終了中…' : 'ゲームを終了'}
         </button>
     );
@@ -51,6 +51,7 @@ function RoomHeaderActions({ isHost, onEnd }: { isHost: boolean; onEnd?: () => P
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
     const { roomId } = use(params);
+    const [reloading, setReloading] = useState(false);
     const { profile, error: authError } = useGuestAuth();
     const myUserId = profile?.id ?? null;
 
@@ -88,8 +89,8 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
                 <div className="paper-card max-w-lg p-6" role="alert">
                     <h1 className="text-2xl font-black">接続できませんでした</h1>
                     <p className="mt-3 text-sm text-[var(--muted)]">通信状況を確認して、もう一度お試しください。</p>
-                    <button type="button" className="button-primary mt-5" onClick={() => window.location.reload()}>
-                        再試行する
+                    <button type="button" className="button-primary mt-5" disabled={reloading} aria-busy={reloading} onClick={(event) => { if (event.detail > 1) return; setReloading(true); window.location.reload(); }}>
+                        {reloading ? '再読み込み中…' : '再試行する'}
                     </button>
                 </div>
             </div>

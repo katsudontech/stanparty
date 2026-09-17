@@ -1,5 +1,7 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useAsyncAction } from '@/hooks/useAsyncAction';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { RoomState } from '@/games/core/types';
@@ -34,28 +36,18 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
     roomState.players.find((player) => player.userId === playerId)?.name ?? '参加者'
   );
 
-  const runAction = async (action: () => Promise<unknown>) => {
-    try {
-      await action();
-    } catch {
-      // The game hook exposes the user-facing error.
-    }
-  };
+  const { pending: busy, error: actionError, run: runAction } = useAsyncAction();
 
   const showTopic = useCallback(async () => {
-    try {
-      const value = await loadTopic();
-      if (typeof value === 'object' && value !== null && 'answer' in value) {
-        setTopic(String((value as { answer: string }).answer));
-      }
-    } catch {
-      // Non-drawers must not receive the hidden topic before game over.
+    const value = await loadTopic();
+    if (typeof value === 'object' && value !== null && 'answer' in value) {
+      setTopic(String((value as { answer: string }).answer));
     }
   }, [loadTopic]);
 
   useEffect(() => {
     if (state.phase !== 'game_over' || topic !== null) return;
-    const timer = window.setTimeout(() => void showTopic(), 0);
+    const timer = window.setTimeout(() => void showTopic().catch(() => {}), 0);
     return () => window.clearTimeout(timer);
   }, [showTopic, state.phase, topic]);
 
@@ -69,16 +61,17 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
         </p>
         {isHost ? (
           <>
-            <button className="button-primary mt-7" onClick={() => void runAction(initialize)}>
+            <PendingButton busy={busy} className="button-primary mt-7" onClick={() => void runAction(initialize)}>
               ゲームを始める
-            </button>
-            <button className="text-link mt-6 block" onClick={() => void onBackToLobby()}>
+            </PendingButton>
+            <PendingButton busy={busy} className="text-link mt-6 block" onClick={() => void runAction(onBackToLobby)}>
               ← ロビーに戻る
-            </button>
+            </PendingButton>
           </>
         ) : (
           <p className="mt-7 font-bold text-[var(--muted)]">ホストがゲームを始めるまでお待ちください。</p>
         )}
+        {(actionError || error) && <p role="alert">{actionError || error}</p>}
       </main>
     );
   }
@@ -108,7 +101,7 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
             {topic ? (
               <p className="font-black text-[var(--purple)]">お題：{topic}</p>
             ) : (
-              <button className="button-secondary" onClick={() => void showTopic()}>お題を確認</button>
+              <PendingButton busy={busy} className="button-secondary" onClick={() => void runAction(showTopic)}>お題を確認</PendingButton>
             )}
           </div>
         )}
@@ -153,6 +146,7 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
               }}
             >
               <input
+                disabled={busy}
                 required
                 maxLength={200}
                 value={answerText}
@@ -160,7 +154,7 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
                 className="min-w-0 flex-1 rounded border-2 border-[var(--line)] bg-white p-3"
                 placeholder="お題の答え"
               />
-              <button className="button-primary" type="submit">回答する</button>
+              <PendingButton busy={busy} className="button-primary" type="submit">回答する</PendingButton>
             </form>
           )}
           {!isDrawer && state.answerSubmittedPlayerIds.includes(myUserId) && (
@@ -211,16 +205,16 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
           )}
           {state.phase === 'revealing' && (
             isDrawer ? (
-              <button className="button-primary mt-5" onClick={() => void runAction(continueDrawing)}>
+              <PendingButton busy={busy} className="button-primary mt-5" onClick={() => void runAction(continueDrawing)}>
                 さらに描く
-              </button>
+              </PendingButton>
             ) : (
               <p className="mt-5 font-bold text-[var(--muted)]">描く人が再開するのを待っています…</p>
             )
           )}
           {state.phase === 'game_over' && (
             isHost ? (
-              <button className="text-link mt-5 block" onClick={() => void onBackToLobby()}>ロビーに戻る</button>
+              <PendingButton busy={busy} className="text-link mt-5 block" onClick={() => void runAction(onBackToLobby)}>ロビーに戻る</PendingButton>
             ) : (
               <p className="mt-5 font-bold text-[var(--muted)]">ホストがロビーに戻るのを待っています…</p>
             )
@@ -228,7 +222,7 @@ export function AiBarenaiDrawingGame({ roomState, myUserId, onBackToLobby }: Pro
         </section>
       )}
 
-      {error && <p role="alert" className="aibd-page-error font-bold text-red-600">{error}</p>}
+      {(actionError || error) && <p role="alert" className="aibd-page-error font-bold text-red-600">{actionError || error}</p>}
     </main>
   );
 }

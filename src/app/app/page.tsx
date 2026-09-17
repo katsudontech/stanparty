@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { GuestNameInput } from '@/components/shared/GuestNameInput';
 import { GameArtwork } from '@/components/site/GameArtwork';
 import { GAME_CATALOG } from '@/games/catalog';

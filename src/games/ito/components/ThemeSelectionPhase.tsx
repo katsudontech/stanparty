@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useState } from 'react';
 
 interface ThemeSelectionPhaseProps {
@@ -18,18 +21,18 @@ export function ThemeSelectionPhase({
   onBackToRules,
 }: ThemeSelectionPhaseProps) {
   const [customTheme, setCustomTheme] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const { pending: submitting, acquire: acquireSubmitting, release: releaseSubmitting } = useActionLock();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const runAction = async (action: () => Promise<void>) => {
-    setSubmitting(true);
+    if (!acquireSubmitting()) return;
     setErrorMessage(null);
     try {
       await action();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'お題を更新できませんでした');
     } finally {
-      setSubmitting(false);
+      releaseSubmitting();
     }
   };
 
@@ -48,22 +51,22 @@ export function ThemeSelectionPhase({
         </p>
         {isHost && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <button
+            <PendingButton busy={submitting}
               type="button"
               onClick={() => runAction(onDrawTheme)}
               disabled={submitting}
               className="rounded-2xl border border-fuchsia-300/30 bg-slate-950/40 px-4 py-3 font-bold text-fuchsia-100 hover:bg-slate-950/70 disabled:opacity-40"
             >
               別のお題を引く
-            </button>
-            <button
+            </PendingButton>
+            <PendingButton busy={submitting}
               type="button"
               onClick={() => themeCandidate && runAction(() => onSelectTheme(themeCandidate))}
               disabled={!themeCandidate || submitting}
               className="rounded-2xl bg-fuchsia-500 px-4 py-3 font-black text-white hover:bg-fuchsia-400 disabled:opacity-40"
             >
               このお題で開始
-            </button>
+            </PendingButton>
           </div>
         )}
       </div>
@@ -82,22 +85,22 @@ export function ThemeSelectionPhase({
             />
             <span className="mt-2 block text-right text-xs text-slate-500">{customTheme.length}/100</span>
           </label>
-          <button
+          <PendingButton busy={submitting}
             type="button"
             onClick={() => runAction(() => onSelectTheme(customTheme))}
             disabled={!customTheme.trim() || submitting}
             className="mt-4 w-full rounded-2xl bg-cyan-500 px-4 py-3 font-black text-slate-950 hover:bg-cyan-400 disabled:opacity-40"
           >
             入力したお題で開始
-          </button>
-          <button
+          </PendingButton>
+          <PendingButton busy={submitting}
             type="button"
             onClick={() => runAction(onBackToRules)}
             disabled={submitting}
             className="mt-3 w-full rounded-2xl border border-white/10 bg-slate-800 px-4 py-3 font-bold text-slate-200 hover:bg-slate-700 disabled:opacity-40"
           >
             カード枚数の設定へ戻る
-          </button>
+          </PendingButton>
           {errorMessage && (
             <p className="mt-4 rounded-xl bg-rose-500/10 p-3 text-sm font-bold text-rose-300">{errorMessage}</p>
           )}

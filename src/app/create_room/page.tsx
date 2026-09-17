@@ -1,7 +1,8 @@
 'use client'
 
+import { useActionLock } from '@/hooks/useActionLock';
 import { useState } from 'react'
-import Link from 'next/link'
+import { PendingLink as Link } from '@/components/shared/PendingLink'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { saveGuestDisplayProfile, useGuestAuth } from '@/hooks/useGuestAuth'
@@ -13,7 +14,7 @@ export default function CreateRoomPage() {
     const [hostName, setHostName] = useState<string | null>(null)
     const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null)
     const [isPublic, setIsPublic] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const { pending: loading, acquire, release } = useActionLock()
     
     const { profile: myProfile, loading: checkingAuth } = useGuestAuth()
     const resolvedHostName = hostName ?? myProfile?.name ?? ''
@@ -28,7 +29,7 @@ export default function CreateRoomPage() {
         e.preventDefault()
         if (!roomName.trim() || !myProfile || !resolvedHostName.trim()) return
 
-        setLoading(true)
+        if (!acquire()) return
 
         try {
             // 部屋を作る前に、確実にホストのユーザー情報をusersテーブルに登録（upsert）する
@@ -62,9 +63,8 @@ export default function CreateRoomPage() {
 
             if (error) throw error
 
-            if (createdRoomId) {
-                router.push(`/room/${createdRoomId}`)
-            }
+            if (!createdRoomId) throw new Error('ルームを作成できませんでした')
+            router.push(`/room/${createdRoomId}`)
         } catch (err: unknown) {
             const errorMessage =
                 typeof err === 'object' && err !== null && 'message' in err
@@ -72,8 +72,7 @@ export default function CreateRoomPage() {
                     : '不明なエラー'
             console.error('部屋作成エラー:', err)
             alert(`エラーが発生しました: ${errorMessage}`)
-        } finally {
-            setLoading(false)
+            release()
         }
     }
 
@@ -154,7 +153,8 @@ export default function CreateRoomPage() {
 
                             <button
                                 type="submit"
-                                disabled={loading || !roomName.trim()}
+                                aria-busy={loading}
+                                disabled={loading || !roomName.trim() || !myProfile || !resolvedHostName.trim()}
                                 className="button-primary create-room__submit w-full text-lg"
                             >
                                 <span className="flex items-center gap-2">

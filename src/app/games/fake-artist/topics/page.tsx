@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { FAKE_ARTIST_TOPIC_CATEGORIES } from '@/games/fake-artist/topics';
 import { SITE_URL } from '@/lib/site';

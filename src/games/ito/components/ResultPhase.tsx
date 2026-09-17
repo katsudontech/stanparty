@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useMemo, useState } from 'react';
 
 import type { Player } from '@/games/core/types';
@@ -21,7 +24,7 @@ export function ResultPhase({
   isHost,
   onResetGame,
 }: ResultPhaseProps) {
-  const [submitting, setSubmitting] = useState(false);
+  const { pending: submitting, acquire: acquireSubmitting, release: releaseSubmitting } = useActionLock();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const playersById = useMemo(
     () => new Map(players.map((player) => [player.userId, player])),
@@ -34,14 +37,14 @@ export function ResultPhase({
   const succeeded = gameState.result === 'success';
 
   const runAction = async (action: () => Promise<void>) => {
-    setSubmitting(true);
+    if (!acquireSubmitting()) return;
     setErrorMessage(null);
     try {
       await action();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '操作に失敗しました');
     } finally {
-      setSubmitting(false);
+      releaseSubmitting();
     }
   };
 
@@ -92,14 +95,14 @@ export function ResultPhase({
       </div>
 
       {isHost ? (
-        <button
+        <PendingButton busy={submitting}
           type="button"
           onClick={() => runAction(onResetGame)}
           disabled={submitting}
           className="w-full rounded-2xl bg-cyan-500 px-5 py-4 font-black text-slate-950 hover:bg-cyan-400 disabled:opacity-40"
         >
           itoのルール設定に戻る
-        </button>
+        </PendingButton>
       ) : (
         <p className="rounded-2xl bg-slate-900 p-4 font-bold text-slate-400">
           ホストが次のゲームを準備しています...

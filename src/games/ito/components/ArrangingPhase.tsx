@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useMemo, useState } from 'react';
 
 import type { Player } from '@/games/core/types';
@@ -26,11 +29,11 @@ function SecretCard({
   onSaveHint,
 }: SecretCardProps) {
   const [hint, setHint] = useState(card.hint);
-  const [saving, setSaving] = useState(false);
+  const { pending: saving, acquire: acquireSaving, release: releaseSaving } = useActionLock();
   const [message, setMessage] = useState<string | null>(null);
 
   const handleSaveHint = async () => {
-    setSaving(true);
+    if (!acquireSaving()) return;
     setMessage(null);
     try {
       await onSaveHint(hint);
@@ -38,7 +41,7 @@ function SecretCard({
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '保存できませんでした');
     } finally {
-      setSaving(false);
+      releaseSaving();
     }
   };
 
@@ -59,6 +62,7 @@ function SecretCard({
         <div className="flex gap-2">
           <input
             type="text"
+            disabled={saving || disabled}
             maxLength={100}
             value={hint}
             onChange={(event) => {
@@ -68,14 +72,14 @@ function SecretCard({
             placeholder="口頭だけでもOK"
             className="min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-950 px-3 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400"
           />
-          <button
+          <PendingButton busy={saving}
             type="button"
             onClick={handleSaveHint}
             disabled={saving || disabled || hint === card.hint}
             className="rounded-xl border border-white/10 bg-slate-800 px-4 text-sm font-bold text-slate-200 hover:bg-slate-700 disabled:opacity-40"
           >
             保存
-          </button>
+          </PendingButton>
         </div>
       </label>
 
@@ -115,7 +119,7 @@ export function ArrangingPhase({
   onStartShowdown,
 }: ArrangingPhaseProps) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const { pending: submitting, acquire: acquireSubmitting, release: releaseSubmitting } = useActionLock();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const cardsById = useMemo(
@@ -136,7 +140,7 @@ export function ArrangingPhase({
   );
 
   const runAction = async (action: () => Promise<void>) => {
-    setSubmitting(true);
+    if (!acquireSubmitting()) return;
     setErrorMessage(null);
     try {
       await action();
@@ -145,7 +149,16 @@ export function ArrangingPhase({
       setErrorMessage(error instanceof Error ? error.message : '操作に失敗しました');
       return false;
     } finally {
-      setSubmitting(false);
+      releaseSubmitting();
+    }
+  };
+
+  const handleSetHint = async (cardId: string, hint: string) => {
+    if (!acquireSubmitting()) throw new Error('別の操作を処理中です。完了後にもう一度お試しください。');
+    try {
+      await onSetHint(cardId, hint);
+    } finally {
+      releaseSubmitting();
     }
   };
 
@@ -191,7 +204,7 @@ export function ArrangingPhase({
               isSelected={selectedCardId === card.id}
               disabled={submitting}
               onSelect={() => setSelectedCardId((current) => current === card.id ? null : card.id)}
-              onSaveHint={(hint) => onSetHint(card.id, hint)}
+              onSaveHint={(hint) => handleSetHint(card.id, hint)}
             />
           ))}
         </div>
@@ -213,6 +226,7 @@ export function ArrangingPhase({
             <span>「ここに置く」を押して位置を決めてください</span>
             <button
               type="button"
+              disabled={submitting}
               onClick={() => setSelectedCardId(null)}
               className="shrink-0 rounded-lg bg-slate-950/50 px-3 py-2 text-xs"
             >
@@ -234,14 +248,14 @@ export function ArrangingPhase({
 
             return (
               <div key={`slot-${slotIndex}`}>
-                <button
+                <PendingButton busy={submitting}
                   type="button"
                   onClick={() => handleMoveToSlot(slotIndex)}
                   disabled={!selectedCardId || submitting}
                   className="my-2 w-full rounded-xl border border-dashed border-cyan-400/30 py-2 text-xs font-black text-cyan-300 transition hover:bg-cyan-400/10 disabled:border-slate-700 disabled:text-slate-700"
                 >
                   ＋ ここに置く
-                </button>
+                </PendingButton>
 
                 {card && (
                   <button
@@ -300,24 +314,24 @@ export function ArrangingPhase({
           })}
         </div>
 
-        <button
+        <PendingButton busy={submitting}
           type="button"
           onClick={() => runAction(() => onSetReady(!isReady))}
           disabled={!allCardsPlaced || submitting}
           className={`w-full rounded-2xl px-5 py-4 font-black transition disabled:cursor-not-allowed disabled:opacity-40 ${isReady ? 'bg-slate-700 text-slate-200' : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'}`}
         >
           {isReady ? '完成確認を取り消す' : allCardsPlaced ? 'この並びで完成' : '全カードを配置してください'}
-        </button>
+        </PendingButton>
 
         {isHost && (
-          <button
+          <PendingButton busy={submitting}
             type="button"
             onClick={() => runAction(onStartShowdown)}
             disabled={!allPlayersReady || !allCardsPlaced || submitting}
             className="mt-3 w-full rounded-2xl bg-fuchsia-500 px-5 py-4 text-lg font-black text-white hover:bg-fuchsia-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             ショーダウン開始
-          </button>
+          </PendingButton>
         )}
 
         {errorMessage && (

@@ -1,5 +1,7 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
 import { useEffect, useState } from "react";
 import type { RoomState } from '@/games/core/types';
 import { type CoyoteGameState, DEFAULT_COYOTE_STATE } from './types';
@@ -43,7 +45,9 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
     const [countdown, setCountdown] = useState<number | null>(null);
     const [showCard, setShowCard] = useState(false);
     const [isSubmittedCoyote, setIsSubmittedCoyote] = useState(false);
-    const [isSubmittedNextGame, setIsSubmittedNextGame] = useState(false);
+    const { pending: isSubmittedNextGame, acquire, release } = useActionLock();
+    const callLock = useActionLock();
+    const [actionError, setActionError] = useState<string | null>(null);
     const [selectedLoser, setSelectedLoser] = useState<string>("");
 
     // WakeLock
@@ -99,25 +103,33 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
 
     const handleDoubleClick = async () => {
         if (isDead || isSubmittedCoyote || !showCard || gameState.phase === 'coyote_called' || !myUserId) return;
+        if (!callLock.acquire()) return;
+        setActionError(null);
         setIsSubmittedCoyote(true);
         try {
             await handleCoyote(myUserId);
         } catch (error) {
             console.error(error);
             setIsSubmittedCoyote(false);
+            setActionError('宣言できませんでした。もう一度お試しください。');
+        } finally {
+            callLock.release();
         }
     };
 
     const onSelectLoser = async () => {
         if (isDead || !selectedLoser || isSubmittedNextGame) return;
-        setIsSubmittedNextGame(true);
+        if (!acquire()) return;
+        setActionError(null);
         try {
             await handleNextGame(selectedLoser);
             setSelectedLoser("");
-            setIsSubmittedNextGame(false);
+
         } catch (error) {
             console.error(error);
-            setIsSubmittedNextGame(false);
+            setActionError('敗者を決定できませんでした。もう一度お試しください。');
+        } finally {
+            release();
         }
     };
 
@@ -127,7 +139,7 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
             <RuleSettingPhase
                 players={players}
                 isHost={isHost}
-                onStartGame={(maxHp: number) => { startGame(maxHp); }}
+                onStartGame={startGame}
                 initialMaxHp={gameState.ruleSettings?.maxHp || 3}
                 onBackToLobby={onBackToLobby}
             />
@@ -200,7 +212,7 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                                         value={p.userId}
                                         checked={selectedLoser === p.userId}
                                         onChange={(e) => isCoyoteCaller && isAlive && setSelectedLoser(e.target.value)}
-                                        disabled={!isCoyoteCaller || !isAlive}
+                                        disabled={!isCoyoteCaller || !isAlive || isSubmittedNextGame}
                                         className="hidden"
                                     />
                                     <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3">
@@ -224,8 +236,9 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                         })}
                     </div>
 
+                    {actionError && <p role="alert" className="mb-3 text-red-600">{actionError}</p>}
                     {isCoyoteCaller ? (
-                        <button
+                        <PendingButton busy={isSubmittedNextGame}
                             onClick={onSelectLoser}
                             disabled={!canDecideLoser}
                             className={
@@ -236,7 +249,7 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                             }
                         >
                             敗者を決定する
-                        </button>
+                        </PendingButton>
                     ) : (
                         <div className="mt-4 border-2 border-dashed border-[#b9b5a8] bg-[var(--paper-deep)] p-4 text-center font-bold text-[var(--muted)]">
                             コヨーテ宣言者が敗者を決定しています...
@@ -252,6 +265,7 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
             className="coyote-playfield flex min-h-[72dvh] flex-col items-center justify-center border-2 border-[var(--line)] bg-[var(--ink)] p-4 text-white shadow-[5px_5px_0_#d79a24] select-none"
             onDoubleClick={handleDoubleClick}
         >
+            {actionError && <p role="alert">{actionError}</p>}
             <h1 className="mb-2 text-2xl font-black tracking-[-.04em] text-white">Coyote</h1>
             
             {/* カウントダウン表示 */}
@@ -274,7 +288,7 @@ export function CoyoteGame({ roomState, myUserId, onBackToLobby }: CoyoteGamePro
                     <div className="mt-8 inline-block border-2 border-[#d79a24] bg-[#f2dfa8] px-6 py-3 text-[var(--ink)]">
                         <p className="flex items-center gap-2 text-sm font-black">
                             <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" /></svg>
-                            画面をダブルタップでコヨーテ宣言！
+                            {isSubmittedCoyote ? 'コヨーテを宣言中…' : '画面をダブルタップでコヨーテ宣言！'}
                         </p>
                     </div>
                 </div>

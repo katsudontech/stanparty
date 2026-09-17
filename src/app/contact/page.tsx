@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import {
   OPERATOR_PROFILE_URL,
@@ -33,7 +33,7 @@ export default function ContactPage() {
             ) : (
               <>
                 問い合わせ・不具合報告は、
-                <a href={SUPPORT_EMAIL_URL} className="text-link">{SUPPORT_EMAIL}</a>
+                <Link href={SUPPORT_EMAIL_URL} className="text-link">{SUPPORT_EMAIL}</Link>
                 で受け付けています。
               </>
             )}
@@ -50,17 +50,17 @@ export default function ContactPage() {
               </p>
               {GITHUB_SUPPORT_LINKS_ENABLED ? (
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <a href={SUPPORT_ISSUE_URL} target="_blank" rel="noreferrer" className="button-primary">
+                  <Link href={SUPPORT_ISSUE_URL} target="_blank" rel="noreferrer" className="button-primary">
                     新しく報告する ↗
-                  </a>
-                  <a href={SUPPORT_ISSUES_URL} target="_blank" rel="noreferrer" className="button-secondary">
+                  </Link>
+                  <Link href={SUPPORT_ISSUES_URL} target="_blank" rel="noreferrer" className="button-secondary">
                     既存の報告を見る ↗
-                  </a>
+                  </Link>
                 </div>
               ) : (
-                <a href={SUPPORT_EMAIL_URL} className="button-primary mt-7">
+                <Link href={SUPPORT_EMAIL_URL} className="button-primary mt-7">
                   メールで報告する
-                </a>
+                </Link>
               )}
             </article>
 
@@ -73,13 +73,13 @@ export default function ContactPage() {
                   : '権利に関する連絡や、データの取扱いに関する相談はメールで受け付けています。'}
               </p>
               {GITHUB_SUPPORT_LINKS_ENABLED ? (
-                <a href={OPERATOR_PROFILE_URL} target="_blank" rel="noreferrer" className="button-secondary mt-7">
+                <Link href={OPERATOR_PROFILE_URL} target="_blank" rel="noreferrer" className="button-secondary mt-7">
                   運営者プロフィールを見る ↗
-                </a>
+                </Link>
               ) : (
-                <a href={SUPPORT_EMAIL_URL} className="button-secondary mt-7">
+                <Link href={SUPPORT_EMAIL_URL} className="button-secondary mt-7">
                   {SUPPORT_EMAIL}
-                </a>
+                </Link>
               )}
             </article>
           </div>

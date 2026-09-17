@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { SiteHeader } from '@/components/site/SiteHeader';
 
 interface LegalPageLayoutProps {

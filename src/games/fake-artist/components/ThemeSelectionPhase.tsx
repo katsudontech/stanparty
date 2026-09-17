@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useState, useEffect } from 'react';
 import type { FakeArtistGameState } from '../types';
 
@@ -19,7 +22,7 @@ export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit
 
   const [inputGenre, setInputGenre] = useState('');
   const [inputTheme, setInputTheme] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { pending: isSubmitting, acquire: acquireIsSubmitting, release: releaseIsSubmitting } = useActionLock();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isThemeDecided = Boolean(gameState.themeGenre && gameState.theme);
@@ -44,7 +47,7 @@ export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit
     e.preventDefault();
     if (!inputGenre.trim() || !inputTheme.trim() || isSubmitting) return;
     
-    setIsSubmitting(true);
+    if (!acquireIsSubmitting()) return;
     setSubmitError(null);
     try {
       if (updateGameState) {
@@ -55,7 +58,7 @@ export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'お題を保存できませんでした');
     } finally {
-      setIsSubmitting(false);
+      releaseIsSubmitting();
     }
   };
 
@@ -147,13 +150,13 @@ export function ThemeSelectionPhase({ gameState, myUserId, isHost, onThemeSubmit
             />
           </div>
           
-          <button
+          <PendingButton busy={isSubmitting} pendingLabel="決定中…"
             type="submit"
             disabled={!inputGenre.trim() || !inputTheme.trim() || isSubmitting}
             className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-indigo-500/25 active:scale-[0.98]"
           >
-            {isSubmitting ? '決定中...' : 'お題を決定する'}
-          </button>
+            お題を決定する
+          </PendingButton>
           {submitError && <p className="text-sm font-bold text-rose-300" role="alert">{submitError}</p>}
         </form>
       ) : (

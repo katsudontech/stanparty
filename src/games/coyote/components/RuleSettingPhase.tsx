@@ -1,5 +1,7 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useAsyncAction } from '@/hooks/useAsyncAction';
 import { useState } from "react";
 import type { Player } from "@/games/core/types";
 import { Avatar } from "@/components/shared/Avatar";
@@ -7,12 +9,13 @@ import { Avatar } from "@/components/shared/Avatar";
 interface RuleSettingPhaseProps {
     players: Player[];
     isHost: boolean;
-    onStartGame: (maxHp: number) => void;
+    onStartGame: (maxHp: number) => Promise<void>;
     initialMaxHp: number;
     onBackToLobby: () => Promise<void>;
 }
 
 export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp, onBackToLobby }: RuleSettingPhaseProps) {
+    const { pending: busy, error, run } = useAsyncAction();
     const [maxHp, setMaxHp] = useState(initialMaxHp);
 
     return (
@@ -57,25 +60,26 @@ export function RuleSettingPhase({ players, isHost, onStartGame, initialMaxHp, o
                             setMaxHp(Number.isFinite(v) && v > 0 ? v : 3);
                         }}
                         className="w-24 border-2 border-[var(--line)] bg-white px-3 py-2 text-center font-black outline-none focus:ring-2 focus:ring-[var(--yellow)] disabled:opacity-50"
-                        disabled={!isHost}
+                        disabled={!isHost || busy}
                     />
                 </div>
 
+                {error && <p role="alert" className="mb-3 text-red-600">{error}</p>}
                 {isHost ? (
                     <div className="space-y-3">
-                        <button
-                            onClick={() => onStartGame(maxHp)}
+                        <PendingButton busy={busy}
+                            onClick={() => void run(() => onStartGame(maxHp))}
                             className="button-primary w-full"
                         >
                             設定を完了して開始
-                        </button>
-                        <button
+                        </PendingButton>
+                        <PendingButton busy={busy}
                             type="button"
-                            onClick={() => void onBackToLobby()}
+                            onClick={() => void run(onBackToLobby)}
                             className="button-secondary w-full"
                         >
                             ロビーへ戻る
-                        </button>
+                        </PendingButton>
                     </div>
                 ) : (
                     <div className="border-2 border-dashed border-[#b9b5a8] bg-[var(--paper-deep)] p-4 text-center font-bold text-[var(--muted)]">

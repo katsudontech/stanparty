@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useState } from 'react';
 import type { Player } from '@/games/core/types';
 import { Avatar } from '@/components/shared/Avatar';
@@ -18,7 +21,7 @@ interface VotingPhaseProps {
 export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVoted }: VotingPhaseProps) {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { pending: isSubmitting, acquire: acquireIsSubmitting, release: releaseIsSubmitting } = useActionLock();
   const [voteError, setVoteError] = useState<string | null>(null);
 
   const {
@@ -41,7 +44,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
   const handleVoteSubmit = async () => {
     if (!selectedPlayerId || hasVoted || isSubmitting || !isSyncReady) return;
 
-    setIsSubmitting(true);
+    if (!acquireIsSubmitting()) return;
     setVoteError(null);
     try {
       await onVote(selectedPlayerId);
@@ -49,7 +52,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
     } catch (error) {
       setVoteError(error instanceof Error ? error.message : '投票できませんでした');
     } finally {
-      setIsSubmitting(false);
+      releaseIsSubmitting();
     }
   };
 
@@ -69,14 +72,14 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
           <div className="mt-4 rounded-lg border border-rose-500 bg-rose-950/60 px-4 py-3 text-sm font-bold text-rose-200" role="alert">
             <p>{voteError || progressionError || syncError}</p>
             {isHost && (progressionError || syncError) && (
-              <button
+              <PendingButton busy={isFinalizing} pendingLabel="集計中…"
                 type="button"
                 onClick={() => void retryFinalization()}
                 disabled={isFinalizing}
                 className="mt-3 min-h-11 max-w-full rounded-md bg-rose-600 px-4 py-2 text-white disabled:opacity-50"
               >
                 投票結果の集計を再試行
-              </button>
+              </PendingButton>
             )}
           </div>
         )}
@@ -121,7 +124,7 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
         </div>
 
         <div className="mt-8 flex justify-center">
-          <button
+          <PendingButton busy={isSubmitting} pendingLabel="投票中…"
             disabled={!isSyncReady || !selectedPlayerId || hasVoted || isSubmitting}
             onClick={() => void handleVoteSubmit()}
             className={`px-10 py-4 rounded-full font-bold text-lg transition-all ${hasVoted
@@ -131,8 +134,8 @@ export function VotingPhase({ roomId, players, myUserId, onVote, isHost, onAllVo
                   : 'bg-indigo-500 text-white hover:bg-indigo-400 hover:-translate-y-1 shadow-xl shadow-indigo-500/30'
               }`}
           >
-            {hasVoted ? '投票完了！' : isSubmitting ? '投票中...' : !isSyncReady ? '投票状況を同期中...' : 'この人に投票する'}
-          </button>
+            {hasVoted ? '投票完了！' : !isSyncReady ? '投票状況を同期中...' : 'この人に投票する'}
+          </PendingButton>
         </div>
       </div>
     </div>

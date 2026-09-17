@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useMemo, useState } from 'react';
 
 import type { Player } from '@/games/core/types';
@@ -21,7 +24,7 @@ export function ShowdownPhase({
   isHost,
   onRevealNext,
 }: ShowdownPhaseProps) {
-  const [submitting, setSubmitting] = useState(false);
+  const { pending: submitting, acquire: acquireSubmitting, release: releaseSubmitting } = useActionLock();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const playersById = useMemo(
     () => new Map(players.map((player) => [player.userId, player])),
@@ -35,14 +38,14 @@ export function ShowdownPhase({
   );
 
   const handleRevealNext = async () => {
-    setSubmitting(true);
+    if (!acquireSubmitting()) return;
     setErrorMessage(null);
     try {
       await onRevealNext();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'カードを公開できませんでした');
     } finally {
-      setSubmitting(false);
+      releaseSubmitting();
     }
   };
 
@@ -95,14 +98,14 @@ export function ShowdownPhase({
       </p>
 
       {isHost ? (
-        <button
+        <PendingButton busy={submitting} pendingLabel="公開中…"
           type="button"
           onClick={handleRevealNext}
           disabled={submitting || gameState.revealedCardCount >= orderedCards.length}
           className="w-full rounded-2xl bg-amber-400 px-5 py-4 text-lg font-black text-slate-950 hover:bg-amber-300 disabled:opacity-40"
         >
-          {submitting ? '公開中...' : gameState.revealedCardCount + 1 === orderedCards.length ? '最後のカードをめくる' : '次のカードをめくる'}
-        </button>
+          {gameState.revealedCardCount + 1 === orderedCards.length ? '最後のカードをめくる' : '次のカードをめくる'}
+        </PendingButton>
       ) : (
         <p className="rounded-2xl bg-slate-900 p-4 font-bold text-slate-400">
           ホストがカードをめくっています...

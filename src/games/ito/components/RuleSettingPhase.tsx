@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useState } from 'react';
 
 import { getMaxCardsPerPlayer, isValidItoPlayerCount } from '../rules';
@@ -21,7 +24,7 @@ export function RuleSettingPhase({
 }: RuleSettingPhaseProps) {
   const maxCardsPerPlayer = getMaxCardsPerPlayer(playerCount);
   const [cardsPerPlayer, setCardsPerPlayer] = useState(initialCardsPerPlayer);
-  const [submitting, setSubmitting] = useState(false);
+  const { pending: submitting, acquire: acquireSubmitting, release: releaseSubmitting } = useActionLock();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const canStart = isValidItoPlayerCount(playerCount);
   const normalizedCardsPerPlayer = Math.min(
@@ -30,26 +33,26 @@ export function RuleSettingPhase({
   );
 
   const handleSubmit = async () => {
-    setSubmitting(true);
+    if (!acquireSubmitting()) return;
     setErrorMessage(null);
     try {
       await onStart(normalizedCardsPerPlayer);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'ゲームを準備できませんでした');
     } finally {
-      setSubmitting(false);
+      releaseSubmitting();
     }
   };
 
   const handleBackToLobby = async () => {
-    setSubmitting(true);
+    if (!acquireSubmitting()) return;
     setErrorMessage(null);
     try {
       await onBackToLobby();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'ロビーに戻れませんでした');
     } finally {
-      setSubmitting(false);
+      releaseSubmitting();
     }
   };
 
@@ -97,22 +100,22 @@ export function RuleSettingPhase({
               <p className="rounded-xl bg-rose-500/10 p-3 text-sm font-bold text-rose-300">{errorMessage}</p>
             )}
 
-            <button
+            <PendingButton busy={submitting}
               type="button"
               onClick={handleSubmit}
               disabled={!canStart || submitting}
               className="w-full rounded-2xl bg-cyan-500 px-5 py-4 text-lg font-black text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {submitting ? '準備中...' : 'お題選択へ'}
-            </button>
-            <button
+              お題選択へ
+            </PendingButton>
+            <PendingButton busy={submitting}
               type="button"
               onClick={handleBackToLobby}
               disabled={submitting}
               className="w-full rounded-2xl border border-white/10 bg-slate-800 px-5 py-3 font-bold text-slate-200 hover:bg-slate-700 disabled:opacity-40"
             >
               ロビーへ戻る
-            </button>
+            </PendingButton>
           </div>
         ) : (
           <p className="rounded-2xl bg-slate-950/70 p-4 font-bold text-slate-400">

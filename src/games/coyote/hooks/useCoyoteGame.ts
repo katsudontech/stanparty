@@ -23,7 +23,7 @@ export function useCoyoteGame(roomState: RoomState) {
             .eq('id', roomId);
 
         if (error) {
-            console.error('ゲーム状態の更新に失敗しました:', error);
+            throw new Error('ゲーム状態を更新できませんでした。もう一度お試しください。');
         }
     };
 

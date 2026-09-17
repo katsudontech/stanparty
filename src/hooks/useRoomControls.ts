@@ -1,7 +1,9 @@
+import { useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getGamePlayerCountError } from '@/games/catalog';
 
 export function useRoomControls(roomId: string) {
+    const lobbyRequest = useRef<Promise<void> | null>(null);
     const handleChangeGame = async (gameId: string) => {
         const supabase = createClient();
         const { error } = await supabase
@@ -10,7 +12,7 @@ export function useRoomControls(roomId: string) {
             .eq('id', roomId);
             
         if (error) {
-            console.error('ゲームの変更に失敗しました:', error);
+            throw new Error('ゲームを変更できませんでした。もう一度お試しください。');
         }
     };
 
@@ -50,7 +52,7 @@ export function useRoomControls(roomId: string) {
         }
     };
 
-    const handleBackToLobby = async () => {
+    const returnToLobby = async () => {
         const supabase = createClient();
         const { error } = await supabase
             .from('rooms')
@@ -61,6 +63,14 @@ export function useRoomControls(roomId: string) {
             console.error('ロビーへの復帰に失敗しました:', error);
             alert('ロビーに戻れませんでした');
         }
+    };
+
+    // The header and game footer can both return to the lobby. Share their
+    // request so activating both controls cannot reset the room twice.
+    const handleBackToLobby = () => {
+        if (lobbyRequest.current) return lobbyRequest.current;
+        lobbyRequest.current = returnToLobby().finally(() => { lobbyRequest.current = null; });
+        return lobbyRequest.current;
     };
 
     return { handleChangeGame, handleStartGame, handleBackToLobby };

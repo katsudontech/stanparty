@@ -1,7 +1,8 @@
 'use client';
 
+import { useActionLock } from '@/hooks/useActionLock';
 import { useState } from 'react';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { createClient } from '@/lib/supabase/client';
 import { saveGuestDisplayProfile, useGuestAuth } from '@/hooks/useGuestAuth';
 import { ProfileInput } from '@/components/shared/ProfileInput';
@@ -18,50 +19,55 @@ export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
     const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null);
     const resolvedJoinName = joinName ?? profile?.name ?? '';
     const resolvedAvatarUrl = selectedAvatarUrl ?? profile?.avatar ?? '';
-    const [isJoining, setIsJoining] = useState(false);
+    const { pending: isJoining, acquire, release } = useActionLock();
 
     const handleJoin = async () => {
         if (!profile || !resolvedJoinName.trim() || isJoining) return;
-        setIsJoining(true);
+        if (!acquire()) return;
+        try {
 
-        const supabase = createClient();
-        const updatedProfile = {
-            ...profile,
-            name: resolvedJoinName.trim(),
-            avatar: resolvedAvatarUrl
-        };
+            const supabase = createClient();
+            const updatedProfile = {
+                ...profile,
+                name: resolvedJoinName.trim(),
+                avatar: resolvedAvatarUrl
+            };
 
-        saveGuestDisplayProfile({
-            name: updatedProfile.name,
-            avatar: updatedProfile.avatar
-        });
+            saveGuestDisplayProfile({
+                name: updatedProfile.name,
+                avatar: updatedProfile.avatar
+            });
 
-        const { error: profileError } = await supabase
-            .from('users')
-            .upsert([updatedProfile]);
+            const { error: profileError } = await supabase
+                .from('users')
+                .upsert([updatedProfile]);
 
-        if (profileError) {
-            console.warn('DBのユーザー登録に失敗しました:', profileError);
-            alert('プロフィールの登録に失敗しました');
-            setIsJoining(false);
-            return;
+            if (profileError) {
+                console.warn('DBのユーザー登録に失敗しました:', profileError);
+                alert('プロフィールの登録に失敗しました');
+
+                return;
+            }
+
+            const { error: joinError } = await supabase.rpc('join_room', {
+                p_room_id: roomId,
+                p_name: updatedProfile.name,
+                p_avatar_url: updatedProfile.avatar
+            });
+
+            if (joinError) {
+                console.error('参加に失敗しました:', joinError);
+                alert(`参加に失敗しました: ${joinError.message}`);
+
+                return;
+            }
+
+            await onJoined();
+        } catch (error) {
+            alert(error instanceof Error ? error.message : '参加に失敗しました。もう一度お試しください。');
+        } finally {
+            release();
         }
-
-        const { error: joinError } = await supabase.rpc('join_room', {
-            p_room_id: roomId,
-            p_name: updatedProfile.name,
-            p_avatar_url: updatedProfile.avatar
-        });
-
-        if (joinError) {
-            console.error('参加に失敗しました:', joinError);
-            alert(`参加に失敗しました: ${joinError.message}`);
-            setIsJoining(false);
-            return;
-        }
-
-        await onJoined();
-        setIsJoining(false);
     };
 
     return (
@@ -87,7 +93,8 @@ export function JoinRoomScreen({ roomId, onJoined }: JoinRoomScreenProps) {
 
                 <button 
                     className="button-primary w-full text-lg"
-                    onClick={handleJoin}
+                    onClick={(event) => { if (event.detail < 2) void handleJoin(); }}
+                    aria-busy={isJoining}
                     disabled={!profile || !resolvedJoinName.trim() || isJoining}
                 >
                     <span className="flex items-center gap-2">

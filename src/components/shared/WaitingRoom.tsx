@@ -1,5 +1,7 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useAsyncAction } from '@/hooks/useAsyncAction';
 import { useState, type ReactNode } from 'react';
 import { Avatar } from '@/components/shared/Avatar';
 import { GameSelectionMenu } from '@/components/shared/GameSelectionMenu';
@@ -16,12 +18,15 @@ interface WaitingRoomProps {
   players: Player[];
   onlineUserIds: string[];
   isHost: boolean;
-  onStartGame: () => void;
-  onChangeGame: (gameId: string) => void;
+  onStartGame: () => Promise<void>;
+  onChangeGame: (gameId: string) => Promise<void>;
   headerActions?: ReactNode;
 }
 
 export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStartGame, onChangeGame, headerActions }: WaitingRoomProps) {
+  const { pending: busy, error, run } = useAsyncAction();
+  const { pending: copying, error: copyError, run: copy } = useAsyncAction();
+  const [lineOpened, setLineOpened] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
@@ -34,10 +39,13 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy URL', err);
+      throw new Error('URLをコピーできませんでした。もう一度お試しください。');
     }
   };
 
-  const handleLineInvite = () => {
+  const handleLineInvite = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (event.detail > 1) return;
+    setLineOpened(true);
     window.open(
       buildLineInviteUrl(window.location.href),
       '_blank',
@@ -50,7 +58,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
 
   const handleStartGame = () => {
     if (playerCountError) return;
-    onStartGame();
+    return run(onStartGame);
   };
 
   return (
@@ -59,6 +67,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
       <main className="site-container mobile-page__main waiting-room__main py-10 sm:py-14">
         <div className="waiting-room__top mb-9 flex min-w-0 flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div className="min-w-0"><p className="section-kicker">Waiting room</p><h1 className="mt-2 text-[clamp(2.25rem,10vw,3rem)] font-black tracking-[-.055em] sm:text-5xl">みんなを待っています。</h1></div>
+          {copyError && <p role="alert" className="text-red-600">{copyError}</p>}
           <div className="waiting-room__invite-actions flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
             <button
               type="button"
@@ -69,7 +78,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 11.5a8.38 8.38 0 01-9 8.5 9.5 9.5 0 01-4.5-1.1L3 20l1.35-3.6A8.1 8.1 0 013 11.5C3 6.8 7 3 12 3s9 3.8 9 8.5z" />
               </svg>
-              LINEで招待
+              {lineOpened ? 'LINEを開きました' : 'LINEで招待'}
             </button>
             <button
               type="button"
@@ -83,9 +92,9 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
               </svg>
               QRコードを表示
             </button>
-            <button
+            <PendingButton busy={copying} pendingLabel="コピー中…"
               type="button"
-              onClick={handleCopyUrl}
+              onClick={() => void copy(handleCopyUrl)}
               className="button-secondary shrink-0"
             >
               {copied ? (
@@ -99,7 +108,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
                   招待URLをコピー
                 </>
               )}
-            </button>
+            </PendingButton>
           </div>
         </div>
 
@@ -152,7 +161,9 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
             <GameSelectionMenu
               games={GAME_CATALOG}
               value={roomState.game_type}
-              onChange={onChangeGame}
+              onChange={(gameId) => run(() => onChangeGame(gameId))}
+              busy={busy}
+              error={error}
               browseOnly={!isHost}
             />
             {selectedGame && (
@@ -178,14 +189,15 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
             )}
           </div>
 
+          {error && <p role="alert" className="mt-3 font-bold text-red-600">{error}</p>}
           {isHost ? (
-            <button
+            <PendingButton busy={busy}
               className="button-primary mt-6 w-full text-lg"
               onClick={handleStartGame}
-              disabled={Boolean(playerCountError)}
+              disabled={busy || Boolean(playerCountError)}
             >
               {playerCountError ? '参加者を待っています' : 'このゲームを開始 →'}
-            </button>
+            </PendingButton>
           ) : (
             <div className="mt-6 w-full border-2 border-dashed border-[#b9b5a8] bg-[var(--paper-deep)] px-4 py-4 text-center font-bold text-[var(--muted)]">
               ホストの開始を待機中...

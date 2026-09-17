@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { GAME_CATALOG } from '@/games/catalog';
 
@@ -39,14 +39,14 @@ export default function CreditsPage() {
                     正式な商品情報、クレジット、遊び方は出版社の公式ページをご確認ください。
                   </p>
                 </div>
-                <a
+                {game.officialProductUrl && <Link
                   href={game.officialProductUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="button-secondary"
                 >
                   公式商品ページ ↗
-                </a>
+                </Link>}
               </article>
             ))}
           </div>

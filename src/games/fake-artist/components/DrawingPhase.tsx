@@ -1,5 +1,8 @@
 'use client';
 
+import { PendingButton } from '@/components/shared/PendingButton';
+import { useActionLock } from '@/hooks/useActionLock';
+
 import { useState } from 'react';
 import type { Player } from '@/games/core/types';
 import { Avatar } from '@/components/shared/Avatar';
@@ -26,20 +29,20 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onUndoStrok
   const canUndo = gameState.currentLap > 1 || gameState.turnOrder.indexOf(currentTurnPlayerId || '') > 0;
 
   const [isInfoVisible, setIsInfoVisible] = useState(false);
-  const [isUndoing, setIsUndoing] = useState(false);
+  const { pending: isUndoing, acquire: acquireIsUndoing, release: releaseIsUndoing } = useActionLock();
   const [undoError, setUndoError] = useState<string | null>(null);
 
   const handleUndo = async () => {
     if (!onUndoStroke || isUndoing) return;
 
-    setIsUndoing(true);
+    if (!acquireIsUndoing()) return;
     setUndoError(null);
     try {
       await onUndoStroke();
     } catch (error) {
       setUndoError(error instanceof Error ? error.message : '線をやり直せませんでした');
     } finally {
-      setIsUndoing(false);
+      releaseIsUndoing();
     }
   };
 
@@ -83,10 +86,10 @@ export function DrawingPhase({ roomId, players, gameState, myUserId, onUndoStrok
       />
       {isMyTurn && canUndo && onUndoStroke && (
         <div className="text-center">
-          <button type="button" onClick={() => void handleUndo()} disabled={isUndoing}
+          <PendingButton busy={isUndoing} pendingLabel="やり直し中…" type="button" onClick={() => void handleUndo()} disabled={isUndoing}
             className="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 text-xs font-bold text-rose-400 disabled:opacity-50">
-            ↩ {isUndoing ? 'やり直し中...' : '前の人の線をやり直す'}
-          </button>
+            ↩ 前の人の線をやり直す
+          </PendingButton>
           {undoError && <p className="mt-1 text-xs font-bold text-rose-300" role="alert">{undoError}</p>}
         </div>
       )}

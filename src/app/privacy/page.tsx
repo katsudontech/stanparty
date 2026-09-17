@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/shared/PendingLink';
 import { LegalPageLayout } from '@/components/site/LegalPageLayout';
 
 export const metadata: Metadata = {
