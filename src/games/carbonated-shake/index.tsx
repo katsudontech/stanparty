@@ -51,8 +51,16 @@ function Scoreboard({ state, room }: { state: ReturnType<typeof useCarbonatedSha
   </div>;
 }
 
+const DANGER_LABELS: Record<CarbonatedShakePrivateHint['level'], string> = {
+  1: 'かなり余裕',
+  2: '少しシュワシュワ',
+  3: 'そこそこ危険',
+  4: 'かなり危険',
+  5: '限界寸前',
+};
+
 function HintReveal({ hint }: { hint: CarbonatedShakePrivateHint }) {
-  return <section className="carbonated-hint-reveal" aria-live="polite"><p>あなたが感じた危険度</p><FizzBottle level={hint.level} /><strong>この情報は一度だけ表示されます</strong></section>;
+  return <section className="carbonated-hint-reveal" aria-live="polite"><p>危険度：{DANGER_LABELS[hint.level]}</p><FizzBottle level={hint.level} /><strong>この情報は一度だけ表示されます</strong></section>;
 }
 
 export function CarbonatedShakeGame({ roomState, myUserId, onBackToLobby }: Props) {
