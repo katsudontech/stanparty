@@ -70,6 +70,25 @@ export function GameArtwork({ gameId, className = '' }: GameArtworkProps) {
     );
   }
 
+  if (gameId === 'carbonated-shake') {
+    return (
+      <svg className={className} viewBox="0 0 240 180" role="img" aria-label="泡がはじける炭酸ジュースの缶のイラスト">
+        <path d="M120 36c-12-18-12-27-12-34m20 35c12-16 17-24 28-30m-47 31C96 25 88 19 77 16" fill="none" stroke="#70c4d8" strokeWidth="7" strokeLinecap="round" />
+        <circle cx="69" cy="56" r="8" fill="#fffaf0" stroke="#70c4d8" strokeWidth="4" />
+        <circle cx="180" cy="60" r="12" fill="#fffaf0" stroke="#70c4d8" strokeWidth="4" />
+        <circle cx="190" cy="105" r="6" fill="#fffaf0" stroke="#70c4d8" strokeWidth="4" />
+        <rect x="72" y="35" width="96" height="132" rx="23" fill="#f3c85b" stroke="currentColor" strokeWidth="5" />
+        <path d="M80 58h80M80 145h80" fill="none" stroke="currentColor" strokeWidth="4" opacity=".35" />
+        <ellipse cx="120" cy="38" rx="38" ry="9" fill="#e6eeee" stroke="currentColor" strokeWidth="4" />
+        <path d="M109 37c8-7 19-7 25 0" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        <circle cx="103" cy="91" r="9" fill="#fffaf0" />
+        <circle cx="137" cy="113" r="6" fill="#fffaf0" />
+        <circle cx="112" cy="132" r="4" fill="#fffaf0" />
+        <text x="121" y="101" textAnchor="middle" fontSize="17" fontWeight="900" fill="#e85d3f">FIZZ!</text>
+      </svg>
+    );
+  }
+
   return (
     <svg className={className} viewBox="0 0 240 180" role="img" aria-label="糸でつながった数字のイラスト">
       <path d="M25 115c20-70 56-70 73-18s42 50 56 6 36-56 61-12" fill="none" stroke="#3978a8" strokeWidth="7" strokeLinecap="round" />

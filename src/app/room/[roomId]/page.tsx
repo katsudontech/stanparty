@@ -15,6 +15,7 @@ import { ItoGame } from '@/games/ito';
 import { AiBarenaiGame } from '@/games/ai-barenai';
 import { AiBarenaiDrawingGame } from '@/games/ai-barenai-drawing';
 import { PinchHintGame } from '@/games/pinch-hint';
+import { CarbonatedShakeGame } from '@/games/carbonated-shake';
 import { RoomReactionHeaderActions, RoomReactionsProvider } from '../../../components/shared/RoomReactions';
 
 function EndGameButton({ onEnd }: { onEnd: () => Promise<void> }) {
@@ -199,6 +200,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         if (roomState.game_type === 'pinch-hint') {
             return withReactions(
                 <PinchHintGame headerActions={headerActions} roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} onRefreshRoom={refreshRoom} />
+            );
+        }
+
+        if (roomState.game_type === 'carbonated-shake') {
+            return withReactions(
+                <GameWrapper headerActions={headerActions} players={players} myUserId={myUserId} showPlayerBar={false} gameClassName="carbonated-shake-wrapper">
+                    <CarbonatedShakeGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
+                </GameWrapper>
             );
         }
     }

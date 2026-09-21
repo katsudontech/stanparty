@@ -1,4 +1,4 @@
-export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint';
+export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake';
 
 export interface GameSeoCopy {
   title: string;
@@ -222,6 +222,33 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
       { title: 'アリかナシか投票', body: '回答者以外が投票し、アリが多ければ1ポイントです。' },
     ],
     tips: ['順番に意味が生まれるように話す', '意外なアイテムほど説明で輝かせる', '同数は失敗なので最後まで説得する'],
+  },
+  {
+    id: 'carbonated-shake', name: '炭酸シェイク！', shortName: '炭酸シェイク！',
+    seo: {
+      title: '炭酸シェイク！ Web版｜スマホを振って遊ぶパーティーゲーム',
+      description: '「炭酸シェイク！」をスマホのブラウザで遊べます。2〜14人対応、登録やアプリは不要。振るほど得点が伸びる炭酸を、吹き出さないように順番に振ろう。',
+      heading: '炭酸シェイク！（Web版）',
+      intro: 'スマホのブラウザだけで遊べる、振って盛り上がるチキンレースゲームです。',
+      ctaLabel: '炭酸シェイク！',
+    },
+    catchphrase: '欲張って振るか、ここで止めるか。炭酸の限界を読み切れ。',
+    summary: 'みんなで1本の炭酸を順番に振り、得点と吹き出しの恐怖を競うチキンレース。',
+    description: [
+      '自分のターンではHOLD TO SHAKEを押しながらスマホを振ります。振るほど得点は伸びますが、共通の炭酸値も増えていきます。',
+      'ターンを終えた本人だけが、炭酸の危険度を一瞬だけ確認できます。どこまで振ったかを話すか、ブラフするかは自由です。',
+    ],
+    players: '2〜14人', minPlayers: 2, maxPlayers: 14, duration: '約10分', difficulty: 'かんたん', mood: '度胸・ブラフ',
+    accent: '#e95735', softColor: '#ffe0a6',
+    funPoints: ['振れば振るほど得点効率が上がる', '次の人へ秘密の危険度を残す', '吹き出した瞬間に全員で盛り上がる'],
+    goodFor: ['スマホを使ったゲームで遊びたい', '度胸試しとブラフが好き', '2人からみんなで盛り上がりたい'],
+    steps: [
+      { title: '順番を確認', body: 'ゲーム開始時に決まったターン順で、同じジュースを回します。' },
+      { title: '押しながら振る', body: 'HOLD TO SHAKEを押し続けてスマホを振ります。指を離すと得点が確定します。' },
+      { title: '危険度を受け取る', body: '無事に止められたら、本人だけが炭酸の危険度を一瞬確認します。' },
+      { title: '限界を超えたら終了', body: '炭酸が限界を超えた瞬間に吹き出し、そのプレイヤーは-999点になります。' },
+    ],
+    tips: ['少しだけ振って安全に止めるか、最大得点を狙うか決める', '前の人の話はヒントにもブラフにもなる', 'モーションセンサーが使えないときは代替操作を使う'],
   },
 ] as const;
 

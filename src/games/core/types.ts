@@ -11,7 +11,7 @@ export interface Player {
 export interface RoomState {
   id: string;
   host_id: string;
-  game_type: 'fake-artist' | 'werewolf' | 'coyote' | 'word-wolf' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'blocks' | 'one-night-werewolf';
+  game_type: 'fake-artist' | 'werewolf' | 'coyote' | 'word-wolf' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake' | 'blocks' | 'one-night-werewolf';
   status: 'waiting' | 'playing' | 'finished';
   players: Player[];
   game_state: unknown;
