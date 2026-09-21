@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RoomState } from '@/games/core/types';
 import { scoreForShakeAmount } from '../rules';
-import { HINT_DURATION_MS, SERVER_UPDATE_INTERVAL_MS } from '../constants';
+import { HINT_DURATION_MS, PENDING_HINT_TIMEOUT_MS, SERVER_UPDATE_INTERVAL_MS } from '../constants';
 import { normalizeCarbonatedShakeState, type CarbonatedShakePrivateHint } from '../types';
 
 function readableError(value: unknown, fallback: string): Error {
@@ -179,7 +179,8 @@ export function useCarbonatedShakeGame(room: RoomState, myUserId: string) {
 
   useEffect(() => {
     if (state.phase !== 'hint_display' || !state.displayUntil) return;
-    const delay = Math.max(0, new Date(state.displayUntil).getTime() - Date.now()) + 2300;
+    const recoveryDelay = Math.max(0, PENDING_HINT_TIMEOUT_MS - HINT_DURATION_MS);
+    const delay = Math.max(0, new Date(state.displayUntil).getTime() - Date.now()) + recoveryDelay;
     let attempts = 0;
     let timer: number | undefined;
     let cancelled = false;

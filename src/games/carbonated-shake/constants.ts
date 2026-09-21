@@ -15,10 +15,10 @@ export const SCORE_LEVELS = [
 
 export const MAX_ACCEPTED_SHAKE_AMOUNT = SCORE_LEVELS.find((level) => level.score >= MAX_TURN_SCORE)?.minimumAmount ?? 0;
 
-export const CARBONATION_LIMIT_MIN = 90;
-export const CARBONATION_LIMIT_MAX = 110;
-export const HINT_DURATION_MS = 700;
-export const PENDING_HINT_TIMEOUT_MS = 3000;
+export const CAPACITY_PER_PLAYER_MIN = 110;
+export const CAPACITY_PER_PLAYER_MAX = 130;
+export const HINT_DURATION_MS = 4000;
+export const PENDING_HINT_TIMEOUT_MS = 6000;
 export const SERVER_UPDATE_INTERVAL_MS = 120;
 
 export const DANGER_THRESHOLDS = [0.2, 0.4, 0.6, 0.8] as const;

@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {
-  CARBONATION_LIMIT_MAX,
-  CARBONATION_LIMIT_MIN,
+  CAPACITY_PER_PLAYER_MAX,
+  CAPACITY_PER_PLAYER_MIN,
   CARBONATION_RATE,
   DANGER_NOISE_PROBABILITIES,
   DANGER_THRESHOLDS,
@@ -57,10 +57,11 @@ async function rpc(name, args) {
 async function reject(action, label) {
   await assert.rejects(action, undefined, label);
 }
-async function createRoom() {
+async function createRoom(playerCount = 2) {
   await db.exec('reset role');
-  const roster = players.map((userId, index) => ({ userId, name: `Player${index + 1}`, isHost: index === 0, color: '#ef4444', isOnline: true, avatarUrl: '' }));
-  return (await db.query(`insert into public.rooms(host_id,game_type,status,players) values($1,'carbonated-shake','playing',$2) returning id`, [players[0], JSON.stringify(roster)])).rows[0].id;
+  const roomPlayers = Array.from({ length: playerCount }, (_, index) => `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`);
+  const roster = roomPlayers.map((userId, index) => ({ userId, name: `Player${index + 1}`, isHost: index === 0, color: '#ef4444', isOnline: true, avatarUrl: '' }));
+  return (await db.query(`insert into public.rooms(host_id,game_type,status,players) values($1,'carbonated-shake','playing',$2) returning id`, [roomPlayers[0], JSON.stringify(roster)])).rows[0].id;
 }
 
 afterAll(async () => { await db.close(); });
@@ -75,8 +76,8 @@ describe('carbonated-shake PostgreSQL authority', () => {
     assert.deepEqual(rows[0].tuning.levels, SCORE_LEVELS);
     assert.equal(rows[0].tuning.maxTurnScore, MAX_TURN_SCORE);
     assert.equal(rows[0].tuning.carbonationRate, CARBONATION_RATE);
-    assert.equal(rows[0].tuning.limitMin, CARBONATION_LIMIT_MIN);
-    assert.equal(rows[0].tuning.limitMax, CARBONATION_LIMIT_MAX);
+    assert.equal(rows[0].tuning.capacityPerPlayerMin, CAPACITY_PER_PLAYER_MIN);
+    assert.equal(rows[0].tuning.capacityPerPlayerMax, CAPACITY_PER_PLAYER_MAX);
     assert.equal(rows[0].tuning.pendingHintMs, PENDING_HINT_TIMEOUT_MS);
     assert.equal(rows[0].tuning.hintDisplayMs, HINT_DURATION_MS);
     assert.deepEqual(rows[0].tuning.dangerThresholds, DANGER_THRESHOLDS);
@@ -86,6 +87,22 @@ describe('carbonated-shake PostgreSQL authority', () => {
     ]);
     assert.equal(Number(rows[0].max_amount), MAX_ACCEPTED_SHAKE_AMOUNT);
     assert.equal(Number(rows[0].level_count), DANGER_THRESHOLDS.length + 1);
+  });
+
+  it('scales the hidden burst capacity with the roster size', async () => {
+    const room2 = await createRoom(2);
+    await actor(players[0]);
+    await rpc('carbonated_shake_initialize', { p_room_id: room2 });
+    await db.exec('reset role');
+    const limit2 = Number((await db.query('select burst_limit from private.carbonated_shake_state where room_id=$1', [room2])).rows[0].burst_limit);
+    assert.ok(limit2 >= CAPACITY_PER_PLAYER_MIN * 2 && limit2 <= CAPACITY_PER_PLAYER_MAX * 2);
+
+    const room4 = await createRoom(4);
+    await actor(players[0]);
+    await rpc('carbonated_shake_initialize', { p_room_id: room4 });
+    await db.exec('reset role');
+    const limit4 = Number((await db.query('select burst_limit from private.carbonated_shake_state where room_id=$1', [room4])).rows[0].burst_limit);
+    assert.ok(limit4 >= CAPACITY_PER_PLAYER_MIN * 4 && limit4 <= CAPACITY_PER_PLAYER_MAX * 4);
   });
 
   it('keeps secrets private, applies cumulative sequences once, and gates hint display', async () => {
@@ -109,7 +126,15 @@ describe('carbonated-shake PostgreSQL authority', () => {
     assert.ok(hint.level >= 1 && hint.level <= 5);
     assert.equal((await rpc('carbonated_shake_consume_hint', { p_room_id: roomId, p_match_id: state.matchId, p_turn_number: 1 })), null);
     await reject(() => rpc('carbonated_shake_advance_turn', { p_room_id: roomId, p_match_id: state.matchId, p_turn_number: 1 }), 'display gate');
-    await new Promise((resolve) => setTimeout(resolve, 760));
+    await db.exec('reset role');
+    const displayTiming = Number((await db.query("select extract(epoch from (display_until - now())) * 1000 as milliseconds from private.carbonated_shake_state where room_id=$1", [roomId])).rows[0].milliseconds);
+    assert.ok(displayTiming >= HINT_DURATION_MS - 100);
+    await db.query("update private.carbonated_shake_state set display_until=now()+interval '3 seconds' where room_id=$1", [roomId]);
+    await actor(current);
+    await reject(() => rpc('carbonated_shake_advance_turn', { p_room_id: roomId, p_match_id: state.matchId, p_turn_number: 1 }), 'full display gate');
+    await db.exec('reset role');
+    await db.query("update private.carbonated_shake_state set display_until=now()-interval '1 millisecond' where room_id=$1", [roomId]);
+    await actor(current);
     state = await rpc('carbonated_shake_advance_turn', { p_room_id: roomId, p_match_id: state.matchId, p_turn_number: 1 });
     assert.equal(state.turnNumber, 2);
     assert.equal(state.currentPlayerId, state.turnOrder[1]);

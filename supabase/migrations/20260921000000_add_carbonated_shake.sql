@@ -22,7 +22,7 @@ revoke all on private.carbonated_shake_state from public, anon, authenticated;
 
 create or replace function private.carbonated_shake_tuning()
 returns jsonb language sql immutable set search_path = '' as $fn$
-  select '{"maxTurnScore":15,"carbonationRate":16,"limitMin":90,"limitMax":110,"pendingHintMs":3000,"hintDisplayMs":700,"dangerThresholds":[0.2,0.4,0.6,0.8],"noiseBuckets":[0.7,0.95],"levels":[{"minimumAmount":1,"score":1},{"minimumAmount":2,"score":3},{"minimumAmount":3,"score":6},{"minimumAmount":4,"score":10},{"minimumAmount":5,"score":15}]}'::jsonb;
+  select '{"maxTurnScore":15,"carbonationRate":16,"capacityPerPlayerMin":110,"capacityPerPlayerMax":130,"pendingHintMs":6000,"hintDisplayMs":4000,"dangerThresholds":[0.2,0.4,0.6,0.8],"noiseBuckets":[0.7,0.95],"levels":[{"minimumAmount":1,"score":1},{"minimumAmount":2,"score":3},{"minimumAmount":3,"score":6},{"minimumAmount":4,"score":10},{"minimumAmount":5,"score":15}]}'::jsonb;
 $fn$;
 
 create or replace function private.carbonated_shake_max_amount()
@@ -113,7 +113,7 @@ begin
     'displayUntil', null, 'pendingHintDeadline', null, 'burstPlayerId', null
   );
   insert into private.carbonated_shake_state(room_id, match_id, burst_limit)
-    values (p_room_id, match, (private.carbonated_shake_tuning() ->> 'limitMin')::numeric + pg_catalog.random() * ((private.carbonated_shake_tuning() ->> 'limitMax')::numeric - (private.carbonated_shake_tuning() ->> 'limitMin')::numeric))
+    values (p_room_id, match, ((private.carbonated_shake_tuning() ->> 'capacityPerPlayerMin')::numeric + pg_catalog.random() * ((private.carbonated_shake_tuning() ->> 'capacityPerPlayerMax')::numeric - (private.carbonated_shake_tuning() ->> 'capacityPerPlayerMin')::numeric)) * pg_catalog.jsonb_array_length(room.players))
     on conflict (room_id) do update set match_id=excluded.match_id, burst_limit=excluded.burst_limit,
       carbonation=0, turn_amount=0, last_sequence=0, pending_hint_level=null,
       pending_hint_turn=null, pending_hint_player=null, pending_hint_expires_at=null, display_until=null;
