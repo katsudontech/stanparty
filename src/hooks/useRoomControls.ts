@@ -16,6 +16,19 @@ export function useRoomControls(roomId: string) {
         }
     };
 
+    const handleKickPlayer = async (userId: string) => {
+        const supabase = createClient();
+        const { error } = await supabase.rpc('kick_waiting_room_player', {
+            p_room_id: roomId,
+            p_user_id: userId
+        });
+
+        if (error) {
+            console.error('待機ルームから参加者を退出させられませんでした:', error);
+            throw new Error('参加者を退出させられませんでした。通信状況を確認して、もう一度お試しください。');
+        }
+    };
+
     const handleStartGame = async () => {
         const supabase = createClient();
         const { data: room, error: roomError } = await supabase
@@ -73,5 +86,5 @@ export function useRoomControls(roomId: string) {
         return lobbyRequest.current;
     };
 
-    return { handleChangeGame, handleStartGame, handleBackToLobby };
+    return { handleChangeGame, handleKickPlayer, handleStartGame, handleBackToLobby };
 }

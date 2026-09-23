@@ -28,6 +28,7 @@ vi.mock('@/games/ai-barenai', () => ({ AiBarenaiGame: () => null }));
 vi.mock('@/games/ai-barenai-drawing', () => ({ AiBarenaiDrawingGame: () => null }));
 vi.mock('@/games/pinch-hint', () => ({ PinchHintGame: ({ headerActions }: { headerActions?: import('react').ReactNode }) => headerActions }));
 import RoomPage from './page';
+import { scheduleWaitingRoomRefresh, WAITING_ROOM_REFRESH_INTERVAL_MS } from './waitingRoomRefresh';
 
 it('shows a retry action instead of an endless spinner when authentication fails', () => {
   const html = renderToStaticMarkup(createElement(RoomPage, { params: Promise.resolve({ roomId: 'room' }) }));
@@ -67,4 +68,27 @@ it('does not mount reaction controls before joining a room', () => {
   state.userId = 'outsider';
   const html = renderToStaticMarkup(createElement(RoomPage, { params: Promise.resolve({ roomId: 'room' }) }));
   expect(html).not.toContain('リアクションを送る');
+});
+
+it('polls waiting rooms and cleans up the fallback interval', () => {
+  const refreshRoom = vi.fn(async () => {});
+  const setInterval = vi.fn((callback: () => void, delay: number) => {
+    void callback;
+    void delay;
+    return 7 as unknown as ReturnType<typeof window.setInterval>;
+  });
+  const clearInterval = vi.fn();
+  vi.stubGlobal('window', { setInterval, clearInterval });
+
+  const cleanup = scheduleWaitingRoomRefresh('waiting', refreshRoom);
+  expect(setInterval).toHaveBeenCalledWith(expect.any(Function), WAITING_ROOM_REFRESH_INTERVAL_MS);
+  const intervalCallback = setInterval.mock.calls[0]?.[0];
+  expect(intervalCallback).toBeTypeOf('function');
+  intervalCallback?.();
+  expect(refreshRoom).toHaveBeenCalledOnce();
+  cleanup();
+  expect(clearInterval).toHaveBeenCalledWith(7);
+
+  scheduleWaitingRoomRefresh('playing', refreshRoom);
+  expect(setInterval).toHaveBeenCalledOnce();
 });

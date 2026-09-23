@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useRef, useState, type ReactNode } from 'react';
+import { use, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRoomSubscription } from '@/hooks/useRoomSubscription';
 import { useGuestAuth } from '@/hooks/useGuestAuth';
 import { useHostAutoKick } from '@/hooks/useHostAutoKick';
@@ -17,6 +17,7 @@ import { AiBarenaiDrawingGame } from '@/games/ai-barenai-drawing';
 import { PinchHintGame } from '@/games/pinch-hint';
 import { CarbonatedShakeGame } from '@/games/carbonated-shake';
 import { RoomReactionHeaderActions, RoomReactionsProvider } from '../../../components/shared/RoomReactions';
+import { scheduleWaitingRoomRefresh } from './waitingRoomRefresh';
 
 function EndGameButton({ onEnd }: { onEnd: () => Promise<void> }) {
     const [ending, setEnding] = useState(false);
@@ -66,7 +67,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         refreshRoom
     } = useRoomSubscription(roomId, myUserId);
 
-    const { handleChangeGame, handleStartGame, handleBackToLobby } = useRoomControls(roomId);
+    const { handleChangeGame, handleKickPlayer, handleStartGame, handleBackToLobby } = useRoomControls(roomId);
 
     const myPlayer = roomState?.players.find((player) => player.userId === myUserId);
     const isJoined = Boolean(
@@ -82,6 +83,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         onlineUserIds,
         isPresenceSynced,
         myUserId
+    );
+
+    useEffect(
+        () => scheduleWaitingRoomRefresh(roomState?.status, refreshRoom),
+        [refreshRoom, roomState?.status]
     );
 
     if (authError) {
@@ -125,6 +131,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
                 onlineUserIds={onlineUserIds}
                 isHost={isHost}
                 onStartGame={handleStartGame}
+                onKickPlayer={handleKickPlayer}
                 onChangeGame={handleChangeGame}
                 headerActions={<RoomHeaderActions isHost={false} />}
             />

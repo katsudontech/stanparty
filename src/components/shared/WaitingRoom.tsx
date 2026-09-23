@@ -13,18 +13,25 @@ import { GAME_CATALOG, getGameById, getGamePlayerCountError } from '@/games/cata
 
 import type { RoomState, Player } from '@/games/core/types';
 
+export function confirmWaitingRoomKick(playerName: string): boolean {
+  return window.confirm(`${playerName}さんを待機ルームから退出させますか？`);
+}
+
 interface WaitingRoomProps {
   roomState: RoomState;
   players: Player[];
   onlineUserIds: string[];
   isHost: boolean;
   onStartGame: () => Promise<void>;
+  onKickPlayer: (userId: string) => Promise<void>;
   onChangeGame: (gameId: string) => Promise<void>;
   headerActions?: ReactNode;
 }
 
-export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStartGame, onChangeGame, headerActions }: WaitingRoomProps) {
+export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStartGame, onKickPlayer, onChangeGame, headerActions }: WaitingRoomProps) {
   const { pending: busy, error, run } = useAsyncAction();
+  const { pending: kicking, error: kickError, run: kick } = useAsyncAction();
+  const [kickingUserId, setKickingUserId] = useState<string | null>(null);
   const { pending: copying, error: copyError, run: copy } = useAsyncAction();
   const [lineOpened, setLineOpened] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -59,6 +66,15 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
   const handleStartGame = () => {
     if (playerCountError) return;
     return run(onStartGame);
+  };
+
+  const handleKickPlayer = (player: Player) => {
+    if (kicking || player.userId === roomState.host_id || player.isHost) return;
+    const playerName = player.name || '名無し';
+    if (!confirmWaitingRoomKick(playerName)) return;
+
+    setKickingUserId(player.userId);
+    void kick(() => onKickPlayer(player.userId)).finally(() => setKickingUserId(null));
   };
 
   return (
@@ -118,6 +134,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
             <h2 className="text-xl font-black">参加者</h2>
             <span className="text-sm font-bold text-[var(--muted)]">{players.length}人</span>
           </div>
+          {kickError && <p role="alert" className="mb-3 text-sm font-bold text-red-600">{kickError}</p>}
 
           <ul className="waiting-room__players space-y-2">
             {players.map((player, index) => (
@@ -143,6 +160,23 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
                     {onlineUserIdSet.has(player.userId) ? 'オンライン' : 'オフライン'}
                   </span>
                 </div>
+                {isHost && player.userId !== roomState.host_id && !player.isHost && (
+                  <PendingButton
+                    busy={kicking && kickingUserId === player.userId}
+                    disabled={kicking}
+                    pendingLabel="キック中…"
+                    type="button"
+                    className="waiting-room__kick button-secondary"
+                    aria-label={`${player.name || '名無し'}さんをキック`}
+                    title={`${player.name || '名無し'}さんをキック`}
+                    onClick={() => handleKickPlayer(player)}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12m-9 0v10m6-10v10M9 7l1-3h4l1 3m-9 0 1 14h8l1-14" />
+                    </svg>
+                    <span>キック</span>
+                  </PendingButton>
+                )}
               </li>
             ))}
 
