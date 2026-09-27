@@ -492,6 +492,23 @@ button, input, select, textarea { font: inherit; }
 .paper-game [class*="rounded-3xl"] { border-radius: 14px !important; }
 .paper-game [class*="rounded-2xl"] { border-radius: 10px !important; }
 .paper-game [class*="rounded-xl"] { border-radius: 8px !important; }
+.paper-game .ito-placement-button {
+  border: 2px solid var(--line) !important;
+  background-color: var(--paper-deep) !important;
+  color: var(--ink) !important;
+  box-shadow: 2px 2px 0 var(--line);
+}
+.paper-game .ito-placement-button.is-ready {
+  background-color: var(--yellow) !important;
+  color: var(--ink) !important;
+}
+.paper-game .ito-placement-button.is-ready:hover { background-color: var(--orange) !important; color: white !important; }
+.paper-game .ito-placement-button.is-disabled {
+  background-color: var(--paper-deep) !important;
+  color: var(--muted) !important;
+  box-shadow: none;
+  cursor: not-allowed;
+}
 
 .fake-artist-canvas-frame { width: 100%; }
 

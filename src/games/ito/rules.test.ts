@@ -4,6 +4,8 @@ import {
   dealItoCards,
   drawRandomTheme,
   getIncorrectItoCardIds,
+  getItoInsertionIndexFromDescendingSlot,
+  getItoMoveTargetIndex,
   getMaxCardsPerPlayer,
   isItoOrderCorrect,
   isValidItoPlayerCount,
@@ -51,6 +53,29 @@ describe('ito rules', () => {
       'b:1',
       'c:1',
       'a:1',
+    ]);
+  });
+
+  it('降順表示の配置スロットを昇順の保存位置に対応させる', () => {
+    expect([0, 1, 2, 3].map((slot) => getItoInsertionIndexFromDescendingSlot(3, slot))).toEqual([3, 2, 1, 0]);
+
+    const index = getItoInsertionIndexFromDescendingSlot(3, 1);
+    expect(moveCardInOrder(['a:1', 'b:1', 'c:1'], 'd:1', index)).toEqual([
+      'a:1',
+      'b:1',
+      'd:1',
+      'c:1',
+    ]);
+  });
+
+  it('降順表示から既配置カードを移動して昇順の保存順を保つ', () => {
+    const currentOrder = ['a:1', 'b:1', 'c:1'];
+
+    expect(moveCardInOrder(currentOrder, 'a:1', getItoMoveTargetIndex(currentOrder, 'a:1', 0))).toEqual([
+      'b:1', 'c:1', 'a:1',
+    ]);
+    expect(moveCardInOrder(currentOrder, 'c:1', getItoMoveTargetIndex(currentOrder, 'c:1', 3))).toEqual([
+      'c:1', 'a:1', 'b:1',
     ]);
   });
 

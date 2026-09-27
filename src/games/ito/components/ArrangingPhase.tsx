@@ -8,7 +8,8 @@ import { useMemo, useState } from 'react';
 import type { Player } from '@/games/core/types';
 import { Avatar } from '@/components/shared/Avatar';
 
-import { moveCardInOrder } from '../rules';
+import { getItoMoveTargetIndex, moveCardInOrder } from '../rules';
+import { saveHintThenSelectCard } from '../arranging';
 import type { ItoCard, ItoGameState } from '../types';
 
 interface SecretCardProps {
@@ -18,6 +19,7 @@ interface SecretCardProps {
   disabled: boolean;
   onSelect: () => void;
   onSaveHint: (hint: string) => Promise<void>;
+  onHintSaved: () => void;
 }
 
 function SecretCard({
@@ -27,6 +29,7 @@ function SecretCard({
   disabled,
   onSelect,
   onSaveHint,
+  onHintSaved,
 }: SecretCardProps) {
   const [hint, setHint] = useState(card.hint);
   const { pending: saving, acquire: acquireSaving, release: releaseSaving } = useActionLock();
@@ -36,7 +39,7 @@ function SecretCard({
     if (!acquireSaving()) return;
     setMessage(null);
     try {
-      await onSaveHint(hint);
+      await saveHintThenSelectCard(hint, onSaveHint, onHintSaved);
       setMessage('保存しました');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '保存できませんでした');
@@ -162,13 +165,14 @@ export function ArrangingPhase({
     }
   };
 
-  const handleMoveToSlot = async (slotIndex: number) => {
+  const handleMoveToSlot = async (descendingSlotIndex: number) => {
     if (!selectedCardId) return;
 
-    const currentIndex = gameState.cardOrder.indexOf(selectedCardId);
-    const targetIndex = currentIndex >= 0 && currentIndex < slotIndex
-      ? slotIndex - 1
-      : slotIndex;
+    const targetIndex = getItoMoveTargetIndex(
+      gameState.cardOrder,
+      selectedCardId,
+      descendingSlotIndex,
+    );
     const nextOrder = moveCardInOrder(gameState.cardOrder, selectedCardId, targetIndex);
 
     if (nextOrder.every((cardId, index) => cardId === gameState.cardOrder[index])) {
@@ -205,6 +209,7 @@ export function ArrangingPhase({
               disabled={submitting}
               onSelect={() => setSelectedCardId((current) => current === card.id ? null : card.id)}
               onSaveHint={(hint) => handleSetHint(card.id, hint)}
+              onHintSaved={() => setSelectedCardId(card.id)}
             />
           ))}
         </div>
@@ -240,9 +245,9 @@ export function ArrangingPhase({
         )}
 
         <div className="mx-auto max-w-xl">
-          <div className="mb-2 text-center text-xl font-black text-cyan-300">1</div>
+          <div className="mb-2 text-center text-xl font-black text-cyan-300">100</div>
           {Array.from({ length: gameState.cardOrder.length + 1 }, (_, slotIndex) => {
-            const cardId = gameState.cardOrder[slotIndex];
+            const cardId = gameState.cardOrder[gameState.cardOrder.length - 1 - slotIndex];
             const card = cardId ? cardsById.get(cardId) : undefined;
             const owner = card ? playersById.get(card.ownerId) : undefined;
 
@@ -252,9 +257,9 @@ export function ArrangingPhase({
                   type="button"
                   onClick={() => handleMoveToSlot(slotIndex)}
                   disabled={!selectedCardId || submitting}
-                  className="my-2 w-full rounded-xl border border-dashed border-cyan-400/30 py-2 text-xs font-black text-cyan-300 transition hover:bg-cyan-400/10 disabled:border-slate-700 disabled:text-slate-700"
+                  className={`ito-placement-button my-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-black transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${selectedCardId && !submitting ? 'is-ready' : 'is-disabled'} disabled:cursor-not-allowed`}
                 >
-                  ＋ ここに置く
+                  <span aria-hidden="true" className="text-lg leading-none">＋</span> ここに置く
                 </PendingButton>
 
                 {card && (
@@ -287,7 +292,7 @@ export function ArrangingPhase({
               </div>
             );
           })}
-          <div className="mt-2 text-center text-xl font-black text-fuchsia-300">100</div>
+          <div className="mt-2 text-center text-xl font-black text-fuchsia-300">1</div>
         </div>
       </div>
 

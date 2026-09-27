@@ -75,6 +75,26 @@ export function moveCardInOrder(
   ];
 }
 
+export function getItoInsertionIndexFromDescendingSlot(
+  cardCount: number,
+  descendingSlotIndex: number,
+): number {
+  return Math.max(0, Math.min(cardCount - Math.trunc(descendingSlotIndex), cardCount));
+}
+
+export function getItoMoveTargetIndex(
+  cardOrder: string[],
+  cardId: string,
+  descendingSlotIndex: number,
+): number {
+  const insertionBoundary = getItoInsertionIndexFromDescendingSlot(cardOrder.length, descendingSlotIndex);
+  const currentIndex = cardOrder.indexOf(cardId);
+
+  return currentIndex >= 0 && currentIndex < insertionBoundary
+    ? insertionBoundary - 1
+    : insertionBoundary;
+}
+
 export function getOrderedItoCards(cards: ItoCard[], cardOrder: string[]): ItoCard[] {
   const cardsById = new Map(cards.map((card) => [card.id, card]));
   return cardOrder.flatMap((cardId) => {

@@ -58,10 +58,10 @@ export function ShowdownPhase({
       </div>
 
       <div className="mx-auto max-w-xl space-y-3 rounded-3xl border border-white/10 bg-slate-900/70 p-4 sm:p-6">
-        <div className="text-center text-xl font-black text-cyan-300">1</div>
-        {orderedCards.map((card, index) => {
+        <div className="text-center text-xl font-black text-cyan-300">100</div>
+        {orderedCards.map((card, orderIndex) => ({ card, orderIndex })).reverse().map(({ card, orderIndex }) => {
           const owner = playersById.get(card.ownerId);
-          const isRevealed = index < gameState.revealedCardCount;
+          const isRevealed = orderIndex < gameState.revealedCardCount;
           const isIncorrect = isRevealed && incorrectCardIds.has(card.id);
 
           return (
@@ -90,7 +90,7 @@ export function ShowdownPhase({
             </article>
           );
         })}
-        <div className="text-center text-xl font-black text-fuchsia-300">100</div>
+        <div className="text-center text-xl font-black text-fuchsia-300">1</div>
       </div>
 
       <p className="text-sm font-bold text-slate-400">
