@@ -16,6 +16,7 @@ import { AiBarenaiGame } from '@/games/ai-barenai';
 import { AiBarenaiDrawingGame } from '@/games/ai-barenai-drawing';
 import { PinchHintGame } from '@/games/pinch-hint';
 import { CarbonatedShakeGame } from '@/games/carbonated-shake';
+import { CriminalDancesGame } from '@/games/criminal-dances';
 import { RoomReactionHeaderActions, RoomReactionsProvider } from '../../../components/shared/RoomReactions';
 import { scheduleWaitingRoomRefresh } from './waitingRoomRefresh';
 
@@ -214,6 +215,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
             return withReactions(
                 <GameWrapper headerActions={headerActions} players={players} myUserId={myUserId} showPlayerBar={false} gameClassName="carbonated-shake-wrapper">
                     <CarbonatedShakeGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
+                </GameWrapper>
+            );
+        }
+
+        if (roomState.game_type === 'criminal-dances') {
+            return withReactions(
+                <GameWrapper headerActions={headerActions} players={players} myUserId={myUserId} showPlayerBar={false} gameClassName="criminal-dances-wrapper">
+                    <CriminalDancesGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
                 </GameWrapper>
             );
         }

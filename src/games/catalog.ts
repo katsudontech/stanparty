@@ -1,4 +1,4 @@
-export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake';
+export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake' | 'criminal-dances';
 
 export interface GameSeoCopy {
   title: string;
@@ -250,6 +250,26 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     ],
     tips: ['少しだけ振って安全に止めるか、最大得点を狙うか決める', '前の人の話はヒントにもブラフにもなる', 'モーションセンサーが使えないときは代替操作を使う'],
   },
+  {
+    id: 'criminal-dances', name: '犯人は踊る', shortName: '犯人は踊る',
+    seo: {
+      title: '犯人は踊る Web版｜3〜8人で遊べるカード推理ゲーム',
+      description: '「犯人は踊る」をスマホのブラウザで遊べます。犯人カードを追い、秘密の交換と推理で勝負する3〜8人向けゲームです。',
+      heading: '犯人は踊る（Web版）',
+      intro: 'スマホのブラウザだけで、みんなの手札を読み合う犯人探しを楽しめます。',
+      ctaLabel: '犯人は踊る',
+    },
+    catchphrase: '犯人カードは、踊るように人から人へ。',
+    summary: '秘密の手札交換と推理で、犯人カードの行方を追うカードゲーム。',
+    description: ['犯人カードを持つ人は固定されません。取り引きやうわさでカードが動くたび、犯人の正体も変わります。', '探偵の指名、いぬの調査、たくらみの勝敗を読み合い、犯人が逃げ切る前に捕まえましょう。'],
+    players: '3〜8人', minPlayers: 3, maxPlayers: 8, duration: '約15分', difficulty: 'ふつう', mood: '推理・駆け引き',
+    accent: '#8f3d57', softColor: '#f0d6df',
+    funPoints: ['犯人カードが交換で動く', '秘密情報を一時的に確認できる', '捕まえるか逃げ切るか最後まで読めない'],
+    goodFor: ['会話しながら推理したい', '短時間のカードゲームで遊びたい', '3〜8人で遊びたい'],
+    steps: [{ title: '事件開始', body: '第一発見者が事件を発表してゲームを始めます。' }, { title: 'カードを使う', body: '手番に1枚出し、効果を解決します。' }, { title: '犯人を追う', body: '探偵やいぬで犯人を捕まえるか、犯人は最後の1枚で逃げ切ります。' }, { title: '結果を確認', body: '犯人とたくらみを出した人を含む勝敗を表示します。' }],
+    tips: ['手札の枚数と公開情報を覚える', 'アリバイを持つ犯人は探偵だけでは捕まらない', 'カード交換の直後は犯人の移動を考える'],
+  },
+
 ] as const;
 
 export function getGameById(id: string): GameCatalogEntry | undefined {

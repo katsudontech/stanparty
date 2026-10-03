@@ -89,6 +89,19 @@ export function GameArtwork({ gameId, className = '' }: GameArtworkProps) {
     );
   }
 
+  if (gameId === 'criminal-dances') {
+    return (
+      <svg className={className} viewBox="0 0 240 180" role="img" aria-label="犯人カードを追う探偵とカードのイラスト">
+        <rect x="46" y="32" width="92" height="122" rx="8" fill="#fffaf0" stroke="currentColor" strokeWidth="5" transform="rotate(-9 92 93)" />
+        <circle cx="91" cy="80" r="19" fill="#f0d6df" stroke="#8f3d57" strokeWidth="4" />
+        <path d="M74 117c11-18 33-18 44 0" fill="none" stroke="#8f3d57" strokeWidth="6" strokeLinecap="round" />
+        <rect x="122" y="42" width="74" height="104" rx="8" fill="#f0d6df" stroke="currentColor" strokeWidth="5" transform="rotate(12 159 94)" />
+        <path d="M145 87c12-16 25-16 37 0M145 108c12 16 25 16 37 0" fill="none" stroke="#8f3d57" strokeWidth="5" strokeLinecap="round" />
+        <path d="M32 30l15 4m-7-17 4 15m-17 6 15-1" stroke="#e85d3f" strokeWidth="5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
   return (
     <svg className={className} viewBox="0 0 240 180" role="img" aria-label="糸でつながった数字のイラスト">
       <path d="M25 115c20-70 56-70 73-18s42 50 56 6 36-56 61-12" fill="none" stroke="#3978a8" strokeWidth="7" strokeLinecap="round" />
