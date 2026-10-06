@@ -19,7 +19,7 @@ vi.mock('@/hooks/useHostAutoKick', () => ({ useHostAutoKick: () => {} }));
 vi.mock('@/hooks/useRoomControls', () => ({ useRoomControls: () => ({ handleBackToLobby: async () => {} }) }));
 vi.mock('@/components/shared/JoinRoomScreen', () => ({ JoinRoomScreen: () => null }));
 vi.mock('@/components/shared/WaitingRoom', () => ({ WaitingRoom: ({ headerActions }: { headerActions?: import('react').ReactNode }) => headerActions }));
-vi.mock('@/games/core/GameWrapper', () => ({ GameWrapper: ({ headerActions }: { headerActions?: import('react').ReactNode }) => headerActions }));
+vi.mock('@/games/core/GameWrapper', () => ({ GameWrapper: ({ headerActions, children }: { headerActions?: import('react').ReactNode; children?: import('react').ReactNode }) => <>{headerActions}{children}</> }));
 vi.mock('@/games/fake-artist', () => ({ FakeArtistGame: () => null }));
 vi.mock('@/games/coyote', () => ({ CoyoteGame: () => null }));
 vi.mock('@/games/one-night-werewolf', () => ({ OneNightWerewolfGame: () => null }));
@@ -27,6 +27,7 @@ vi.mock('@/games/ito', () => ({ ItoGame: () => null }));
 vi.mock('@/games/ai-barenai', () => ({ AiBarenaiGame: () => null }));
 vi.mock('@/games/ai-barenai-drawing', () => ({ AiBarenaiDrawingGame: () => null }));
 vi.mock('@/games/pinch-hint', () => ({ PinchHintGame: ({ headerActions }: { headerActions?: import('react').ReactNode }) => headerActions }));
+vi.mock('@/games/criminal-dances', () => ({ CriminalDancesGame: () => <div>犯人は踊るの結果画面</div> }));
 import RoomPage from './page';
 import { scheduleWaitingRoomRefresh, WAITING_ROOM_REFRESH_INTERVAL_MS } from './waitingRoomRefresh';
 
@@ -54,6 +55,15 @@ it('does not show the end button in the waiting room', () => {
   const html = renderToStaticMarkup(createElement(RoomPage, { params: Promise.resolve({ roomId: 'room' }) }));
   expect(html).not.toContain('ゲームを終了して待機ルームへ戻る');
   expect(html).toContain('aria-label="リアクションを送る"');
+});
+
+it('mounts criminal-dances results after the room is marked finished', () => {
+  state.userId = 'host';
+  state.game = 'criminal-dances';
+  state.status = 'finished';
+  const html = renderToStaticMarkup(createElement(RoomPage, { params: Promise.resolve({ roomId: 'room' }) }));
+  expect(html).toContain('犯人は踊るの結果画面');
+  expect(html).not.toContain('ゲームは終了しました。');
 });
 
 it('keeps reaction and host controls available in the finished fallback', () => {

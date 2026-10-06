@@ -139,7 +139,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         );
     }
 
-    if (roomState.status === 'playing') {
+    if (roomState.status === 'playing' || (roomState.status === 'finished' && roomState.game_type === 'criminal-dances')) {
         const headerActions = <RoomHeaderActions isHost={isHost} onEnd={handleBackToLobby} />;
         if (roomState.game_type === 'fake-artist') {
             return withReactions(

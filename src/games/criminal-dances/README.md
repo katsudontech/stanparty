@@ -29,7 +29,7 @@ The play screen keeps the latest public action, incident text, full played-card 
 2. サーバーに `SUPABASE_SERVICE_ROLE_KEY`、ブラウザ・サーバーに既存の `NEXT_PUBLIC_SUPABASE_URL` と `NEXT_PUBLIC_SUPABASE_ANON_KEY` を設定してください。サービスキーはブラウザへ公開しません。
 3. 通常のルームの Realtime 設定を利用します。`private` スキーマのAPI公開や秘密テーブルの Realtime 配信設定は不要です。
 
-ゲーム一覧から3〜8人で開始できます。ホストの「ゲームを中断してロビーへ戻る」、または結果画面の「再戦する」で秘密状態を削除し、次の開始時に新規配札します。
+ゲーム一覧から3〜8人で開始できます。ルームがゲーム画面に移った後、ホストが設定確認画面の「この設定で開始」を押すまで配札しません。ゲストはその開始操作を待ちます。ホストの「ゲームを中断してロビーへ戻る」、または結果画面の「再戦する」で秘密状態を削除し、次の開始時に新規配札します。
 
 ## 検証
 

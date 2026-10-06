@@ -36,12 +36,12 @@ function privateCardRule(state: CriminalDancesPrivateState, playerId: string, ca
   return { allowed: true };
 }
 
-function useCriminalDancesGame(room: RoomState, myUserId: string) {
+function useCriminalDancesGame(room: RoomState) {
   const supabase = useMemo(() => createClient(), []);
   const [privateState, setPrivateState] = useState<CriminalDancesPrivateState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inFlight = useRef(false);
-
+  const initializeInFlight = useRef(false);
 
   const callApi = useCallback(async (payload: Record<string, unknown>) => {
     const session = await supabase.auth.getSession();
@@ -60,21 +60,36 @@ function useCriminalDancesGame(room: RoomState, myUserId: string) {
     setError(null);
   }, []);
 
+  const publicGame = room.game_state && typeof room.game_state === 'object'
+    ? (room.game_state as { game?: unknown }).game
+    : null;
+  const snapshotAvailable = room.status === 'finished' || publicGame === 'criminal-dances';
+
   const refresh = useCallback(async () => {
-    const publicState = room.game_state as { game?: string } | null;
-    if (room.status === 'playing' && room.host_id === myUserId && publicState?.game !== 'criminal-dances') {
+    if (!snapshotAvailable) return;
+    acceptSnapshot(await callApi({ action: 'snapshot' }));
+  }, [acceptSnapshot, callApi, snapshotAvailable]);
+
+  const initialize = useCallback(async () => {
+    if (initializeInFlight.current) return;
+    initializeInFlight.current = true;
+    setError(null);
+    try {
       acceptSnapshot(await callApi({ action: 'initialize' }));
-    } else {
-      acceptSnapshot(await callApi({ action: 'snapshot' }));
+    } catch (caught: unknown) {
+      setError(errorMessage(caught));
+      throw caught;
+    } finally {
+      initializeInFlight.current = false;
     }
-  }, [acceptSnapshot, callApi, myUserId, room.game_state, room.host_id, room.status]);
+  }, [acceptSnapshot, callApi]);
 
   useEffect(() => {
-    if (room.status !== 'playing' && room.status !== 'finished') return;
+    if (!snapshotAvailable) return;
     let cancelled = false;
     void Promise.resolve().then(() => { if (!cancelled) return refresh(); }).catch((caught: unknown) => { if (!cancelled) setError(errorMessage(caught)); });
     return () => { cancelled = true; };
-  }, [refresh, room.status]);
+  }, [refresh, room.game_state, snapshotAvailable]);
 
   useEffect(() => {
     const reconnect = () => { void refresh().catch(() => {}); };
@@ -103,18 +118,64 @@ function useCriminalDancesGame(room: RoomState, myUserId: string) {
   }, [acceptSnapshot, callApi, privateState, refresh]);
 
   const retry = () => { void refresh().catch((caught: unknown) => setError(errorMessage(caught))); };
-  return { state: privateState, error, action, retry };
+  return { state: privateState, error, action, retry, initialize, snapshotAvailable };
+}
+
+export function CriminalDancesStartScreen({
+  isHost,
+  busy,
+  error,
+  players,
+  onStart,
+  onAbort,
+}: {
+  isHost: boolean;
+  busy: boolean;
+  players: RoomState['players'];
+  error: string | null;
+  onStart: () => Promise<void>;
+  onAbort: () => Promise<void>;
+}) {
+  return <main className="criminal-dances-game paper-card mx-auto max-w-3xl p-5">
+    <p className="section-kicker">犯人は踊る</p>
+    <h1 className="mt-2 text-2xl font-black">ゲームの設定を確認</h1>
+    <p className="mt-2 text-sm text-[var(--muted)]">カードを配る前に、全員で遊び方を確認します。</p>
+    <p className="mt-4 rounded-xl bg-orange-50 p-3 text-sm font-bold">第一発見者から座席順にカードを1枚ずつ出し、探偵やいぬで犯人を捕まえるゲームです。犯人は最後の1枚で逃げ切りを狙います。</p>
+    <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><dt className="font-bold">参加人数</dt><dd className="mt-1">{players.length}人（3〜8人）</dd></div>
+      <div className="rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><dt className="font-bold">最初の手札</dt><dd className="mt-1">1人4枚</dd></div>
+      <div className="rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><dt className="font-bold">手番</dt><dd className="mt-1">第一発見者から、座席順に左隣へ</dd></div>
+      <div className="rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><dt className="font-bold">勝敗</dt><dd className="mt-1">犯人の逃走か、探偵・いぬの逮捕</dd></div>
+    </dl>
+    <section className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><h2 className="font-bold">座席順</h2><ol className="mt-2 grid gap-1 text-sm sm:grid-cols-2">{players.map((player, index) => <li key={player.userId}>{index + 1}. {player.name}</li>)}</ol></section>
+    <details className="mt-4 rounded-xl border border-[var(--line)] p-3 text-sm"><summary className="cursor-pointer font-bold">ルールを読む</summary><p className="mt-2">第一発見者カードから始まり、カードの効果を解決しながら犯人を探します。犯人は最後の1枚で逃げ切りを狙います。</p><p className="mt-2">このゲームには追加設定はありません。ホストが開始すると、固定のカード構成で自動的に配札されます。</p></details>
+    {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700" role="alert">{error}</p>}
+    {isHost ? <button className="button-primary mt-5 w-full" type="button" disabled={busy} aria-busy={busy} onClick={() => void onStart()}>{busy ? '準備中…' : 'この設定で開始'}</button> : <p className="mt-5 border-2 border-dashed border-[var(--line)] p-4 text-center font-bold text-[var(--muted)]">ホストが設定を確認して開始するまでお待ちください。</p>}
+    {isHost && <button className="button-secondary mt-3 w-full" type="button" onClick={() => void onAbort()}>ゲームを中断してロビーへ戻る</button>}
+  </main>;
 }
 
 export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props) {
-  const { state, error, action, retry } = useCriminalDancesGame(roomState, myUserId);
+  const { state, error, action, retry, initialize, snapshotAvailable } = useCriminalDancesGame(roomState);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [incidentText, setIncidentText] = useState('');
+  const [starting, setStarting] = useState(false);
   const currentId = state?.turnOrder[state.currentPlayerIndex];
   const isTurn = currentId === myUserId;
   const pending = state?.pending;
 
-  if (!state) return <main className="criminal-dances-game paper-card p-5"><p className="section-kicker">犯人は踊る</p><h1 className="mt-2 text-2xl font-black">{error ? 'ゲーム状態を読み込めません' : 'ゲームを準備中…'}</h1><p className="mt-2 text-sm text-[var(--muted)]">{error ?? 'ホストの開始処理を待っています。'}</p><div className="mt-4 flex flex-wrap gap-2"><button className="button-primary" type="button" onClick={retry}>再読み込み</button>{roomState.host_id === myUserId && <button className="button-secondary" type="button" onClick={() => void onBackToLobby()}>ゲームを中断</button>}</div></main>;
+  if (!state && !snapshotAvailable) return <CriminalDancesStartScreen
+    isHost={roomState.host_id === myUserId}
+    busy={starting}
+    error={error}
+    players={roomState.players}
+    onStart={async () => {
+      setStarting(true);
+      try { await initialize(); } catch { /* displayed below */ } finally { setStarting(false); }
+    }}
+    onAbort={onBackToLobby}
+  />;
+  if (!state) return <main className="criminal-dances-game paper-card p-5"><p className="section-kicker">犯人は踊る</p><h1 className="mt-2 text-2xl font-black">{error ? 'ゲーム状態を読み込めません' : 'ゲームを読み込んでいます…'}</h1><p className="mt-2 text-sm text-[var(--muted)]">{error ?? 'ホストの開始処理を待っています。'}</p><div className="mt-4 flex flex-wrap gap-2"><button className="button-primary" type="button" onClick={retry}>再読み込み</button>{roomState.host_id === myUserId && <button className="button-secondary" type="button" onClick={() => void onBackToLobby()}>ゲームを中断</button>}</div></main>;
   const selected = state.myHand.find((card) => card.id === selectedCard) ?? null;
   const selectedRule = selected ? privateCardRule(state, myUserId, selected) : null;
   const isMyPending = Boolean(pending && 'actorId' in pending && pending.actorId === myUserId);

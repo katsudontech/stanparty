@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { CardConfirmation, resultLabel } from './index';
+import { CardConfirmation, CriminalDancesStartScreen, resultLabel } from './index';
 import type { CriminalDancesPrivateState } from './types';
 
 const resultState = (reason: 'culprit_escaped' | 'detective_caught'): CriminalDancesPrivateState => ({
@@ -37,6 +37,24 @@ const resultState = (reason: 'culprit_escaped' | 'detective_caught'): CriminalDa
 });
 
 describe('criminal dances UI projections', () => {
+  it('shows the fixed settings and host-only start action before cards are dealt', () => {
+    const start = () => Promise.resolve();
+    const players = [
+      { userId: 'host', name: 'ホスト', avatarUrl: '', isHost: true, color: '#fff', isOnline: true },
+      { userId: 'guest', name: 'ゲスト', avatarUrl: '', isHost: false, color: '#000', isOnline: true },
+      { userId: 'guest2', name: 'ゲスト2', avatarUrl: '', isHost: false, color: '#000', isOnline: true },
+    ];
+    const hostHtml = renderToStaticMarkup(createElement(CriminalDancesStartScreen, { isHost: true, busy: false, error: null, players, onStart: start, onAbort: start }));
+    const guestHtml = renderToStaticMarkup(createElement(CriminalDancesStartScreen, { isHost: false, busy: false, error: null, players, onStart: start, onAbort: start }));
+    expect(hostHtml).toContain('この設定で開始');
+    expect(hostHtml).toContain('3〜8人');
+    expect(hostHtml).toContain('3人（3〜8人）');
+    expect(hostHtml).toContain('ホスト');
+    expect(hostHtml).toContain('1人4枚');
+    expect(guestHtml).toContain('ホストが設定を確認して開始するまでお待ちください');
+    expect(guestHtml).not.toContain('この設定で開始');
+  });
+
   it('renders an enabled trade confirmation independently of whose turn it is', () => {
     const html = renderToStaticMarkup(createElement(CardConfirmation, { allowed: true, trade: true, onConfirm: () => {} }));
     expect(html).toContain('渡すカードを確定');
