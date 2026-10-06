@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { CardConfirmation, CriminalDancesStartScreen, resultLabel } from './index';
+import { CardConfirmation, CriminalDancesCardTile, CriminalDancesModal, CriminalDancesSecret, CriminalDancesStartScreen, resultLabel } from './index';
 import type { CriminalDancesPrivateState } from './types';
 
 const resultState = (reason: 'culprit_escaped' | 'detective_caught'): CriminalDancesPrivateState => ({
@@ -53,6 +53,41 @@ describe('criminal dances UI projections', () => {
     expect(hostHtml).toContain('1人4枚');
     expect(guestHtml).toContain('ホストが設定を確認して開始するまでお待ちください');
     expect(guestHtml).not.toContain('この設定で開始');
+  });
+
+  it('renders physical card selection affordances with the selected state and effect label', () => {
+    const html = renderToStaticMarkup(createElement(CriminalDancesCardTile, {
+      card: { id: 'detective-1', type: 'detective' }, selected: true, disabled: false, onSelect: () => {},
+    }));
+    expect(html).toContain('criminal-card--detective');
+    expect(html).toContain('aria-pressed="true"');
+    expect(html).toContain('探偵');
+    expect(html).toContain('type="button"');
+    const locked = renderToStaticMarkup(createElement(CriminalDancesCardTile, {
+      card: { id: 'culprit-1', type: 'culprit' }, selected: false, disabled: true, reason: '最後の1枚だけ使えます', onSelect: () => {},
+    }));
+    expect(locked).toContain('aria-disabled="true"');
+    expect(locked).not.toContain('disabled=""');
+  });
+
+  it('keeps modal close controls available to keyboard and pointer users', () => {
+    const html = renderToStaticMarkup(createElement(CriminalDancesModal, { title: 'カード詳細', labelledBy: 'card-title', onClose: () => {} }, createElement('p', null, '説明')));
+    expect(html).toContain('role="dialog"');
+    expect(html).toContain('aria-labelledby="card-title"');
+    expect(html.match(/aria-label="閉じる"/g)).toHaveLength(1);
+  });
+
+  it('renders private boy and witness information with a confirmation action', () => {
+    const boy = renderToStaticMarkup(createElement(CriminalDancesSecret, {
+      reveal: { kind: 'boy', culpritPlayerId: 'p2' }, culpritName: 'プレイヤー2', canConfirm: true, onConfirm: () => {},
+    }));
+    const witness = renderToStaticMarkup(createElement(CriminalDancesSecret, {
+      reveal: { kind: 'witness', targetId: 'p3', cards: [{ id: 'ephemeral-a', type: 'alibi' }, { id: 'ephemeral-b', type: 'culprit' }] }, culpritName: '不明', canConfirm: true, onConfirm: () => {},
+    }));
+    expect(boy).toContain('プレイヤー2');
+    expect(boy).toContain('確認して続ける');
+    expect(witness).toContain('アリバイ');
+    expect(witness).toContain('犯人');
   });
 
   it('renders an enabled trade confirmation independently of whose turn it is', () => {

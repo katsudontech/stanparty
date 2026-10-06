@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RoomState } from '@/games/core/types';
 import { CARD_DESCRIPTIONS, CARD_LABELS } from './rules';
@@ -155,11 +155,142 @@ export function CriminalDancesStartScreen({
   </main>;
 }
 
+const CARD_GLYPHS: Record<CriminalDancesCardType, string> = {
+  first_discoverer: '!',
+  culprit: '♠',
+  detective: '⌕',
+  alibi: '✓',
+  conspiracy: '◎',
+  boy: '♙',
+  dog: '🐕',
+  witness: '◉',
+  trade: '⇄',
+  information_control: '↔',
+  rumor: '…',
+  civilian: '●',
+};
+
+export function CriminalDancesCardTile({
+  card,
+  selected,
+  disabled,
+  reason,
+  onSelect,
+}: {
+  card: { id: string; type: CriminalDancesCardType };
+  selected: boolean;
+  disabled: boolean;
+  reason?: string;
+  onSelect: () => void;
+}) {
+  const label = cardLabel(card.type);
+  return <button
+    type="button"
+    className={'criminal-card criminal-card--' + card.type + (selected ? ' is-selected' : '')}
+    aria-pressed={selected}
+    aria-disabled={disabled}
+    aria-label={label + (disabled && reason ? '（' + reason + '）' : '')}
+    title={disabled ? reason : label + 'を選ぶ'}
+    onClick={onSelect}
+  >
+    <span className="criminal-card__corner" aria-hidden="true">{CARD_GLYPHS[card.type]}</span>
+    <span className="criminal-card__name">{label}</span>
+    <span className="criminal-card__type" aria-hidden="true">{card.type === 'civilian' ? '市民' : '効果'}</span>
+  </button>;
+}
+
+export function CriminalDancesModal({
+  title,
+  labelledBy,
+  onClose,
+  children,
+}: {
+  title: string;
+  labelledBy?: string;
+  onClose: () => void;
+  children?: ReactNode;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (typeof dialog.showModal !== 'function') {
+      dialog.setAttribute('open', '');
+      return;
+    }
+    try {
+      if (!dialog.open) dialog.showModal();
+    } catch {
+      // Older browsers can still render the dialog as a regular open element.
+    }
+  }, []);
+  return <dialog
+    ref={dialogRef}
+    className="criminal-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby={labelledBy}
+    onCancel={(event) => { event.preventDefault(); onClose(); }}
+    onClose={onClose}
+    onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+  >
+    <section className="criminal-modal__panel">
+      <header className="criminal-modal__header">
+        <h2 id={labelledBy}>{title}</h2>
+        <button className="criminal-modal__close" type="button" aria-label="閉じる" onClick={onClose}>×</button>
+      </header>
+      <div className="criminal-modal__body">{children}</div>
+    </section>
+  </dialog>;
+}
+
+function pendingText(
+  pending: NonNullable<CriminalDancesPrivateState['pending']>,
+  myUserId: string,
+  submittedIds: string[],
+  tradeAlreadySubmitted: boolean,
+  isMyPending: boolean,
+) {
+  if (pending.kind === 'information_control') return submittedIds.includes(myUserId) ? 'カードを渡しました。ほかの参加者を待っています。' : '左隣へ渡すカードを選んでください。';
+  if (pending.kind === 'rumor') return submittedIds.includes(myUserId) ? '右隣から引くカードを選びました。' : '右隣から引く裏向きカードを選んでください。';
+  if (pending.kind === 'trade') {
+    if (pending.targetId === myUserId) return tradeAlreadySubmitted ? '渡すカードを選びました。相手を待っています。' : 'あなたの手札から渡すカードを選んでください。';
+    if (pending.actorId === myUserId) return pending.targetId
+      ? (tradeAlreadySubmitted ? '渡すカードを選びました。相手を待っています。' : 'あなたの手札から渡すカードを選んでください。')
+      : '取り引き相手を選んでください。';
+    return '取り引きのカードを待っています。';
+  }
+  return isMyPending ? 'あなたの操作を選んでください。' : 'ほかの参加者の操作を待っています。';
+}
+
+export function CriminalDancesSecret({
+  reveal,
+  culpritName,
+  canConfirm,
+  onConfirm,
+}: {
+  reveal: NonNullable<CriminalDancesPrivateState['privateReveal']>;
+  culpritName: string;
+  canConfirm: boolean;
+  onConfirm: () => void;
+}) {
+  return <section className="criminal-secret" role="status" aria-live="polite">
+    <strong>あなたにだけ見える情報</strong>
+    {reveal.kind === 'boy'
+      ? <p>犯人カードを持つ人：<b>{culpritName}</b></p>
+      : <div className="criminal-secret__cards">{reveal.cards?.map((card) => <span key={card.id}>{cardLabel(card.type)}</span>)}</div>}
+    {canConfirm && <button className="button-primary criminal-pending__primary" type="button" onClick={onConfirm}>確認して続ける</button>}
+  </section>;
+}
+
 export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props) {
   const { state, error, action, retry, initialize, snapshotAvailable } = useCriminalDancesGame(roomState);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [incidentText, setIncidentText] = useState('');
   const [starting, setStarting] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [incidentOpen, setIncidentOpen] = useState(false);
   const currentId = state?.turnOrder[state.currentPlayerIndex];
   const isTurn = currentId === myUserId;
   const pending = state?.pending;
@@ -176,6 +307,7 @@ export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props
     onAbort={onBackToLobby}
   />;
   if (!state) return <main className="criminal-dances-game paper-card p-5"><p className="section-kicker">犯人は踊る</p><h1 className="mt-2 text-2xl font-black">{error ? 'ゲーム状態を読み込めません' : 'ゲームを読み込んでいます…'}</h1><p className="mt-2 text-sm text-[var(--muted)]">{error ?? 'ホストの開始処理を待っています。'}</p><div className="mt-4 flex flex-wrap gap-2"><button className="button-primary" type="button" onClick={retry}>再読み込み</button>{roomState.host_id === myUserId && <button className="button-secondary" type="button" onClick={() => void onBackToLobby()}>ゲームを中断</button>}</div></main>;
+
   const selected = state.myHand.find((card) => card.id === selectedCard) ?? null;
   const selectedRule = selected ? privateCardRule(state, myUserId, selected) : null;
   const isMyPending = Boolean(pending && 'actorId' in pending && pending.actorId === myUserId);
@@ -193,22 +325,109 @@ export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props
   const submit = async () => {
     if (!selected) return;
     if (!selectedRule?.allowed && !canSubmitTrade) return;
-    if (isTradeParticipant) { if (!canSubmitTrade) return; await action('trade_card', { cardId: selected.id }); }
-    else { await action('play_card', { cardId: selected.id, incidentText: incidentText.trim() || null }); }
+    if (isTradeParticipant) {
+      if (!canSubmitTrade) return;
+      await action('trade_card', { cardId: selected.id });
+    } else {
+      await action('play_card', { cardId: selected.id, incidentText: incidentText.trim() || null });
+    }
     setSelectedCard(null);
   };
-  return <main className="criminal-dances-game mx-auto w-full max-w-3xl px-3 pb-8">
-    <header className="paper-card mb-3 p-4"><p className="section-kicker">犯人は踊る</p><h1 className="mt-1 text-2xl font-black">カードを出して、犯人を追え</h1><p className="mt-2 text-sm text-[var(--muted)]">{state.round}巡目 · {isTurn ? 'あなたの手番' : `${currentId ? playerName(currentId) : '次の人'}の手番`}</p></header>
-    {error && <p className="mb-3 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700" role="alert">{error}</p>}
-    {state.incidentText && <section className="mb-3 rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3 text-sm"><strong>事件内容</strong><p className="mt-1">{state.incidentText}</p></section>}{state.lastAction && <section className="mb-3 rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3 text-sm"><strong>直前の行動</strong><p className="mt-1">{playerName(state.lastAction.actorId)}: {state.lastAction.text}</p>{state.revealedCardType && <p className="mt-1 font-bold">公開されたカード: {cardLabel(state.revealedCardType)}</p>}</section>}
-    <section className="paper-card mb-3 p-3" aria-label="プレイヤー一覧"><h2 className="font-black">座席順 <span className="text-xs font-normal">次の番号が左隣・次の手番</span></h2><div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">{state.turnOrder.map((id, index) => { const player = state.players[id]; return <div key={id} className={`rounded-xl border p-2 ${index === state.currentPlayerIndex ? 'border-[var(--orange)] bg-orange-50' : 'border-[var(--line)]'}`}><strong>{id === myUserId ? 'あなた' : playerName(id)}</strong><span className="ml-2 text-sm text-[var(--muted)]">手札 {player.handCount}枚</span>{player.played.at(-1) && <small className="mt-1 block text-[var(--muted)]">最後: {cardLabel(player.played.at(-1)!)}</small>}{player.played.length > 0 && <details className="mt-1 text-xs"><summary className="cursor-pointer font-bold">履歴（{player.played.length}枚）</summary><div className="mt-1 space-y-0.5">{player.played.map((cardType, cardIndex) => <span className="mr-1 inline-block" key={`${id}-${cardIndex}`}>{cardLabel(cardType)}</span>)}</div></details>}{player.conspirator && <small className="mt-1 block font-bold text-red-700">たくらみ済み</small>}</div>; })}</div></section>
-    {state.phase === 'playing' && !pending && isTurn && <p role="status" className="mb-3 rounded-xl bg-orange-100 p-3 font-bold">あなたの手番です。手札を選んで「使う」を押してください。</p>}
-    {pending && <section className="mb-3 rounded-2xl border-2 border-[var(--orange)] bg-orange-50 p-4" role="status"><strong>待っている操作</strong><p className="mt-1 text-sm">{pending.kind === 'information_control' ? (submittedIds.includes(myUserId) ? 'カードを渡しました。ほかの参加者を待っています。' : '左隣へ渡すカードを選んでください。') : pending.kind === 'rumor' ? (submittedIds.includes(myUserId) ? '右隣から引くカードを選びました。' : '右隣から引く裏向きカードを選んでください。') : pending.kind === 'trade' ? (pending.targetId === myUserId ? (tradeAlreadySubmitted ? '渡すカードを選びました。相手を待っています。' : 'あなたの手札から渡すカードを選んでください。') : pending.actorId === myUserId ? (pending.targetId ? (tradeAlreadySubmitted ? '渡すカードを選びました。相手を待っています。' : 'あなたの手札から渡すカードを選んでください。') : '取り引き相手を選んでください。') : '取り引きのカードを待っています。') : isMyPending ? 'あなたの操作を選んでください。' : 'ほかの参加者の操作を待っています。'}</p>{(pending.kind === 'information_control' || pending.kind === 'rumor') && !submittedIds.includes(myUserId) && simultaneousCount > 0 && <div className="mt-3 flex flex-wrap gap-2">{Array.from({ length: simultaneousCount }, (_, index) => <button className="button-secondary" type="button" key={index} onClick={() => void action('simultaneous_choice', pending.kind === 'information_control' ? { cardId: state.myHand[index]?.id } : { cardIndex: index })}>{pending.kind === 'information_control' ? cardLabel(state.myHand[index]?.type ?? 'civilian') : `右隣の裏向きカード ${index + 1}`}</button>)}</div>}{isMyPending && (pending.kind === 'boy_reveal' || pending.kind === 'witness_reveal') && <button className="button-primary mt-3" type="button" onClick={() => void action('confirm_private_reveal')}>確認して続ける</button>}{isMyPending && pending.kind === 'dog_card' && <div className="mt-3 flex flex-wrap gap-2">{Array.from({ length: dogCount }, (_, index) => <button className="button-secondary" type="button" key={index} onClick={() => void action('choose_dog_card', { cardIndex: index })}>裏向きカード {index + 1}</button>)}</div>}{pending && 'eligibleTargetIds' in pending && isMyPending && <div className="mt-3 flex flex-wrap gap-2">{eligibleTargets.map((id) => <button className="button-secondary" type="button" key={id} onClick={() => void action('select_target', { targetId: id })}>{playerName(id)}を指名</button>)}</div>}</section>}
-    {state.privateReveal && <section className="paper-card mb-3 border-2 border-blue-300 p-4"><h2 className="font-black">秘密の確認</h2>{state.privateReveal.kind === 'boy' ? <p className="mt-2">犯人カードを持つ人: <strong>{state.privateReveal.culpritPlayerId === myUserId ? 'あなた' : state.privateReveal.culpritPlayerId ? playerName(state.privateReveal.culpritPlayerId) : '不明'}</strong></p> : <div className="mt-2 flex flex-wrap gap-2">{state.privateReveal.cards?.map((card) => <span className="rounded-full bg-blue-50 px-3 py-1 text-sm" key={card.id}>{cardLabel(card.type)}</span>)}</div>}</section>}
-    {state.phase === 'finished' && outcome && <section className="paper-card mb-3 border-2 border-[var(--orange)] p-5"><h2 className="text-2xl font-black">{outcome.reason === 'culprit_escaped' ? '犯人が逃げ切った！' : outcome.reason === 'dog_caught' ? 'いぬが犯人を捕まえた！' : '探偵が犯人を捕まえた！'}</h2><p className="mt-2">犯人: {outcome.culpritPlayerId === myUserId ? 'あなた' : outcome.culpritPlayerId ? playerName(outcome.culpritPlayerId) : '不明'}</p><p className="mt-1">たくらみ: {outcome.conspirators.length ? outcome.conspirators.map((id) => id === myUserId ? 'あなた' : playerName(id)).join('、') : 'なし'}</p><p className="mt-1">勝者: {outcome.winners.length ? outcome.winners.map((id) => id === myUserId ? 'あなた' : playerName(id)).join('、') : '勝者なし'}</p><div className="mt-3 space-y-1 border-t border-[var(--line)] pt-3 text-sm">{state.turnOrder.map((id) => <p key={id}><strong>{id === myUserId ? 'あなた' : playerName(id)}</strong>: {resultLabel(state, id)}</p>)}</div>{isHost && <button className="button-primary mt-4" type="button" onClick={() => void onBackToLobby()}>再戦する</button>}</section>}
-    <details className="mb-3 rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3 text-sm"><summary className="cursor-pointer font-black">カード効果を見る</summary><p className="mt-2">3〜8人・各4枚。第一発見者から左隣へ進み、全員の最初の手番が終わると2巡目です。手札0枚の手番は飛ばしますが、交換の受け取りは続きます。</p><p className="mt-2">探偵は2巡目から使用できます。1巡目に他の合法なカードがなければ、効果なしで捨てられます。犯人は最後の1枚を自分の手番に出すと逃げ切ります。</p><p className="mt-2">逃げ切りでは犯人とたくらみ済みの人が勝利。捕まえた場合は捕まえた人だけが勝利し、犯人とたくらみ済みの人は敗北、残りは「その他」です。たくらみ済みの人が捕まえたときは勝者なしです。</p><div className="mt-2 grid gap-1 sm:grid-cols-2">{(Object.keys(CARD_LABELS) as CriminalDancesCardType[]).map((type) => <p key={type}><strong>{cardLabel(type)}</strong>: {CARD_DESCRIPTIONS[type]}</p>)}</div></details>
-    {state.phase === 'playing' && <section className="paper-card p-4"><h2 className="font-black">あなたの手札</h2><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">{state.myHand.map((card) => { const rule = privateCardRule(state, myUserId, card); return <button type="button" key={card.id} onClick={() => setSelectedCard(card.id)} className={`min-h-28 rounded-2xl border-2 p-3 text-left ${selectedCard === card.id ? 'border-[var(--orange)] bg-orange-50' : 'border-[var(--line)]'}`}><strong className="block">{cardLabel(card.type)}</strong><small className="mt-2 block text-[var(--muted)]">{CARD_DESCRIPTIONS[card.type]}</small>{!rule.allowed && !canSubmitTrade && <small className="mt-2 block font-bold text-red-700">{rule.reason}</small>}</button>; })}</div>{selected && <div className="mt-4 rounded-xl bg-[var(--paper)] p-3"><p className="font-bold">{cardLabel(selected.type)}を{canSubmitTrade ? '渡しますか？' : '使いますか？'}</p><p className="mt-1 text-sm text-[var(--muted)]">{CARD_DESCRIPTIONS[selected.type]}</p>{selected.type === 'first_discoverer' && <input className="input mt-3 w-full" value={incidentText} maxLength={200} onChange={(event) => setIncidentText(event.target.value)} placeholder="事件内容（省略可）" />}{(isTurn || canSubmitTrade) && <CardConfirmation allowed={Boolean(selectedRule?.allowed || canSubmitTrade)} trade={canSubmitTrade} onConfirm={() => void submit()} />}</div>}</section>}
-    {isHost && <button className="button-secondary mt-4" type="button" onClick={() => void onBackToLobby()}>ゲームを中断してロビーへ戻る</button>}
+
+  const renderPendingChoices = () => {
+    if (!pending) return null;
+    if ((pending.kind === 'information_control' || pending.kind === 'rumor') && !submittedIds.includes(myUserId) && simultaneousCount > 0) {
+      return <div className="criminal-pending__choices">{Array.from({ length: simultaneousCount }, (_, index) => <button className="criminal-choice" type="button" key={index} onClick={() => void action('simultaneous_choice', pending.kind === 'information_control' ? { cardId: state.myHand[index]?.id } : { cardIndex: index })}>{pending.kind === 'information_control' ? cardLabel(state.myHand[index]?.type ?? 'civilian') : '右隣の裏向きカード ' + (index + 1)}</button>)}</div>;
+    }
+    if (isMyPending && (pending.kind === 'boy_reveal' || pending.kind === 'witness_reveal') && !state.privateReveal) return <button className="button-primary criminal-pending__primary" type="button" onClick={() => void action('confirm_private_reveal')}>確認して続ける</button>;
+    if (isMyPending && pending.kind === 'dog_card') return <div className="criminal-pending__choices">{Array.from({ length: dogCount }, (_, index) => <button className="criminal-choice" type="button" key={index} onClick={() => void action('choose_dog_card', { cardIndex: index })}>裏向きカード {index + 1}</button>)}</div>;
+    if ('eligibleTargetIds' in pending && isMyPending) return <div className="criminal-pending__choices">{eligibleTargets.map((id) => <button className="criminal-choice" type="button" key={id} onClick={() => void action('select_target', { targetId: id })}>{playerName(id)}を指名</button>)}</div>;
+    return null;
+  };
+
+  const phaseLabel = state.phase === 'finished' ? '結果' : state.round + '巡目';
+  return <main className={'criminal-dances-game criminal-dances-game--' + state.phase + ' mx-auto w-full max-w-3xl px-2 pb-2'} data-phase={state.phase}>
+    <header className="criminal-hud">
+      <div className="criminal-hud__title"><span className="section-kicker">犯人は踊る</span><h1>カードを出して、犯人を追え</h1></div>
+      <div className="criminal-hud__turn"><strong>{phaseLabel}</strong><span>{state.phase === 'finished' ? '結果を確認' : isTurn ? 'あなたの手番' : (currentId ? playerName(currentId) : '次の人') + 'の手番'}</span></div>
+    </header>
+
+    {error && <p className="criminal-alert" role="alert">{error}</p>}
+    {state.phase === 'playing' && <section className="criminal-board">
+      <section className="criminal-seats" aria-label="座席順">
+        {state.turnOrder.map((id, index) => {
+          const player = state.players[id];
+          return <div key={id} className={'criminal-seat ' + (index === state.currentPlayerIndex ? 'is-current' : '')}>
+            <span className="criminal-seat__number">{index + 1}</span>
+            <strong>{id === myUserId ? 'あなた' : playerName(id)}</strong>
+            <small>{player.handCount}枚</small>
+            {player.conspirator && <em>たくらみ</em>}
+          </div>;
+        })}
+      </section>
+
+      <section className="criminal-center" aria-label="ゲーム進行">
+        {state.incidentText && <button className="criminal-notice" type="button" onClick={() => setIncidentOpen(true)}><span>事件内容</span><strong>{state.incidentText}</strong></button>}
+        {state.lastAction && <p className="criminal-last-action" role="status"><span>直前</span>{playerName(state.lastAction.actorId)}：{state.lastAction.text}{state.revealedCardType && <b>公開：{cardLabel(state.revealedCardType)}</b>}</p>}
+        {state.privateReveal && <CriminalDancesSecret
+          reveal={state.privateReveal}
+          culpritName={state.privateReveal.culpritPlayerId === myUserId ? 'あなた' : state.privateReveal.culpritPlayerId ? playerName(state.privateReveal.culpritPlayerId) : '不明'}
+          canConfirm={Boolean(isMyPending && (pending?.kind === 'boy_reveal' || pending?.kind === 'witness_reveal'))}
+          onConfirm={() => void action('confirm_private_reveal')}
+        />}
+        {pending ? <div className="criminal-pending" role="status">
+          <strong>待っている操作</strong>
+          <p>{pendingText(pending, myUserId, submittedIds, tradeAlreadySubmitted, isMyPending)}</p>
+          {renderPendingChoices()}
+        </div> : <p className="criminal-turn-status" role="status">{isTurn ? 'あなたの手番です。手札を選んでください。' : (currentId ? playerName(currentId) : '次の人') + 'の手番です。'}</p>}
+      </section>
+    </section>}
+
+    {state.phase === 'finished' && outcome && <section className="criminal-result" aria-labelledby="criminal-result-title">
+      <div className="criminal-result__stamp" aria-hidden="true">RESULT</div>
+      <h2 id="criminal-result-title">{outcome.reason === 'culprit_escaped' ? '犯人が逃げ切った！' : outcome.reason === 'dog_caught' ? 'いぬが犯人を捕まえた！' : '探偵が犯人を捕まえた！'}</h2>
+      <p>犯人：{outcome.culpritPlayerId === myUserId ? 'あなた' : outcome.culpritPlayerId ? playerName(outcome.culpritPlayerId) : '不明'}</p>
+      <p>たくらみ：{outcome.conspirators.length ? outcome.conspirators.map((id) => id === myUserId ? 'あなた' : playerName(id)).join('、') : 'なし'}</p>
+      <p>勝者：{outcome.winners.length ? outcome.winners.map((id) => id === myUserId ? 'あなた' : playerName(id)).join('、') : '勝者なし'}</p>
+      <div className="criminal-result__players">{state.turnOrder.map((id) => <p key={id}><strong>{id === myUserId ? 'あなた' : playerName(id)}</strong><span>{resultLabel(state, id)}</span></p>)}</div>
+      {isHost && <button className="button-primary criminal-result__button" type="button" onClick={() => void onBackToLobby()}>再戦する</button>}
+    </section>}
+
+    {state.phase === 'playing' && <section className="criminal-hand" aria-label="あなたの手札">
+      <header className="criminal-hand__header"><h2>手札 <span>{state.myHand.length}枚</span></h2><div className="criminal-tools"><button type="button" className="criminal-tool" onClick={() => setRulesOpen(true)}>ルール</button><button type="button" className="criminal-tool" onClick={() => setHistoryOpen(true)}>履歴</button>{state.incidentText && <button type="button" className="criminal-tool" onClick={() => setIncidentOpen(true)}>事件</button>}</div></header>
+      <div className="criminal-hand__cards">{state.myHand.map((card) => {
+        const rule = privateCardRule(state, myUserId, card);
+        const tradeAllowed = Boolean(canSubmitTrade);
+        return <CriminalDancesCardTile key={card.id} card={card} selected={selectedCard === card.id} disabled={!rule.allowed && !tradeAllowed} reason={tradeAllowed ? undefined : rule.reason} onSelect={() => setSelectedCard(card.id)} />;
+      })}</div>
+      <p className="criminal-hand__hint">{pending ? '効果の指示を優先してください。' : isTurn ? 'カードをタップすると詳細と確定操作が開きます。' : 'あなたの手番を待っています。'}</p>
+    </section>}
+
+    <footer className="criminal-footer">
+      <button className="criminal-tool" type="button" onClick={() => setRulesOpen(true)}>ルール</button>
+      <button className="criminal-tool" type="button" onClick={() => setHistoryOpen(true)}>履歴</button>
+      {isHost && <button className="criminal-tool criminal-tool--danger" type="button" onClick={() => void onBackToLobby()}>ロビーへ</button>}
+    </footer>
+
+    {selected && <CriminalDancesModal title={cardLabel(selected.type) + 'カード'} labelledBy="criminal-card-title" onClose={() => setSelectedCard(null)}>
+      <div className={'criminal-card criminal-card--' + selected.type + ' criminal-card--preview'} aria-hidden="true"><span className="criminal-card__corner">{CARD_GLYPHS[selected.type]}</span><span className="criminal-card__name">{cardLabel(selected.type)}</span><span className="criminal-card__type">効果</span></div>
+      <p className="criminal-modal__description">{CARD_DESCRIPTIONS[selected.type]}</p>
+      {selected.type === 'first_discoverer' && <label className="criminal-field">事件内容（省略可）<input className="input" value={incidentText} maxLength={200} onChange={(event) => setIncidentText(event.target.value)} placeholder="みんなに伝える一言" /></label>}
+      {!selectedRule?.allowed && !canSubmitTrade && <p className="criminal-disabled">{selectedRule?.reason}</p>}
+      {(isTurn || canSubmitTrade) && <CardConfirmation allowed={Boolean(selectedRule?.allowed || canSubmitTrade)} trade={canSubmitTrade} onConfirm={() => void submit()} />}
+    </CriminalDancesModal>}
+
+    {rulesOpen && <CriminalDancesModal title="ルール" labelledBy="criminal-rules-title" onClose={() => setRulesOpen(false)}>
+      <p>3〜8人・各4枚。第一発見者から座席順に進み、全員の最初の手番が終わると2巡目です。手札0枚の手番は飛ばしますが、交換の受け取りは続きます。</p>
+      <p className="criminal-modal__paragraph">探偵は2巡目から使用できます。1巡目にほかの合法なカードがない場合だけ、探偵を効果なしで捨てられます。犯人は最後の1枚を自分の手番に出すと逃げ切ります。</p>
+      <p className="criminal-modal__paragraph">犯人が逃げ切ると犯人とたくらみ済みの人が勝利します。探偵・いぬで捕まえた場合は、捕まえた人だけが勝利し、犯人とたくらみ済みの人は敗北、残りは「その他」です。たくらみ済みの人が捕まえた場合は勝者なしです。</p>
+      <div className="criminal-rules-grid">{(Object.keys(CARD_LABELS) as CriminalDancesCardType[]).map((type) => <p key={type}><strong>{CARD_GLYPHS[type]} {cardLabel(type)}</strong><span>{CARD_DESCRIPTIONS[type]}</span></p>)}</div>
+    </CriminalDancesModal>}
+
+    {historyOpen && <CriminalDancesModal title="カード履歴" labelledBy="criminal-history-title" onClose={() => setHistoryOpen(false)}>
+      {state.turnOrder.map((id) => <section className="criminal-history-player" key={id}><h3>{id === myUserId ? 'あなた' : playerName(id)}</h3>{state.players[id].played.length ? <div>{state.players[id].played.map((cardType, index) => <span key={id + '-' + index}>{index + 1}. {cardLabel(cardType)}</span>)}</div> : <p>まだカードを出していません。</p>}</section>)}
+    </CriminalDancesModal>}
+
+    {incidentOpen && state.incidentText && <CriminalDancesModal title="事件内容" labelledBy="criminal-incident-title" onClose={() => setIncidentOpen(false)}><p className="criminal-incident-full">{state.incidentText}</p></CriminalDancesModal>}
   </main>;
 }
-
