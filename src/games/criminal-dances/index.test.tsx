@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { CardConfirmation, CriminalDancesCardTile, CriminalDancesModal, CriminalDancesSecret, CriminalDancesStartScreen, resultLabel } from './index';
+import { CardConfirmation, CriminalDancesCardTile, CriminalDancesLastPlayedCard, CriminalDancesModal, CriminalDancesSecret, CriminalDancesStartScreen, resultLabel } from './index';
 import type { CriminalDancesPrivateState } from './types';
 
 const resultState = (reason: 'culprit_escaped' | 'detective_caught'): CriminalDancesPrivateState => ({
@@ -68,6 +68,16 @@ describe('criminal dances UI projections', () => {
     }));
     expect(locked).toContain('aria-disabled="true"');
     expect(locked).not.toContain('disabled=""');
+  });
+
+  it('renders the durable last-played card as a prominent battle card', () => {
+    const html = renderToStaticMarkup(createElement(CriminalDancesLastPlayedCard, {
+      card: { actorId: 'p1', cardType: 'detective' }, actorName: 'プレイヤー1',
+    }));
+    expect(html).toContain('最後に使ったカード');
+    expect(html).toContain('criminal-card--battle criminal-last-played__card');
+    expect(html).toContain('探偵');
+    expect(html).toContain('プレイヤー1');
   });
 
   it('keeps modal close controls available to keyboard and pointer users', () => {

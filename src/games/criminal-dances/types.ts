@@ -60,6 +60,8 @@ export interface CriminalDancesState {
   firstDiscovererPlayed: boolean;
   players: Record<string, CriminalDancesPlayerState>;
   lastAction: { actorId: string; cardType?: CriminalDancesCardType; text: string } | null;
+  /** Publicly safe metadata for the most recently discarded card. */
+  lastPlayedCard?: { actorId: string; cardType: CriminalDancesCardType } | null;
   pending: CriminalDancesPending | null;
   outcome: CriminalDancesOutcome | null;
   processedActionIds: string[];
@@ -87,6 +89,7 @@ export interface CriminalDancesPublicState {
   firstDiscovererPlayed: boolean;
   players: Record<string, CriminalDancesPublicPlayer>;
   lastAction: CriminalDancesState['lastAction'];
+  lastPlayedCard?: CriminalDancesState['lastPlayedCard'];
   pending: { kind: CriminalDancesPending['kind']; actorId?: string; targetId?: string; eligibleTargetIds?: string[]; cardCount?: number; submittedPlayerIds?: string[] } | null;
   outcome: CriminalDancesOutcome | null;
   incidentText: string | null;

@@ -199,6 +199,27 @@ export function CriminalDancesCardTile({
   </button>;
 }
 
+export function CriminalDancesLastPlayedCard({
+  card,
+  actorName,
+}: {
+  card: { actorId: string; cardType: CriminalDancesCardType } | null;
+  actorName: string;
+}) {
+  return <section className={'criminal-last-played' + (card ? '' : ' is-empty')} aria-label="最後に使ったカード">
+    <span className="criminal-last-played__label">最後に使ったカード</span>
+    {card ? <>
+      <div className={'criminal-card criminal-card--' + card.cardType + ' criminal-card--battle criminal-last-played__card'}>
+        <span className="criminal-card__corner" aria-hidden="true">{CARD_GLYPHS[card.cardType]}</span>
+        <span className="criminal-card__battle-glyph" aria-hidden="true">{CARD_GLYPHS[card.cardType]}</span>
+        <span className="criminal-card__name">{cardLabel(card.cardType)}</span>
+        <span className="criminal-card__type">公開カード</span>
+      </div>
+      <p><b>{actorName}</b> が出した</p>
+    </> : <p className="criminal-last-played__placeholder">最初のカードを待っています</p>}
+  </section>;
+}
+
 export function CriminalDancesModal({
   title,
   labelledBy,
@@ -322,6 +343,7 @@ export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props
   const tradeAlreadySubmitted = submittedIds.includes(myUserId);
   const isTradeParticipant = pending?.kind === 'trade' && (pending.actorId === myUserId || pending.targetId === myUserId);
   const canSubmitTrade = Boolean(isTradeParticipant && pending?.kind === 'trade' && pending.targetId && !tradeAlreadySubmitted);
+  const lastPlayedCard = state.lastPlayedCard ?? (state.lastAction?.cardType ? { actorId: state.lastAction.actorId, cardType: state.lastAction.cardType } : null);
   const submit = async () => {
     if (!selected) return;
     if (!selectedRule?.allowed && !canSubmitTrade) return;
@@ -367,6 +389,7 @@ export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props
       </section>
 
       <section className="criminal-center" aria-label="ゲーム進行">
+        <CriminalDancesLastPlayedCard card={lastPlayedCard} actorName={lastPlayedCard ? playerName(lastPlayedCard.actorId) : ''} />
         {state.incidentText && <button className="criminal-notice" type="button" onClick={() => setIncidentOpen(true)}><span>事件内容</span><strong>{state.incidentText}</strong></button>}
         {state.lastAction && <p className="criminal-last-action" role="status"><span>直前</span>{playerName(state.lastAction.actorId)}：{state.lastAction.text}{state.revealedCardType && <b>公開：{cardLabel(state.revealedCardType)}</b>}</p>}
         {state.privateReveal && <CriminalDancesSecret
@@ -394,7 +417,7 @@ export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props
     </section>}
 
     {state.phase === 'playing' && <section className="criminal-hand" aria-label="あなたの手札">
-      <header className="criminal-hand__header"><h2>手札 <span>{state.myHand.length}枚</span></h2><div className="criminal-tools"><button type="button" className="criminal-tool" onClick={() => setRulesOpen(true)}>ルール</button><button type="button" className="criminal-tool" onClick={() => setHistoryOpen(true)}>履歴</button>{state.incidentText && <button type="button" className="criminal-tool" onClick={() => setIncidentOpen(true)}>事件</button>}</div></header>
+      <header className="criminal-hand__header"><h2>手札 <span>{state.myHand.length}枚</span></h2></header>
       <div className="criminal-hand__cards">{state.myHand.map((card) => {
         const rule = privateCardRule(state, myUserId, card);
         const tradeAllowed = Boolean(canSubmitTrade);
@@ -406,6 +429,7 @@ export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props
     <footer className="criminal-footer">
       <button className="criminal-tool" type="button" onClick={() => setRulesOpen(true)}>ルール</button>
       <button className="criminal-tool" type="button" onClick={() => setHistoryOpen(true)}>履歴</button>
+      {state.incidentText && <button className="criminal-tool" type="button" onClick={() => setIncidentOpen(true)}>事件</button>}
       {isHost && <button className="criminal-tool criminal-tool--danger" type="button" onClick={() => void onBackToLobby()}>ロビーへ</button>}
     </footer>
 

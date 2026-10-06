@@ -45,6 +45,31 @@ describe('犯人は踊る deck and state rules', () => {
     expect(next.currentPlayerIndex).toBe((state.currentPlayerIndex + 1) % 3);
   });
 
+  it('keeps the last played card public while an effect is resolving', () => {
+    let state = fixture({ a: [{ type: 'dog' }], b: [{ type: 'culprit' }], c: [] });
+    state = playCard(state, 'a', 'a-dog-0');
+    expect(state.lastPlayedCard).toEqual({ actorId: 'a', cardType: 'dog' });
+    expect(toPublicState(state).lastPlayedCard).toEqual({ actorId: 'a', cardType: 'dog' });
+    state = selectTarget(state, 'a', 'b');
+    expect(toPublicState(state).lastPlayedCard).toEqual({ actorId: 'a', cardType: 'dog' });
+    if (state.pending?.kind !== 'dog_card') throw new Error('dog effect missing');
+    state = chooseDogCard(state, 'a', 0);
+    expect(toPublicState(state).lastPlayedCard).toEqual({ actorId: 'a', cardType: 'dog' });
+
+    state = fixture({ a: [{ type: 'information_control' }], b: [{ type: 'civilian' }], c: [{ type: 'civilian' }] });
+    state = playCard(state, 'a', 'a-information_control-0');
+    state = submitSimultaneousChoice(state, 'b', 'b-civilian-0');
+    state = submitSimultaneousChoice(state, 'c', 'c-civilian-0');
+    expect(toPublicState(state).lastPlayedCard).toEqual({ actorId: 'a', cardType: 'information_control' });
+  });
+
+  it('falls back to legacy lastAction card metadata and resets the durable card', () => {
+    const state = createGameState(['a', 'b', 'c'], sequenceRng, 'legacy');
+    const legacy = { ...state, lastPlayedCard: undefined, lastAction: { actorId: 'b', cardType: 'witness' as const, text: '旧状態' } };
+    expect(toPublicState(legacy).lastPlayedCard).toEqual({ actorId: 'b', cardType: 'witness' });
+    expect(toPublicState(state).lastPlayedCard).toBeNull();
+  });
+
   it('does not expose hands or card IDs in the public projection', () => {
     const state = createGameState(['a', 'b', 'c'], sequenceRng, 'secret');
     const publicState = toPublicState(state);
@@ -227,6 +252,7 @@ describe('edge cases and privacy regressions', () => {
     expect(reset.pending).toBeNull();
     expect(reset.processedActionIds).toEqual([]);
     expect(reset.outcome).toBeNull();
+    expect(reset.lastPlayedCard).toBeNull();
     expect(Object.values(reset.players).every(p => p.hand.length === 4 && !p.conspirator && !p.played.length)).toBe(true);
   });
 });

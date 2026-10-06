@@ -1403,6 +1403,17 @@ button, input, select, textarea { font: inherit; }
 .criminal-notice strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .criminal-last-action { border-color: #c9dce5; background: #eef8fb; }
 .criminal-last-action b { grid-column: 2; color: var(--muted); font-size: .57rem; }
+.criminal-last-played { display: grid; min-height: 0; flex: 1; place-items: center; align-content: center; gap: .15rem; text-align: center; }
+.criminal-last-played__label { color: var(--orange); font-size: .57rem; font-weight: 1000; letter-spacing: .18em; }
+.criminal-last-played .criminal-last-played__card { width: clamp(8rem, 34vw, 10.5rem); max-width: none; flex: none; aspect-ratio: .68; }
+.criminal-last-played__card .criminal-card__corner { font-size: clamp(1.25rem, 6vw, 2rem); }
+.criminal-last-played__card .criminal-card__battle-glyph { color: var(--card-accent, var(--ink)); font-size: clamp(2.8rem, 14vw, 5rem); font-weight: 1000; line-height: .9; }
+.criminal-last-played__card .criminal-card__name { font-size: clamp(.9rem, 4vw, 1.25rem); }
+.criminal-last-played p { margin: 0; color: var(--muted); font-size: .64rem; font-weight: 800; }
+.criminal-last-played__placeholder { color: #aaa295 !important; font-size: .68rem !important; }
+.criminal-last-played.is-empty { min-height: 4rem; }
+.criminal-center:has(.criminal-pending) .criminal-last-played__card,
+.criminal-center:has(.criminal-secret) .criminal-last-played__card { width: clamp(4.5rem, 13vw, 6.2rem); }
 .criminal-pending {
   display: grid;
   min-height: 0;

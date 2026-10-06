@@ -92,7 +92,7 @@ export function createGameState(playerIds: readonly string[], rng: () => number 
   return {
     game: 'criminal-dances', version: 1, matchId, revision: 0, phase: 'playing', turnOrder: [...playerIds],
     currentPlayerIndex: playerIds.indexOf(firstDiscovererPlayerId), round: 1,
-    firstDiscovererPlayerId, firstDiscovererPlayed: false, players, lastAction: null, pending: null,
+    firstDiscovererPlayerId, firstDiscovererPlayed: false, players, lastAction: null, lastPlayedCard: null, pending: null,
     outcome: null, processedActionIds: [], incidentText: null, revealedCardType: null,
   };
 }
@@ -184,6 +184,7 @@ export function playCard(state: CriminalDancesState, playerId: string, cardId: s
   const card = findCard(player, cardId);
   player.hand = player.hand.filter((candidate) => candidate.id !== cardId);
   player.played.push(card.type);
+  next.lastPlayedCard = { actorId: playerId, cardType: card.type };
   if (actionId) next.processedActionIds = [...next.processedActionIds.slice(-49), actionId];
   next.revision += 1;
   if (card.type === 'first_discoverer') {
@@ -416,12 +417,13 @@ function publicPending(state: CriminalDancesState): CriminalDancesPublicState['p
 }
 
 export function toPublicState(state: CriminalDancesState): CriminalDancesPublicState {
+  const lastPlayedCard = state.lastPlayedCard ?? (state.lastAction?.cardType ? { actorId: state.lastAction.actorId, cardType: state.lastAction.cardType } : null);
   return {
     game: state.game, version: 1, matchId: state.matchId, revision: state.revision, phase: state.phase,
     turnOrder: [...state.turnOrder], currentPlayerIndex: state.currentPlayerIndex, round: state.round,
     firstDiscovererPlayerId: state.firstDiscovererPlayerId, firstDiscovererPlayed: state.firstDiscovererPlayed,
     players: Object.fromEntries(state.turnOrder.map((id) => [id, { id, handCount: state.players[id].hand.length, played: [...state.players[id].played], conspirator: state.players[id].conspirator }])),
-    lastAction: state.lastAction ? { ...state.lastAction } : null, pending: publicPending(state), outcome: state.outcome ? structuredClone(state.outcome) : null,
+    lastAction: state.lastAction ? { ...state.lastAction } : null, lastPlayedCard, pending: publicPending(state), outcome: state.outcome ? structuredClone(state.outcome) : null,
     incidentText: state.incidentText, revealedCardType: state.revealedCardType,
   };
 }
