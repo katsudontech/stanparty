@@ -127,31 +127,44 @@ export function CriminalDancesStartScreen({
   error,
   players,
   onStart,
-  onAbort,
 }: {
   isHost: boolean;
   busy: boolean;
   players: RoomState['players'];
   error: string | null;
   onStart: () => Promise<void>;
-  onAbort: () => Promise<void>;
 }) {
-  return <main className="criminal-dances-game paper-card mx-auto max-w-3xl p-5">
-    <p className="section-kicker">犯人は踊る</p>
-    <h1 className="mt-2 text-2xl font-black">ゲームの設定を確認</h1>
-    <p className="mt-2 text-sm text-[var(--muted)]">カードを配る前に、全員で遊び方を確認します。</p>
-    <p className="mt-4 rounded-xl bg-orange-50 p-3 text-sm font-bold">第一発見者から座席順にカードを1枚ずつ出し、探偵やいぬで犯人を捕まえるゲームです。犯人は最後の1枚で逃げ切りを狙います。</p>
-    <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-      <div className="rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><dt className="font-bold">参加人数</dt><dd className="mt-1">{players.length}人（3〜8人）</dd></div>
-      <div className="rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><dt className="font-bold">最初の手札</dt><dd className="mt-1">1人4枚</dd></div>
-      <div className="rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><dt className="font-bold">手番</dt><dd className="mt-1">第一発見者から、座席順に左隣へ</dd></div>
-      <div className="rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><dt className="font-bold">勝敗</dt><dd className="mt-1">犯人の逃走か、探偵・いぬの逮捕</dd></div>
-    </dl>
-    <section className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3"><h2 className="font-bold">座席順</h2><ol className="mt-2 grid gap-1 text-sm sm:grid-cols-2">{players.map((player, index) => <li key={player.userId}>{index + 1}. {player.name}</li>)}</ol></section>
-    <details className="mt-4 rounded-xl border border-[var(--line)] p-3 text-sm"><summary className="cursor-pointer font-bold">ルールを読む</summary><p className="mt-2">第一発見者カードから始まり、カードの効果を解決しながら犯人を探します。犯人は最後の1枚で逃げ切りを狙います。</p><p className="mt-2">このゲームには追加設定はありません。ホストが開始すると、固定のカード構成で自動的に配札されます。</p></details>
-    {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700" role="alert">{error}</p>}
-    {isHost ? <button className="button-primary mt-5 w-full" type="button" disabled={busy} aria-busy={busy} onClick={() => void onStart()}>{busy ? '準備中…' : 'この設定で開始'}</button> : <p className="mt-5 border-2 border-dashed border-[var(--line)] p-4 text-center font-bold text-[var(--muted)]">ホストが設定を確認して開始するまでお待ちください。</p>}
-    {isHost && <button className="button-secondary mt-3 w-full" type="button" onClick={() => void onAbort()}>ゲームを中断してロビーへ戻る</button>}
+  const motifCards: CriminalDancesCardType[] = ['first_discoverer', 'culprit', 'detective'];
+  return <main className="criminal-dances-game criminal-dances-start">
+    <div className="criminal-dances-start__hero">
+      <div className="criminal-dances-start__cards" aria-hidden="true">
+        {motifCards.map((type) => <span className={'criminal-card criminal-card--' + type + ' criminal-dances-start__motif'} key={type}>
+          <span className="criminal-card__corner">{CARD_GLYPHS[type]}</span>
+          <span className="criminal-card__name">{cardLabel(type)}</span>
+          <span className="criminal-card__type">効果</span>
+        </span>)}
+      </div>
+      <p className="section-kicker">PARTY CARD GAME</p>
+      <h1>犯人は踊る</h1>
+      <p className="criminal-dances-start__tagline">最後の1枚まで、犯人を追え。</p>
+      <p className="criminal-dances-start__summary">カードを出して、秘密を読み合い、犯人の逃走を止めよう。</p>
+    </div>
+    <div className="criminal-dances-start__badges" aria-label="ゲーム情報">
+      <span><b>{players.length}人</b>でプレイ</span>
+      <span><b>4枚</b>スタート</span>
+      <span><b>座席順</b>に進行</span>
+    </div>
+    <ol className="criminal-dances-start__steps" aria-label="遊び方">
+      <li><b>1</b><span>第一発見者が事件を始める</span></li>
+      <li><b>2</b><span>カードの効果で探る</span></li>
+      <li><b>3</b><span>犯人を捕まえる／逃げ切る</span></li>
+    </ol>
+    <section className="criminal-dances-start__players" aria-labelledby="criminal-start-players">
+      <h2 id="criminal-start-players">参加者 <span>{players.length}/8</span></h2>
+      <ol>{players.map((player, index) => <li key={player.userId}><span>{index + 1}</span>{player.name}</li>)}</ol>
+    </section>
+    {error && <p className="criminal-dances-start__error" role="alert">{error}</p>}
+    {isHost ? <button className="button-primary criminal-dances-start__button" type="button" disabled={busy} aria-busy={busy} onClick={() => void onStart()}>{busy ? '準備中…' : 'ゲームを始める'}</button> : <p className="criminal-dances-start__waiting" role="status">ホストが開始するまでお待ちください</p>}
   </main>;
 }
 
@@ -325,9 +338,8 @@ export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props
       setStarting(true);
       try { await initialize(); } catch { /* displayed below */ } finally { setStarting(false); }
     }}
-    onAbort={onBackToLobby}
   />;
-  if (!state) return <main className="criminal-dances-game paper-card p-5"><p className="section-kicker">犯人は踊る</p><h1 className="mt-2 text-2xl font-black">{error ? 'ゲーム状態を読み込めません' : 'ゲームを読み込んでいます…'}</h1><p className="mt-2 text-sm text-[var(--muted)]">{error ?? 'ホストの開始処理を待っています。'}</p><div className="mt-4 flex flex-wrap gap-2"><button className="button-primary" type="button" onClick={retry}>再読み込み</button>{roomState.host_id === myUserId && <button className="button-secondary" type="button" onClick={() => void onBackToLobby()}>ゲームを中断</button>}</div></main>;
+  if (!state) return <main className="criminal-dances-game paper-card p-5"><p className="section-kicker">犯人は踊る</p><h1 className="mt-2 text-2xl font-black">{error ? 'ゲーム状態を読み込めません' : 'ゲームを読み込んでいます…'}</h1><p className="mt-2 text-sm text-[var(--muted)]">{error ?? 'ホストの開始処理を待っています。'}</p><div className="mt-4 flex flex-wrap gap-2"><button className="button-primary" type="button" onClick={retry}>再読み込み</button></div></main>;
 
   const selected = state.myHand.find((card) => card.id === selectedCard) ?? null;
   const selectedRule = selected ? privateCardRule(state, myUserId, selected) : null;
@@ -430,7 +442,6 @@ export function CriminalDancesGame({ roomState, myUserId, onBackToLobby }: Props
       <button className="criminal-tool" type="button" onClick={() => setRulesOpen(true)}>ルール</button>
       <button className="criminal-tool" type="button" onClick={() => setHistoryOpen(true)}>履歴</button>
       {state.incidentText && <button className="criminal-tool" type="button" onClick={() => setIncidentOpen(true)}>事件</button>}
-      {isHost && <button className="criminal-tool criminal-tool--danger" type="button" onClick={() => void onBackToLobby()}>ロビーへ</button>}
     </footer>
 
     {selected && <CriminalDancesModal title={cardLabel(selected.type) + 'カード'} labelledBy="criminal-card-title" onClose={() => setSelectedCard(null)}>

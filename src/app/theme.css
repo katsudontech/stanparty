@@ -1559,3 +1559,58 @@ button, input, select, textarea { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .criminal-card { transition: none; }
 }
+
+/* 犯人は踊る: compact pregame card. The parent room main remains scrollable
+   when a short viewport or long participant names need more room. */
+.criminal-dances-start {
+  display: flex;
+  width: min(100%, 35rem);
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: .65rem;
+  margin-inline: auto;
+  padding: .45rem .65rem .85rem;
+}
+.criminal-dances-start__hero { text-align: center; }
+.criminal-dances-start__hero .section-kicker { margin: 0; font-size: .55rem; letter-spacing: .2em; }
+.criminal-dances-start__hero h1 { margin: .15rem 0 0; color: var(--ink); font-size: clamp(2rem, 10vw, 2.8rem); font-weight: 1000; letter-spacing: -.08em; line-height: 1; }
+.criminal-dances-start__cards { display: flex; justify-content: center; gap: .35rem; margin-bottom: .45rem; }
+.criminal-dances-start__motif { width: 3.6rem; max-width: none; aspect-ratio: .68; box-shadow: 1px 2px 0 #6a6255, 0 3px 6px rgba(49, 37, 24, .12); }
+.criminal-dances-start__motif:nth-child(1) { transform: rotate(-8deg) translateY(.18rem); }
+.criminal-dances-start__motif:nth-child(2) { transform: translateY(-.12rem); }
+.criminal-dances-start__motif:nth-child(3) { transform: rotate(8deg) translateY(.18rem); }
+.criminal-dances-start__motif .criminal-card__corner { top: .22rem; left: .25rem; font-size: .85rem; }
+.criminal-dances-start__motif .criminal-card__name { font-size: .58rem; }
+.criminal-dances-start__motif .criminal-card__type { right: .23rem; bottom: .2rem; font-size: .38rem; }
+.criminal-dances-start__tagline { margin: .38rem 0 0; color: var(--orange); font-size: .92rem; font-weight: 1000; }
+.criminal-dances-start__summary { margin: .12rem 0 0; color: var(--muted); font-size: .72rem; font-weight: 750; }
+.criminal-dances-start__badges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .3rem; border-block: 1px solid var(--line); padding: .42rem 0; text-align: center; }
+.criminal-dances-start__badges span { color: var(--muted); font-size: .62rem; font-weight: 800; }
+.criminal-dances-start__badges b { display: block; color: var(--ink); font-size: .78rem; font-weight: 1000; }
+.criminal-dances-start__steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; margin: 0; padding: 0; list-style: none; }
+.criminal-dances-start__steps li { display: grid; min-width: 0; grid-template-rows: auto 1fr; justify-items: center; gap: .22rem; border: 1px solid #d9cdb9; border-radius: .45rem; background: color-mix(in srgb, var(--paper) 78%, var(--yellow)); padding: .35rem .24rem; text-align: center; }
+.criminal-dances-start__steps b { display: grid; width: 1.25rem; height: 1.25rem; place-items: center; border-radius: 50%; background: var(--orange); color: white; font-size: .65rem; }
+.criminal-dances-start__steps span { color: var(--ink); font-size: .59rem; font-weight: 850; line-height: 1.25; }
+.criminal-dances-start__players { border: 1px solid var(--line); border-radius: .5rem; background: color-mix(in srgb, var(--surface) 85%, var(--paper-deep)); padding: .4rem .5rem; }
+.criminal-dances-start__players h2 { display: flex; align-items: baseline; justify-content: space-between; gap: .4rem; font-size: .75rem; font-weight: 1000; }
+.criminal-dances-start__players h2 span { color: var(--muted); font-size: .62rem; }
+.criminal-dances-start__players ol { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .25rem; margin: .3rem 0 0; padding: 0; list-style: none; }
+.criminal-dances-start__players li { display: flex; min-width: 0; align-items: center; gap: .2rem; border-radius: .3rem; background: var(--paper); padding: .25rem .28rem; color: var(--ink); font-size: .62rem; font-weight: 800; }
+.criminal-dances-start__players li > span { display: grid; flex: none; width: .95rem; height: .95rem; place-items: center; border-radius: 50%; background: var(--paper-deep); color: var(--muted); font-size: .5rem; font-weight: 1000; }
+.criminal-dances-start__players li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.criminal-dances-start__error { margin: 0; border: 2px solid #b6332f; border-radius: .4rem; background: #ffe3d8; padding: .35rem .5rem; color: #8c211f; font-size: .7rem; font-weight: 850; }
+.criminal-dances-start__button { width: 100%; min-height: 2.7rem; margin: 0; }
+.criminal-dances-start__waiting { margin: 0; border: 2px dashed var(--line); border-radius: .45rem; padding: .65rem .5rem; color: var(--muted); font-size: .74rem; font-weight: 900; text-align: center; }
+@media (max-width: 360px) {
+  .criminal-dances-start { gap: .5rem; padding-inline: .45rem; }
+  .criminal-dances-start__players ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .criminal-dances-start__summary { font-size: .67rem; }
+}
+@media (max-height: 640px) {
+  .criminal-dances-start { justify-content: flex-start; gap: .45rem; padding-top: .2rem; }
+  .criminal-dances-start__cards { margin-bottom: .22rem; }
+  .criminal-dances-start__motif { width: 3rem; }
+  .criminal-dances-start__hero h1 { font-size: 2rem; }
+  .criminal-dances-start__tagline { margin-top: .22rem; }
+}

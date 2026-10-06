@@ -37,22 +37,29 @@ const resultState = (reason: 'culprit_escaped' | 'detective_caught'): CriminalDa
 });
 
 describe('criminal dances UI projections', () => {
-  it('shows the fixed settings and host-only start action before cards are dealt', () => {
+  it('shows a compact host start screen and locks guests to waiting', () => {
     const start = () => Promise.resolve();
     const players = [
       { userId: 'host', name: 'ホスト', avatarUrl: '', isHost: true, color: '#fff', isOnline: true },
       { userId: 'guest', name: 'ゲスト', avatarUrl: '', isHost: false, color: '#000', isOnline: true },
       { userId: 'guest2', name: 'ゲスト2', avatarUrl: '', isHost: false, color: '#000', isOnline: true },
     ];
-    const hostHtml = renderToStaticMarkup(createElement(CriminalDancesStartScreen, { isHost: true, busy: false, error: null, players, onStart: start, onAbort: start }));
-    const guestHtml = renderToStaticMarkup(createElement(CriminalDancesStartScreen, { isHost: false, busy: false, error: null, players, onStart: start, onAbort: start }));
-    expect(hostHtml).toContain('この設定で開始');
-    expect(hostHtml).toContain('3〜8人');
-    expect(hostHtml).toContain('3人（3〜8人）');
+    const hostHtml = renderToStaticMarkup(createElement(CriminalDancesStartScreen, { isHost: true, busy: false, error: null, players, onStart: start }));
+    const busyHostHtml = renderToStaticMarkup(createElement(CriminalDancesStartScreen, { isHost: true, busy: true, error: null, players, onStart: start }));
+    const guestHtml = renderToStaticMarkup(createElement(CriminalDancesStartScreen, { isHost: false, busy: false, error: null, players, onStart: start }));
+    expect(hostHtml).toContain('ゲームを始める');
+    expect(hostHtml).toContain('最後の1枚まで、犯人を追え');
+    expect(hostHtml).toContain('第一発見者が事件を始める');
+    expect(hostHtml).toContain('3人');
+    expect(hostHtml).toContain('4枚');
+    expect(hostHtml).toContain('3/8');
     expect(hostHtml).toContain('ホスト');
-    expect(hostHtml).toContain('1人4枚');
-    expect(guestHtml).toContain('ホストが設定を確認して開始するまでお待ちください');
-    expect(guestHtml).not.toContain('この設定で開始');
+    expect(hostHtml).not.toContain('ゲームを中断してロビーへ戻る');
+    expect(busyHostHtml).toContain('準備中…');
+    expect(busyHostHtml).toContain('aria-busy="true"');
+    expect(guestHtml).toContain('ホストが開始するまでお待ちください');
+    expect(guestHtml).not.toContain('ゲームを始める');
+    expect(guestHtml).not.toContain('<button');
   });
 
   it('renders physical card selection affordances with the selected state and effect label', () => {
