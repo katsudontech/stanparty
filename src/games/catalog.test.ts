@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { GAME_CATALOG, getGamePlayerCountError } from './catalog';
+import {
+  GAME_CATALOG,
+  getGamePlayerCountError,
+  getGamePlayerCountGuidance,
+  sortGamesByPlayerCount,
+} from './catalog';
 
 describe('game catalog details', () => {
   it('ロビーで各ゲームの詳しいルールを表示できる', () => {
@@ -35,6 +40,34 @@ describe('game catalog details', () => {
 });
 
 describe('game player count', () => {
+  it('returns inclusive card guidance at each boundary and immediately outside it', () => {
+    GAME_CATALOG.forEach((game) => {
+      expect(getGamePlayerCountGuidance(game, game.minPlayers)).toBe(`今の${game.minPlayers}人で遊べます`);
+      expect(getGamePlayerCountGuidance(game, game.maxPlayers)).toBe(`今の${game.maxPlayers}人で遊べます`);
+      expect(getGamePlayerCountGuidance(game, game.minPlayers - 1)).toBe('あと1人必要です');
+      expect(getGamePlayerCountGuidance(game, game.maxPlayers + 1)).toBe(`${game.maxPlayers}人まで遊べます`);
+    });
+  });
+
+  it('groups playable games first without mutating the catalog order', () => {
+    const originalIds = GAME_CATALOG.map((game) => game.id);
+
+    [0, 2, 9, 11, 15, ...GAME_CATALOG.flatMap((game) => [game.minPlayers - 1, game.minPlayers, game.maxPlayers, game.maxPlayers + 1])]
+      .forEach((playerCount) => {
+        const sortedIds = sortGamesByPlayerCount(GAME_CATALOG, playerCount).map((game) => game.id);
+        const playableIds = GAME_CATALOG
+          .filter((game) => game.minPlayers <= playerCount && playerCount <= game.maxPlayers)
+          .map((game) => game.id);
+        const unavailableIds = GAME_CATALOG
+          .filter((game) => !(game.minPlayers <= playerCount && playerCount <= game.maxPlayers))
+          .map((game) => game.id);
+
+        expect(sortedIds).toEqual([...playableIds, ...unavailableIds]);
+      });
+
+    expect(GAME_CATALOG.map((game) => game.id)).toEqual(originalIds);
+  });
+
   it.each([
     ['fake-artist', 2, 'エセ芸術家は3人以上で遊べます。あと1人必要です'],
     ['coyote', 1, 'Coyoteは2人以上で遊べます。あと1人必要です'],

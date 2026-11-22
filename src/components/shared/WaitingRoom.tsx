@@ -9,7 +9,7 @@ import { GameRulesDialog } from '@/components/shared/GameRulesDialog';
 import { RoomQrDialog } from '@/components/shared/RoomQrDialog';
 import { buildLineInviteUrl } from '@/components/shared/lineInvite';
 import { SiteHeader } from '@/components/site/SiteHeader';
-import { GAME_CATALOG, getGameById, getGamePlayerCountError } from '@/games/catalog';
+import { GAME_CATALOG, getGameById, getGamePlayerCountError, sortGamesByPlayerCount } from '@/games/catalog';
 
 import type { RoomState, Player } from '@/games/core/types';
 
@@ -62,6 +62,7 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
 
   const selectedGame = getGameById(roomState.game_type);
   const playerCountError = getGamePlayerCountError(roomState.game_type, players.length);
+  const games = sortGamesByPlayerCount(GAME_CATALOG, players.length);
 
   const handleStartGame = () => {
     if (playerCountError) return;
@@ -193,7 +194,8 @@ export function WaitingRoom({ roomState, players, onlineUserIds, isHost, onStart
           <h2 className="mt-2 text-2xl font-black tracking-[-.04em]">遊ぶゲームを選ぶ</h2>
           <div className="mt-6 border-y-2 border-[var(--line)] py-5">
             <GameSelectionMenu
-              games={GAME_CATALOG}
+              games={games}
+              playerCount={players.length}
               value={roomState.game_type}
               onChange={(gameId) => run(() => onChangeGame(gameId))}
               busy={busy}

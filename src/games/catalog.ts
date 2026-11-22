@@ -276,6 +276,38 @@ export function getGameById(id: string): GameCatalogEntry | undefined {
   return GAME_CATALOG.find((game) => game.id === id);
 }
 
+/** Returns the short player-count guidance shown on a waiting-room game card. */
+export function getGamePlayerCountGuidance(
+  game: Pick<GameCatalogEntry, 'minPlayers' | 'maxPlayers'>,
+  playerCount: number,
+): string {
+  if (playerCount < game.minPlayers) {
+    return `あと${game.minPlayers - playerCount}人必要です`;
+  }
+
+  if (playerCount > game.maxPlayers) {
+    return `${game.maxPlayers}人まで遊べます`;
+  }
+
+  return `今の${playerCount}人で遊べます`;
+}
+
+/** Groups games that fit the current room first while preserving catalog order within each group. */
+export function sortGamesByPlayerCount(
+  games: readonly GameCatalogEntry[],
+  playerCount: number,
+): GameCatalogEntry[] {
+  const playable: GameCatalogEntry[] = [];
+  const unavailable: GameCatalogEntry[] = [];
+
+  games.forEach((game) => {
+    const isPlayable = playerCount >= game.minPlayers && playerCount <= game.maxPlayers;
+    (isPlayable ? playable : unavailable).push(game);
+  });
+
+  return [...playable, ...unavailable];
+}
+
 export function getGamePlayerCountError(gameId: string, playerCount: number): string | null {
   const game = getGameById(gameId);
 

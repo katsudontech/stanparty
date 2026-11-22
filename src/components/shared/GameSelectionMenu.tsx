@@ -3,10 +3,12 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { GameArtwork } from '@/components/site/GameArtwork';
+import { getGamePlayerCountGuidance } from '@/games/catalog';
 import type { GameCatalogEntry, PlayableGameId } from '@/games/catalog';
 
 interface GameSelectionMenuProps {
   games: readonly GameCatalogEntry[];
+  playerCount: number;
   value: string;
   onChange: (gameId: PlayableGameId) => Promise<boolean>;
   busy?: boolean;
@@ -15,10 +17,10 @@ interface GameSelectionMenuProps {
   browseOnly?: boolean;
 }
 
-export function GameSelectionMenu({ games, value, onChange, browseOnly = false, busy = false, error = null }: GameSelectionMenuProps) {
+export function GameSelectionMenu({ games, playerCount, value, onChange, browseOnly = false, busy = false, error = null }: GameSelectionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const optionRefs = useRef(new Map<PlayableGameId, HTMLButtonElement>());
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dialogId = useId();
   const titleId = useId();
@@ -26,6 +28,7 @@ export function GameSelectionMenu({ games, value, onChange, browseOnly = false, 
   const dialogHintId = useId();
   const selectedIndex = games.findIndex((game) => game.id === value);
   const selectedGame = selectedIndex >= 0 ? games[selectedIndex] : undefined;
+  const firstGameId = games[0]?.id;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -33,11 +36,12 @@ export function GameSelectionMenu({ games, value, onChange, browseOnly = false, 
 
     if (isOpen && !dialog.open) {
       dialog.showModal();
-      optionRefs.current[selectedIndex >= 0 ? selectedIndex : 0]?.focus();
+      const initialGameId = selectedGame?.id ?? firstGameId;
+      if (initialGameId) optionRefs.current.get(initialGameId)?.focus();
     } else if (!isOpen && dialog.open) {
       dialog.close();
     }
-  }, [isOpen, selectedIndex]);
+  }, [firstGameId, isOpen, selectedGame?.id]);
 
   const closeMenu = () => {
     setIsOpen(false);
@@ -61,8 +65,10 @@ export function GameSelectionMenu({ games, value, onChange, browseOnly = false, 
     }
   };
 
-  const handleOptionKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+  const handleOptionKeyDown = (event: KeyboardEvent<HTMLButtonElement>, gameId: PlayableGameId) => {
     if (games.length === 0) return;
+    const index = games.findIndex((game) => game.id === gameId);
+    if (index < 0) return;
 
     let nextIndex: number | undefined;
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
@@ -77,7 +83,7 @@ export function GameSelectionMenu({ games, value, onChange, browseOnly = false, 
 
     if (nextIndex !== undefined) {
       event.preventDefault();
-      optionRefs.current[nextIndex]?.focus();
+      optionRefs.current.get(games[nextIndex].id)?.focus();
     }
   };
 
@@ -168,6 +174,7 @@ export function GameSelectionMenu({ games, value, onChange, browseOnly = false, 
           <div className="game-selection-grid" aria-label="ゲーム一覧">
             {games.map((game, index) => {
               const isSelected = game.id === value;
+              const playerCountGuidance = getGamePlayerCountGuidance(game, playerCount);
 
               return (
                 <article
@@ -189,22 +196,23 @@ export function GameSelectionMenu({ games, value, onChange, browseOnly = false, 
                       <div><dt>難しさ</dt><dd>{game.difficulty}</dd></div>
                     </dl>
                     <span className="game-selection-card__status" aria-hidden="true">
-                      {busy ? 'ゲームを変更中…' : isSelected ? '選択中 ✓' : browseOnly ? 'ホストが選択します' : 'このゲームを選ぶ'}
+                      {playerCountGuidance} · {busy ? 'ゲームを変更中…' : isSelected ? '選択中 ✓' : browseOnly ? 'ホストが選択します' : 'このゲームを選ぶ'}
                     </span>
                   </div>
                   <button
                     ref={(element) => {
-                      optionRefs.current[index] = element;
+                      if (element) optionRefs.current.set(game.id, element);
+                      else optionRefs.current.delete(game.id);
                     }}
                     type="button"
                     className="game-selection-card__button"
-                    aria-label={`${game.shortName}。${game.summary}。${isSelected ? '選択中。' : browseOnly ? 'ホストのみ変更できます。' : 'このゲームを選ぶ。'}`}
+                    aria-label={`${game.shortName}。${game.summary}。${playerCountGuidance}。${isSelected ? '選択中。' : browseOnly ? 'ホストのみ変更できます。' : 'このゲームを選ぶ。'}`}
                     aria-pressed={isSelected}
                     aria-disabled={browseOnly || busy}
                     disabled={busy}
                     aria-busy={busy}
                     onClick={() => chooseGame(game.id)}
-                    onKeyDown={(event) => handleOptionKeyDown(event, index)}
+                    onKeyDown={(event) => handleOptionKeyDown(event, game.id)}
                   />
                 </article>
               );
