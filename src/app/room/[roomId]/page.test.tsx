@@ -27,6 +27,7 @@ vi.mock('@/games/ito', () => ({ ItoGame: () => null }));
 vi.mock('@/games/ai-barenai', () => ({ AiBarenaiGame: () => null }));
 vi.mock('@/games/ai-barenai-drawing', () => ({ AiBarenaiDrawingGame: () => null }));
 vi.mock('@/games/pinch-hint', () => ({ PinchHintGame: ({ headerActions }: { headerActions?: import('react').ReactNode }) => headerActions }));
+vi.mock('@/games/aiue-battle', () => ({ AiueBattleGame: () => <div>あいうえバトルの結果画面</div> }));
 vi.mock('@/games/criminal-dances', () => ({ CriminalDancesGame: () => <div>犯人は踊るの結果画面</div> }));
 import RoomPage from './page';
 import { scheduleWaitingRoomRefresh, WAITING_ROOM_REFRESH_INTERVAL_MS } from './waitingRoomRefresh';
@@ -38,7 +39,7 @@ it('shows a retry action instead of an endless spinner when authentication fails
   expect(html).not.toContain('ルームを読み込んでいます');
 });
 
-const games = ['fake-artist', 'coyote', 'one-night-werewolf', 'ito', 'ai-barenai', 'ai-barenai-drawing', 'pinch-hint'];
+const games = ['fake-artist', 'coyote', 'one-night-werewolf', 'ito', 'ai-barenai', 'ai-barenai-drawing', 'pinch-hint', 'aiue-battle'];
 it.each(games)('shows the end button only to the host in %s', (game) => {
   state.game = game;
   state.userId = 'host';
@@ -101,4 +102,13 @@ it('polls waiting rooms and cleans up the fallback interval', () => {
 
   scheduleWaitingRoomRefresh('playing', refreshRoom);
   expect(setInterval).toHaveBeenCalledOnce();
+});
+
+it('mounts aiue-battle results after the room is marked finished', () => {
+  state.userId = 'host';
+  state.game = 'aiue-battle';
+  state.status = 'finished';
+  const html = renderToStaticMarkup(createElement(RoomPage, { params: Promise.resolve({ roomId: 'room' }) }));
+  expect(html).toContain('あいうえバトルの結果画面');
+  expect(html).not.toContain('ゲームは終了しました。');
 });

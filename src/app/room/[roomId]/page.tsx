@@ -16,6 +16,7 @@ import { AiBarenaiGame } from '@/games/ai-barenai';
 import { AiBarenaiDrawingGame } from '@/games/ai-barenai-drawing';
 import { PinchHintGame } from '@/games/pinch-hint';
 import { CarbonatedShakeGame } from '@/games/carbonated-shake';
+import { AiueBattleGame } from '@/games/aiue-battle';
 import { CriminalDancesGame } from '@/games/criminal-dances';
 import { RoomReactionHeaderActions, RoomReactionsProvider } from '../../../components/shared/RoomReactions';
 import { scheduleWaitingRoomRefresh } from './waitingRoomRefresh';
@@ -139,7 +140,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         );
     }
 
-    if (roomState.status === 'playing' || (roomState.status === 'finished' && roomState.game_type === 'criminal-dances')) {
+    if (roomState.status === 'playing' || (roomState.status === 'finished' && ['criminal-dances', 'aiue-battle'].includes(roomState.game_type))) {
         const headerActions = <RoomHeaderActions isHost={isHost} onEnd={handleBackToLobby} />;
         if (roomState.game_type === 'fake-artist') {
             return withReactions(
@@ -217,6 +218,10 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
                     <CarbonatedShakeGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} />
                 </GameWrapper>
             );
+        }
+
+        if (roomState.game_type === 'aiue-battle') {
+            return withReactions(<GameWrapper headerActions={headerActions} players={players} myUserId={myUserId} showPlayerBar={false}><AiueBattleGame roomState={roomState} myUserId={myUserId} onBackToLobby={handleBackToLobby} /></GameWrapper>);
         }
 
         if (roomState.game_type === 'criminal-dances') {

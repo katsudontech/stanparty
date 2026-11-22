@@ -1,4 +1,4 @@
-export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake' | 'criminal-dances';
+export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake' | 'criminal-dances' | 'aiue-battle';
 
 export interface GameSeoCopy {
   title: string;
@@ -268,6 +268,17 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     goodFor: ['会話しながら推理したい', '短時間のカードゲームで遊びたい', '3〜8人で遊びたい'],
     steps: [{ title: '事件開始', body: '第一発見者が事件を発表してゲームを始めます。' }, { title: 'カードを使う', body: '手番に1枚出し、効果を解決します。' }, { title: '犯人を追う', body: '探偵やいぬで犯人を捕まえるか、犯人は最後の1枚で逃げ切ります。' }, { title: '結果を確認', body: '犯人とたくらみを出した人を含む勝敗を表示します。' }],
     tips: ['手札の枚数と公開情報を覚える', 'アリバイを持つ犯人は探偵だけでは捕まらない', 'カード交換の直後は犯人の移動を考える'],
+  },
+
+  {
+    id: 'aiue-battle', name: 'あいうえバトル', shortName: 'あいうえバトル',
+    seo: { title: 'あいうえバトル Web版｜2〜8人のことば推理ゲーム', description: 'スマホで秘密の言葉を五十音で探る2〜8人のブラウザゲーム。', heading: 'あいうえバトル', intro: 'スマホのブラウザで秘密の言葉を読み合おう。', ctaLabel: 'あいうえバトル' },
+    catchphrase: '一文字ずつ、秘密の言葉を追いつめよう。', summary: 'お題に沿った言葉を隠し、文字を当てて最後まで生き残るゲーム。',
+    description: ['お題に沿った2〜7文字の言葉を自分だけに登録します。', '文字を宣言すると全員の同じ文字が公開。自分の言葉を守りながら最後まで生き残りましょう。'],
+    players: '2〜8人', minPlayers: 2, maxPlayers: 8, duration: '約10分', difficulty: 'かんたん', mood: 'ことば・推理', accent: '#148b89', softColor: '#d6eeea',
+    funPoints: ['一文字で何人もの秘密が開く', '自分の言葉にも攻撃が当たる', '当たればもう一度攻撃できる'], goodFor: ['言葉遊びが好き', '短時間で推理したい', '2〜8人で遊びたい'],
+    steps: [{ title: 'お題を選ぶ', body: 'ホストがランダム候補か自由入力でお題を決めます。' }, { title: '秘密の言葉を登録', body: '変換後の2〜7文字を確認して確定します。' }, { title: '一文字を攻撃', body: '最初の攻撃が当たれば2回目、外れたら次の人です。' }, { title: '生き残る', body: '自分の言葉がすべて開くと脱落。最後の1人が勝利、全員脱落なら引き分けです。' }],
+    tips: ['濁点はなくなり、小文字は大文字になります', '伸ばし棒も攻撃できます', '自分の文字も開くので慎重に'],
   },
 
 ] as const;

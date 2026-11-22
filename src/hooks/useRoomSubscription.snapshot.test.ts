@@ -18,3 +18,13 @@ describe('room snapshot ordering', () => {
     expect(shouldAcceptRoomSnapshot(room(4), { ...room(0), status: 'waiting', game_state: {} })).toBe(true);
   });
 });
+
+describe('aiue snapshot ordering across results and reconnect', () => {
+  const aiue = (revision: number, status: RoomState['status'] = 'playing'): RoomState => ({ ...room(0), game_type: 'aiue-battle', status, game_state: { game: 'aiue-battle', matchId: 'match', revision } });
+  it('rejects old play after result and accepts current result or lobby reset', () => {
+    expect(shouldAcceptRoomSnapshot(aiue(7, 'finished'), aiue(6))).toBe(false);
+    expect(shouldAcceptRoomSnapshot(aiue(6), aiue(7, 'finished'))).toBe(true);
+    expect(shouldAcceptRoomSnapshot(aiue(7, 'finished'), aiue(7, 'finished'))).toBe(true);
+    expect(shouldAcceptRoomSnapshot(aiue(7, 'finished'), { ...aiue(0, 'waiting'), game_state: {} })).toBe(true);
+  });
+});

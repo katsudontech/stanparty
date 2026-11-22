@@ -89,6 +89,12 @@ export function GameArtwork({ gameId, className = '' }: GameArtworkProps) {
     );
   }
 
+  if (gameId === 'aiue-battle') {
+    return <svg className={className} viewBox="0 0 240 180" role="img" aria-label="秘密の言葉を探る7つの文字マス">
+      {['あ', '?', 'い', '?', '?', '?', '?'].map((letter, index) => <g key={index} transform={'translate(' + (16 + index % 4 * 55) + ' ' + (index < 4 ? 35 : 100) + ')'}><rect width="45" height="48" rx="8" fill={letter === '?' ? '#fffaf0' : '#d6eeea'} stroke="currentColor" strokeWidth="3" /><text x="22" y="34" textAnchor="middle" fontSize="29" fontWeight="900" fill="#148b89">{letter}</text></g>)}
+    </svg>;
+  }
+
   if (gameId === 'criminal-dances') {
     return (
       <svg className={className} viewBox="0 0 240 180" role="img" aria-label="犯人カードを追う探偵とカードのイラスト">
