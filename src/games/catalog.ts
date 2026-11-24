@@ -8,6 +8,14 @@ export interface GameSeoCopy {
   ctaLabel: string;
 }
 
+export const GAME_GENRES = ['推理', '駆け引き・ブラフ', '協力', 'お絵描き', 'ことば', '発想・トーク'] as const;
+export type GameGenre = typeof GAME_GENRES[number];
+export const GAME_PLAY_MODES = {
+  'in-person': '対面限定',
+  online: 'オンライン可',
+} as const;
+export type GamePlayMode = keyof typeof GAME_PLAY_MODES;
+
 export interface GameCatalogEntry {
   id: PlayableGameId;
   name: string;
@@ -24,6 +32,8 @@ export interface GameCatalogEntry {
   duration: string;
   difficulty: string;
   mood: string;
+  genres: readonly GameGenre[];
+  playMode: GamePlayMode;
   accent: string;
   softColor: string;
   funPoints: string[];
@@ -34,6 +44,7 @@ export interface GameCatalogEntry {
 
 export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   {
+    genres: ['推理', 'お絵描き'], playMode: 'online',
     id: 'fake-artist',
     name: 'エセ芸術家 ニューヨークへ行く',
     seo: {
@@ -75,6 +86,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['本物は核心を描きすぎない', '前の人の線に自然につなげる', '描く順番と迷った時間も観察する'],
   },
   {
+    genres: ['駆け引き・ブラフ'], playMode: 'in-person',
     id: 'coyote',
     name: 'Coyote Online Forehead',
     seo: {
@@ -117,6 +129,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['見えている数字を単純に足すところから始める', '特殊カードの可能性を忘れない', '相手が急に弱気になった瞬間を見逃さない'],
   },
   {
+    genres: ['協力', '発想・トーク'], playMode: 'online',
     id: 'ito',
     name: 'ito クモノイト2.0',
     seo: {
@@ -159,6 +172,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['両端の1と100を先にイメージする', '似たヒントは具体的な場面を聞いて比べる', '自分の感覚が普通だと決めつけない'],
   },
   {
+    genres: ['協力', 'ことば', '推理'], playMode: 'online',
     id: 'ai-barenai', name: 'AIにバレるな！', shortName: 'AIにバレるな！',
     seo: {
       title: 'AIにバレるな！ Web版｜スマホ・ブラウザで友達と遊べる',
@@ -178,6 +192,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['固有名詞をそのまま書かない', 'AIにも人間にも伝わる具体性を狙う', 'ヒント担当の順番を活かして情報を積み上げる'],
   },
   {
+    genres: ['協力', 'お絵描き', '推理'], playMode: 'online',
     id: 'ai-barenai-drawing', name: 'AIにバレるな！お絵かき版', shortName: 'AIにバレるな！お絵かき版',
     seo: {
       title: 'AIにバレるな！お絵かき版｜Webで友達と遊べる',
@@ -197,6 +212,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['最初は特徴を1つだけ描く', 'リセットで今の絵を描き直す', 'AIの確信度を見ながら描き足す'],
   },
   {
+    genres: ['発想・トーク'], playMode: 'online',
     id: 'pinch-hint', name: 'ピンチにひらめき！', shortName: 'ピンチにひらめき！',
     seo: {
       title: 'ピンチにひらめき！ Web版｜スマホ・ブラウザで友達と遊べる',
@@ -224,6 +240,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['順番に意味が生まれるように話す', '意外なアイテムほど説明で輝かせる', '同数は失敗なので最後まで説得する'],
   },
   {
+    genres: ['駆け引き・ブラフ'], playMode: 'online',
     id: 'carbonated-shake', name: '炭酸シェイク！', shortName: '炭酸シェイク！',
     seo: {
       title: '炭酸シェイク！ Web版｜スマホを振って遊ぶパーティーゲーム',
@@ -251,6 +268,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['少しだけ振って安全に止めるか、最大得点を狙うか決める', '前の人の話はヒントにもブラフにもなる', 'モーションセンサーが使えないときは代替操作を使う'],
   },
   {
+    genres: ['推理', '駆け引き・ブラフ'], playMode: 'online',
     id: 'criminal-dances', name: '犯人は踊る', shortName: '犯人は踊る',
     seo: {
       title: '犯人は踊る Web版｜3〜8人で遊べるカード推理ゲーム',
@@ -271,6 +289,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   },
 
   {
+    genres: ['ことば', '推理'], playMode: 'online',
     id: 'aiue-battle', name: 'あいうえバトル', shortName: 'あいうえバトル',
     seo: { title: 'あいうえバトル Web版｜2〜8人のことば推理ゲーム', description: 'スマホで秘密の言葉を五十音で探る2〜8人のブラウザゲーム。', heading: 'あいうえバトル', intro: 'スマホのブラウザで秘密の言葉を読み合おう。', ctaLabel: 'あいうえバトル' },
     catchphrase: '一文字ずつ、秘密の言葉を追いつめよう。', summary: 'お題に沿った言葉を隠し、文字を当てて最後まで生き残るゲーム。',
@@ -282,6 +301,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   },
 
   {
+    genres: ['発想・トーク', '駆け引き・ブラフ'], playMode: 'online',
     id: 'shittakaburi-show', name: '知ったかぶりショー', shortName: '知ったかぶりショー',
     seo: { title: '知ったかぶりショー Web版｜3〜14人のブラフゲーム', description: 'スマホで秘密の言葉を知っているふりで説明し、本当の出題者を当てるブラウザゲーム。', heading: '知ったかぶりショー', intro: 'スマホのブラウザで言葉の意味を知ったふりで説明し、出題者を見抜こう。', ctaLabel: '知ったかぶりショー' },
     catchphrase: '知らなくても、堂々と語れ。', summary: '本当の出題者を探しながら、知ったかぶりの説得力を競うゲーム。',

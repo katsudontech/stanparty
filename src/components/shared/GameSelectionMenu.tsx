@@ -3,8 +3,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { GameArtwork } from '@/components/site/GameArtwork';
-import { getGamePlayerCountGuidance } from '@/games/catalog';
-import type { GameCatalogEntry, PlayableGameId } from '@/games/catalog';
+import { GAME_GENRES, GAME_PLAY_MODES, getGamePlayerCountGuidance } from '@/games/catalog';
+import type { GameCatalogEntry, GameGenre, GamePlayMode, PlayableGameId } from '@/games/catalog';
 
 interface GameSelectionMenuProps {
   games: readonly GameCatalogEntry[];
@@ -22,13 +22,20 @@ export function GameSelectionMenu({ games, playerCount, value, onChange, browseO
   const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef(new Map<PlayableGameId, HTMLButtonElement>());
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [genre, setGenre] = useState<GameGenre | 'all'>('all');
+  const [playMode, setPlayMode] = useState<GamePlayMode | 'all'>('all');
+  const visibleGames = games.filter((game) =>
+    (genre === 'all' || game.genres.includes(genre)) &&
+    (playMode === 'all' || game.playMode === playMode),
+  );
+  const resetFilters = () => { setGenre('all'); setPlayMode('all'); };
   const dialogId = useId();
   const titleId = useId();
   const helperId = useId();
   const dialogHintId = useId();
   const selectedIndex = games.findIndex((game) => game.id === value);
   const selectedGame = selectedIndex >= 0 ? games[selectedIndex] : undefined;
-  const firstGameId = games[0]?.id;
+  const firstGameId = visibleGames.find((game) => game.id === value)?.id ?? visibleGames[0]?.id;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -36,7 +43,7 @@ export function GameSelectionMenu({ games, playerCount, value, onChange, browseO
 
     if (isOpen && !dialog.open) {
       dialog.showModal();
-      const initialGameId = selectedGame?.id ?? firstGameId;
+      const initialGameId = firstGameId;
       if (initialGameId) optionRefs.current.get(initialGameId)?.focus();
     } else if (!isOpen && dialog.open) {
       dialog.close();
@@ -66,24 +73,24 @@ export function GameSelectionMenu({ games, playerCount, value, onChange, browseO
   };
 
   const handleOptionKeyDown = (event: KeyboardEvent<HTMLButtonElement>, gameId: PlayableGameId) => {
-    if (games.length === 0) return;
-    const index = games.findIndex((game) => game.id === gameId);
+    if (visibleGames.length === 0) return;
+    const index = visibleGames.findIndex((game) => game.id === gameId);
     if (index < 0) return;
 
     let nextIndex: number | undefined;
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-      nextIndex = (index + 1) % games.length;
+      nextIndex = (index + 1) % visibleGames.length;
     } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-      nextIndex = (index - 1 + games.length) % games.length;
+      nextIndex = (index - 1 + visibleGames.length) % visibleGames.length;
     } else if (event.key === 'Home') {
       nextIndex = 0;
     } else if (event.key === 'End') {
-      nextIndex = games.length - 1;
+      nextIndex = visibleGames.length - 1;
     }
 
     if (nextIndex !== undefined) {
       event.preventDefault();
-      optionRefs.current.get(games[nextIndex].id)?.focus();
+      optionRefs.current.get(visibleGames[nextIndex].id)?.focus();
     }
   };
 
@@ -169,10 +176,34 @@ export function GameSelectionMenu({ games, playerCount, value, onChange, browseO
             </button>
           </header>
 
+          <div className="border-b-2 border-[var(--line)] p-3 sm:p-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="text-sm font-bold">
+                ジャンル
+                <select className="form-select mt-1" value={genre} onChange={(event) => setGenre(event.target.value as GameGenre | 'all')}>
+                  <option value="all">すべてのジャンル</option>
+                  {GAME_GENRES.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </label>
+              <label className="text-sm font-bold">
+                プレイ環境
+                <select className="form-select mt-1" value={playMode} onChange={(event) => setPlayMode(event.target.value as GamePlayMode | 'all')}>
+                  <option value="all">すべてのプレイ環境</option>
+                  {Object.entries(GAME_PLAY_MODES).map(([mode, label]) => <option key={mode} value={mode}>{label}</option>)}
+                </select>
+              </label>
+            </div>
+            <p className="mt-3 text-xs text-[var(--muted)]">オンライン可のゲームは対面でも遊べます。会話が必要なゲームでは、別途通話アプリをご利用ください。</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm font-bold">
+              <p role="status">{games.length}件中 {visibleGames.length}件を表示</p>
+              <button type="button" className="min-h-11 underline underline-offset-4" onClick={resetFilters} disabled={genre === 'all' && playMode === 'all'}>絞り込みをリセット</button>
+            </div>
+            {visibleGames.length === 0 && <p className="mt-3 font-bold">条件に合うゲームがありません。条件を変更するか、絞り込みをリセットしてください。</p>}
+          </div>
           {busy && <p role="status" className="mb-3 font-bold">ゲームを変更中…</p>}
           {error && <p role="alert" className="mb-3 font-bold text-red-600">{error}</p>}
           <div className="game-selection-grid" aria-label="ゲーム一覧">
-            {games.map((game, index) => {
+            {visibleGames.map((game, index) => {
               const isSelected = game.id === value;
               const playerCountGuidance = getGamePlayerCountGuidance(game, playerCount);
 
@@ -188,7 +219,8 @@ export function GameSelectionMenu({ games, playerCount, value, onChange, browseO
                   </div>
                   <GameArtwork gameId={game.id} className="game-card__art" />
                   <div className="game-card__body">
-                    <p className="game-card__mood">{game.mood}</p>
+                    <p className="game-card__mood">{game.genres.join('・')}</p>
+                    <p className="text-sm font-bold">{GAME_PLAY_MODES[game.playMode]}</p>
                     <h3>{game.shortName}</h3>
                     <p>{game.summary}</p>
                     <dl className="game-facts">
@@ -206,7 +238,7 @@ export function GameSelectionMenu({ games, playerCount, value, onChange, browseO
                     }}
                     type="button"
                     className="game-selection-card__button"
-                    aria-label={`${game.shortName}。${game.summary}。${playerCountGuidance}。${isSelected ? '選択中。' : browseOnly ? 'ホストのみ変更できます。' : 'このゲームを選ぶ。'}`}
+                    aria-label={`${game.shortName}。${game.summary}。${game.genres.join('・')}。${GAME_PLAY_MODES[game.playMode]}。${playerCountGuidance}。${isSelected ? '選択中。' : browseOnly ? 'ホストのみ変更できます。' : 'このゲームを選ぶ。'}`}
                     aria-pressed={isSelected}
                     aria-disabled={browseOnly || busy}
                     disabled={busy}

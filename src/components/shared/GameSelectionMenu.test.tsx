@@ -219,3 +219,59 @@ describe('GameSelectionMenu interaction state', () => {
     expect(collect(busyErrorRoot, (element) => element.props?.className === 'game-selection-card__button')).toHaveLength(4);
   });
 });
+
+function changeFilter(root: unknown, index: number, value: string) {
+  const select = collect(root, (element) => element.type === 'select')[index];
+  (select.props?.onChange as (event: unknown) => void)({ target: { value } });
+}
+
+describe('game selection filters', () => {
+  it('combines independent filters, preserves selection, and resets an empty result', () => {
+    const onChange = vi.fn();
+    let root = render({ onChange });
+    changeFilter(root, 0, 'お絵描き');
+    root = render({ onChange });
+    expect(buttons(root)).toHaveLength(1);
+    expect(buttonFor(root, 'fake-artist').props?.['aria-pressed']).toBe(true);
+    changeFilter(root, 1, 'in-person');
+    root = render({ onChange });
+    expect(buttons(root)).toHaveLength(0);
+    expect(collect(root, (element) => String(element.props?.children).includes('条件に合うゲームがありません'))).not.toHaveLength(0);
+    const reset = collect(root, (element) => element.type === 'button' && element.props?.children === '絞り込みをリセット')[0];
+    (reset.props?.onClick as () => void)();
+    root = render({ onChange });
+    expect(buttons(root)).toHaveLength(4);
+    expect(buttonFor(root, 'fake-artist').props?.['aria-pressed']).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('filters online games in the supplied player-count order and navigates only visible cards', () => {
+    let root = render();
+    changeFilter(root, 1, 'online');
+    root = render();
+    expect(buttons(root)).toHaveLength(3);
+    const active = { current: null as FakeButton | null };
+    bindOptionNodes(root, active, new Map());
+    const first = buttonFor(root, 'ito');
+    (first.props?.onKeyDown as (event: unknown) => void)({ key: 'ArrowUp', preventDefault: vi.fn() });
+    expect(active.current?.label).toContain('エセ芸術家');
+    changeFilter(root, 0, '協力');
+    root = render();
+    expect(buttons(root)).toHaveLength(2);
+    expect(buttons(root)[0].props?.['aria-label']).toContain('ito');
+  });
+
+  it('reopens with the first visible card focused when the selection is hidden', () => {
+    let root = render();
+    harness.refs[3].current = dialog;
+    changeFilter(root, 1, 'in-person');
+    root = render();
+    const trigger = collect(root, (element) => element.props?.['aria-haspopup'] === 'dialog')[0];
+    (trigger.props?.onClick as () => void)();
+    root = render();
+    const active = { current: null as FakeButton | null };
+    bindOptionNodes(root, active, new Map());
+    runLatestEffect();
+    expect(active.current?.label).toContain('Coyote');
+  });
+});
