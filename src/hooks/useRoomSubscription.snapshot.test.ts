@@ -28,3 +28,14 @@ describe('aiue snapshot ordering across results and reconnect', () => {
     expect(shouldAcceptRoomSnapshot(aiue(7, 'finished'), { ...aiue(0, 'waiting'), game_state: {} })).toBe(true);
   });
 });
+
+describe('shittakaburi snapshot ordering across results and reconnect', () => {
+  const snapshot = (revision: number, status: RoomState['status'] = 'playing'): RoomState => ({ ...room(0), game_type: 'shittakaburi-show', status, game_state: { game: 'shittakaburi-show', matchId: 'match', revision } });
+  it('rejects stale updates, accepts results, a new match and lobby reset', () => {
+    expect(shouldAcceptRoomSnapshot(snapshot(7, 'finished'), snapshot(6))).toBe(false);
+    expect(shouldAcceptRoomSnapshot(snapshot(6), snapshot(7, 'finished'))).toBe(true);
+    expect(shouldAcceptRoomSnapshot(snapshot(7, 'finished'), snapshot(7, 'finished'))).toBe(true);
+    expect(shouldAcceptRoomSnapshot(snapshot(7, 'finished'), { ...snapshot(0, 'waiting'), game_state: {} })).toBe(true);
+    expect(shouldAcceptRoomSnapshot(snapshot(7, 'finished'), { ...snapshot(0), game_state: { game: 'shittakaburi-show', matchId: 'new', revision: 0 } })).toBe(true);
+  });
+});

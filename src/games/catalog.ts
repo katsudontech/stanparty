@@ -1,4 +1,4 @@
-export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake' | 'criminal-dances' | 'aiue-battle';
+export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake' | 'criminal-dances' | 'aiue-battle' | 'shittakaburi-show';
 
 export interface GameSeoCopy {
   title: string;
@@ -281,6 +281,16 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['濁点はなくなり、小文字は大文字になります', '伸ばし棒も攻撃できます', '自分の文字も開くので慎重に'],
   },
 
+  {
+    id: 'shittakaburi-show', name: '知ったかぶりショー', shortName: '知ったかぶりショー',
+    seo: { title: '知ったかぶりショー Web版｜3〜14人のブラフゲーム', description: 'スマホで秘密の言葉を知っているふりで説明し、本当の出題者を当てるブラウザゲーム。', heading: '知ったかぶりショー', intro: 'スマホのブラウザで言葉の意味を知ったふりで説明し、出題者を見抜こう。', ctaLabel: '知ったかぶりショー' },
+    catchphrase: '知らなくても、堂々と語れ。', summary: '本当の出題者を探しながら、知ったかぶりの説得力を競うゲーム。',
+    description: ['全員が秘密の言葉を1つ登録。ランダムで選ばれた言葉について、順番に知っているふりで語ります。', '出題者を見抜く投票と説得力で得点。票を公開した後、出題者と得点を一緒に公開します。'],
+    players: '3〜14人', minPlayers: 3, maxPlayers: 14, duration: '約15〜30分', difficulty: 'かんたん', mood: '会話・ブラフ', accent: '#9b4b93', softColor: '#efdaed',
+    funPoints: ['知らない言葉にも堂々と説明', '出題者も自分以外に投票', '票の集まり方を見てから正体公開'], goodFor: ['会話で盛り上がりたい', 'ブラフが好き', '自由な発想で遊びたい'],
+    steps: [{ title: '秘密の言葉を登録', body: '1人1つ、自分だけが意味を知っていそうな言葉を登録します。' }, { title: '順番に説明', body: 'ランダムな発表順で言葉の意味を語ります。出題者以外も知っているふりをします。' }, { title: '全員で投票', body: '出題者は最も説得力のあった人へ、ほかの人は出題者と思う人へ投票。自分には投票できません。' }, { title: '段階的に公開', body: '票を公開した後、出題者と得点を一緒に公開。出題者は得票×1点、ほかは得票×2点と出題者的中で1点です。' }],
+    tips: ['説明の細かさや自信に注目', '同じ言葉でも投稿者ごとに別のお題', '全員の投稿を使うか、ホストが途中終了できます'],
+  },
 ] as const;
 
 export function getGameById(id: string): GameCatalogEntry | undefined {

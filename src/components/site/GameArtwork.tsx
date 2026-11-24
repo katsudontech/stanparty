@@ -89,6 +89,10 @@ export function GameArtwork({ gameId, className = '' }: GameArtworkProps) {
     );
   }
 
+  if (gameId === 'shittakaburi-show') {
+    return <svg className={className} viewBox="0 0 240 180" role="img" aria-label="知ったかぶりで説明する吹き出しとマイク"><path d="M28 28h150v80H85l-30 25v-25H28z" fill="#efdaed" stroke="currentColor" strokeWidth="5"/><text x="102" y="84" textAnchor="middle" fontSize="48" fontWeight="900" fill="#9b4b93">!?</text><rect x="169" y="85" width="32" height="58" rx="16" fill="#f3c85b" stroke="currentColor" strokeWidth="4"/><path d="M185 144v22m-19 0h38" stroke="currentColor" strokeWidth="5"/></svg>;
+  }
+
   if (gameId === 'aiue-battle') {
     return <svg className={className} viewBox="0 0 240 180" role="img" aria-label="秘密の言葉を探る7つの文字マス">
       {['あ', '?', 'い', '?', '?', '?', '?'].map((letter, index) => <g key={index} transform={'translate(' + (16 + index % 4 * 55) + ' ' + (index < 4 ? 35 : 100) + ')'}><rect width="45" height="48" rx="8" fill={letter === '?' ? '#fffaf0' : '#d6eeea'} stroke="currentColor" strokeWidth="3" /><text x="22" y="34" textAnchor="middle" fontSize="29" fontWeight="900" fill="#148b89">{letter}</text></g>)}

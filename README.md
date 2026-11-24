@@ -325,3 +325,12 @@ npm run build
 - [ ] エセ芸術家と共通ルーム機能の単体テストを追加する
 - [ ] ルーム作成からゲーム終了までのE2Eテストを追加する
 - [ ] GitHub Actionsでlint、型チェック、テスト、ビルドを自動実行する
+
+### 知ったかぶりショー
+
+3〜14人で遊べる会話・ブラフゲームを追加しています。公開前に
+`supabase/migrations/20261123000000_add_shittakaburi_show.sql` を適用し、
+サーバー環境に `SUPABASE_SERVICE_ROLE_KEY` を設定してください。
+秘密の投稿・出題者・未確定の投票は公開ルーム状態に保存せず、認証済みAPIから
+本人用の情報だけを返します。遊び方、デプロイと制限事項は
+[src/games/shittakaburi-show/README.md](src/games/shittakaburi-show/README.md) を参照してください。
