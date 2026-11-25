@@ -12,6 +12,7 @@ export const GAME_GENRES = ['推理', '駆け引き・ブラフ', '協力', 'お
 export type GameGenre = typeof GAME_GENRES[number];
 export const GAME_PLAY_MODES = {
   'in-person': '対面限定',
+  'online-with-call': '通話があればオンライン可',
   online: 'オンライン可',
 } as const;
 export type GamePlayMode = keyof typeof GAME_PLAY_MODES;
@@ -129,7 +130,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['見えている数字を単純に足すところから始める', '特殊カードの可能性を忘れない', '相手が急に弱気になった瞬間を見逃さない'],
   },
   {
-    genres: ['協力', '発想・トーク'], playMode: 'online',
+    genres: ['協力', '発想・トーク'], playMode: 'online-with-call',
     id: 'ito',
     name: 'ito クモノイト2.0',
     seo: {
@@ -212,7 +213,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     tips: ['最初は特徴を1つだけ描く', 'リセットで今の絵を描き直す', 'AIの確信度を見ながら描き足す'],
   },
   {
-    genres: ['発想・トーク'], playMode: 'online',
+    genres: ['発想・トーク'], playMode: 'online-with-call',
     id: 'pinch-hint', name: 'ピンチにひらめき！', shortName: 'ピンチにひらめき！',
     seo: {
       title: 'ピンチにひらめき！ Web版｜スマホ・ブラウザで友達と遊べる',
@@ -301,7 +302,7 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
   },
 
   {
-    genres: ['発想・トーク', '駆け引き・ブラフ'], playMode: 'online',
+    genres: ['発想・トーク', '駆け引き・ブラフ'], playMode: 'online-with-call',
     id: 'shittakaburi-show', name: '知ったかぶりショー', shortName: '知ったかぶりショー',
     seo: { title: '知ったかぶりショー Web版｜3〜14人のブラフゲーム', description: 'スマホで秘密の言葉を知っているふりで説明し、本当の出題者を当てるブラウザゲーム。', heading: '知ったかぶりショー', intro: 'スマホのブラウザで言葉の意味を知ったふりで説明し、出題者を見抜こう。', ctaLabel: '知ったかぶりショー' },
     catchphrase: '知らなくても、堂々と語れ。', summary: '本当の出題者を探しながら、知ったかぶりの説得力を競うゲーム。',

@@ -193,7 +193,7 @@ export function GameSelectionMenu({ games, playerCount, value, onChange, browseO
                 </select>
               </label>
             </div>
-            <p className="mt-3 text-xs text-[var(--muted)]">オンライン可のゲームは対面でも遊べます。会話が必要なゲームでは、別途通話アプリをご利用ください。</p>
+            <p className="mt-3 text-xs text-[var(--muted)]">「通話があればオンライン可」は、離れて遊ぶときに別途通話アプリが必要です。「オンライン可」は通話なしでも遊べます。どちらも対面で遊べます。</p>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm font-bold">
               <p role="status">{games.length}件中 {visibleGames.length}件を表示</p>
               <button type="button" className="min-h-11 underline underline-offset-4" onClick={resetFilters} disabled={genre === 'all' && playMode === 'all'}>絞り込みをリセット</button>

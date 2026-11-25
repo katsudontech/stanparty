@@ -43,6 +43,7 @@ const gamesAtCountThree = sortGamesByPlayerCount(allGames, 3);
 const noop = async () => true;
 
 function collect(node: unknown, predicate: (element: ElementNode) => boolean): ElementNode[] {
+  if (Array.isArray(node)) return node.flatMap((child) => collect(child, predicate));
   if (!node || typeof node !== 'object') return [];
 
   const element = node as ElementNode;
@@ -249,16 +250,31 @@ describe('game selection filters', () => {
     let root = render();
     changeFilter(root, 1, 'online');
     root = render();
-    expect(buttons(root)).toHaveLength(3);
+    expect(buttons(root)).toHaveLength(2);
     const active = { current: null as FakeButton | null };
     bindOptionNodes(root, active, new Map());
-    const first = buttonFor(root, 'ito');
+    const first = buttonFor(root, 'ai-barenai');
     (first.props?.onKeyDown as (event: unknown) => void)({ key: 'ArrowUp', preventDefault: vi.fn() });
     expect(active.current?.label).toContain('エセ芸術家');
     changeFilter(root, 0, '協力');
     root = render();
-    expect(buttons(root)).toHaveLength(2);
-    expect(buttons(root)[0].props?.['aria-label']).toContain('ito');
+    expect(buttons(root)).toHaveLength(1);
+    expect(buttons(root)[0].props?.['aria-label']).toContain('AIにバレるな！');
+  });
+
+  it('offers three play environments and filters games that need a call', () => {
+    let root = render({ games: GAME_CATALOG });
+    const select = collect(root, (element) => element.type === 'select')[1];
+    const options = collect(select, (element) => element.type === 'option');
+    expect(options.map((option) => option.props?.children)).toEqual([
+      'すべてのプレイ環境', '対面限定', '通話があればオンライン可', 'オンライン可',
+    ]);
+    changeFilter(root, 1, 'online-with-call');
+    root = render({ games: GAME_CATALOG });
+    expect(buttons(root)).toHaveLength(3);
+    for (const id of ['ito', 'pinch-hint', 'shittakaburi-show']) {
+      expect(buttonFor(root, id).props?.['aria-label']).toContain('通話があればオンライン可');
+    }
   });
 
   it('reopens with the first visible card focused when the selection is hidden', () => {
