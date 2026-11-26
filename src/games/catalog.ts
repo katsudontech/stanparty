@@ -1,4 +1,4 @@
-export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake' | 'criminal-dances' | 'aiue-battle' | 'shittakaburi-show';
+export type PlayableGameId = 'fake-artist' | 'coyote' | 'ito' | 'ai-barenai' | 'ai-barenai-drawing' | 'pinch-hint' | 'carbonated-shake' | 'criminal-dances' | 'aiue-battle' | 'shittakaburi-show' | 'skull';
 
 export interface GameSeoCopy {
   title: string;
@@ -311,6 +311,43 @@ export const GAME_CATALOG: readonly GameCatalogEntry[] = [
     funPoints: ['知らない言葉にも堂々と説明', '出題者も自分以外に投票', '票の集まり方を見てから正体公開'], goodFor: ['会話で盛り上がりたい', 'ブラフが好き', '自由な発想で遊びたい'],
     steps: [{ title: '秘密の言葉を登録', body: '1人1つ、自分だけが意味を知っていそうな言葉を登録します。' }, { title: '順番に説明', body: 'ランダムな発表順で言葉の意味を語ります。出題者以外も知っているふりをします。' }, { title: '全員で投票', body: '出題者は最も説得力のあった人へ、ほかの人は出題者と思う人へ投票。自分には投票できません。' }, { title: '段階的に公開', body: '票を公開した後、出題者と得点を一緒に公開。出題者は得票×1点、ほかは得票×2点と出題者的中で1点です。' }],
     tips: ['説明の細かさや自信に注目', '同じ言葉でも投稿者ごとに別のお題', '全員の投稿を使うか、ホストが途中終了できます'],
+  },
+  {
+    id: 'skull',
+    name: 'スカル',
+    shortName: 'スカル',
+    genres: ['駆け引き・ブラフ', '推理'],
+    playMode: 'online',
+    seo: {
+      title: 'スカル Web版｜3〜6人で遊べるブラフゲーム',
+      description: 'スカルをスマホのブラウザで。伏せた花とドクロを読み合い、宣言した枚数の花をめくる3〜6人のゲームです。',
+      heading: 'スカル（Web版）',
+      intro: 'スマホのブラウザで、花とドクロの駆け引きを楽しめます。',
+      ctaLabel: 'スカル',
+    },
+    catchphrase: 'その山にあるのは、花かドクロか。',
+    summary: '伏せたディスクを読み合い、ドクロを避けて宣言した枚数の花をめくるゲーム。',
+    description: [
+      '花3枚とドクロ1枚を持ってスタート。山に伏せて重ねるか、花だけをめくれる枚数を宣言します。',
+      '最高の宣言をした人がチャレンジします。2回成功するか、最後までディスクが残った1人が勝ちです。',
+    ],
+    players: '3〜6人',
+    minPlayers: 3,
+    maxPlayers: 6,
+    duration: '約15〜30分',
+    difficulty: 'かんたん',
+    mood: '駆け引き・ブラフ',
+    accent: '#793553',
+    softColor: '#f4d9dc',
+    funPoints: ['ドクロを伏せて花があるふりをする', '誰が勝負に出るか宣言で読み合う', '自分の山から先にめくる緊張感'],
+    goodFor: ['駆け引きが好き', '少ないルールですぐに遊びたい', '3〜6人で遊びたい'],
+    steps: [
+      { title: '1枚ずつ伏せる', body: '全員が1枚出したら、先手からディスクを重ねるか、めくる枚数を宣言します。手札がなければ宣言します。' },
+      { title: '宣言を競る', body: '前の宣言より多い枚数を宣言するかパスします。パスした人の山も場に残ります。' },
+      { title: '花をめくる', body: '最高の宣言者が自分の山を上からめくります。足りなければ他の山の一番上を1枚ずつ選びます。' },
+      { title: '結果を確かめる', body: '宣言の枚数ぶん花が出れば成功。ドクロが出ると失敗し、自分のドクロなら自分で、他の人のドクロならランダムで1枚を失います。' },
+    ],
+    tips: ['場の枚数まで宣言できます', '自分の山は長押しで確認できます', '2回成功するか最後まで残ると勝ちです'],
   },
 ] as const;
 

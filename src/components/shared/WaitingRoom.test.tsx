@@ -64,7 +64,7 @@ describe('WaitingRoom game selection', () => {
   it('shows the same count-prioritized catalog to hosts and guests', () => {
     const hostMarkup = renderWaitingRoom(true);
     const guestMarkup = renderWaitingRoom(false);
-    const expectedOrder = ['Coyote', 'ito', 'AIにバレるな！', 'AIにバレるな！お絵かき版', 'ピンチにひらめき！', '炭酸シェイク！', 'あいうえバトル', 'エセ芸術家', '犯人は踊る', '知ったかぶりショー'];
+    const expectedOrder = ['Coyote', 'ito', 'AIにバレるな！', 'AIにバレるな！お絵かき版', 'ピンチにひらめき！', '炭酸シェイク！', 'あいうえバトル', 'エセ芸術家', '犯人は踊る', '知ったかぶりショー', 'スカル'];
 
     expect(cardNames(hostMarkup)).toEqual(expectedOrder);
     expect(cardNames(guestMarkup)).toEqual(expectedOrder);
@@ -77,8 +77,8 @@ describe('WaitingRoom game selection', () => {
     const twoPlayerMarkup = renderWaitingRoom(true, playersForCount(2));
     const threePlayerMarkup = renderWaitingRoom(true, playersForCount(3));
     const twoPlayerAgainMarkup = renderWaitingRoom(true, playersForCount(2));
-    const catalogOrder = ['エセ芸術家', 'Coyote', 'ito', 'AIにバレるな！', 'AIにバレるな！お絵かき版', 'ピンチにひらめき！', '炭酸シェイク！', '犯人は踊る', 'あいうえバトル', '知ったかぶりショー'];
-    const playableAtTwo = ['Coyote', 'ito', 'AIにバレるな！', 'AIにバレるな！お絵かき版', 'ピンチにひらめき！', '炭酸シェイク！', 'あいうえバトル', 'エセ芸術家', '犯人は踊る', '知ったかぶりショー'];
+    const catalogOrder = ['エセ芸術家', 'Coyote', 'ito', 'AIにバレるな！', 'AIにバレるな！お絵かき版', 'ピンチにひらめき！', '炭酸シェイク！', '犯人は踊る', 'あいうえバトル', '知ったかぶりショー', 'スカル'];
+    const playableAtTwo = ['Coyote', 'ito', 'AIにバレるな！', 'AIにバレるな！お絵かき版', 'ピンチにひらめき！', '炭酸シェイク！', 'あいうえバトル', 'エセ芸術家', '犯人は踊る', '知ったかぶりショー', 'スカル'];
 
     expect(cardNames(onePlayerMarkup)).toEqual(catalogOrder);
     expect(cardNames(twoPlayerMarkup)).toEqual(playableAtTwo);

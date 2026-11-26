@@ -89,6 +89,15 @@ export function GameArtwork({ gameId, className = '' }: GameArtworkProps) {
     );
   }
 
+  if (gameId === 'skull') {
+    return (
+      <div className={`${className} flex aspect-[4/3] items-center justify-center gap-1`} role="img" aria-label="花とドクロのディスク">
+        <span className="grid aspect-square w-[36%] -translate-y-3 -rotate-12 place-items-center rounded-full border-[3px] border-[#793553] bg-[#f7c9cd] text-[2.4rem] font-black text-[#793553]" aria-hidden="true">✿</span>
+        <span className="grid aspect-square w-[36%] translate-y-3 rotate-12 place-items-center rounded-full border-[3px] border-[#793553] bg-[#301c2d] text-[2.4rem] font-black text-[#fff6e9]" aria-hidden="true">☠</span>
+      </div>
+    );
+  }
+
   if (gameId === 'shittakaburi-show') {
     return <svg className={className} viewBox="0 0 240 180" role="img" aria-label="知ったかぶりで説明する吹き出しとマイク"><path d="M28 28h150v80H85l-30 25v-25H28z" fill="#efdaed" stroke="currentColor" strokeWidth="5"/><text x="102" y="84" textAnchor="middle" fontSize="48" fontWeight="900" fill="#9b4b93">!?</text><rect x="169" y="85" width="32" height="58" rx="16" fill="#f3c85b" stroke="currentColor" strokeWidth="4"/><path d="M185 144v22m-19 0h38" stroke="currentColor" strokeWidth="5"/></svg>;
   }

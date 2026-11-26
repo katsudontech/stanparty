@@ -39,3 +39,19 @@ describe('shittakaburi snapshot ordering across results and reconnect', () => {
     expect(shouldAcceptRoomSnapshot(snapshot(7, 'finished'), { ...snapshot(0), game_state: { game: 'shittakaburi-show', matchId: 'new', revision: 0 } })).toBe(true);
   });
 });
+
+
+describe('skull reconnect ordering', () => {
+  const snapshot = (revision: number, epoch = 0): RoomState => ({ ...room(0), game_type: 'skull', skull_epoch: epoch, game_state: { game: 'skull', matchId: 'match', revision } });
+  it('rejects old revisions, initialization and same-epoch lobby snapshots', () => {
+    expect(shouldAcceptRoomSnapshot(snapshot(4), snapshot(3))).toBe(false);
+    expect(shouldAcceptRoomSnapshot(snapshot(4), { ...snapshot(0), game_state: {} })).toBe(false);
+    expect(shouldAcceptRoomSnapshot(snapshot(4), { ...snapshot(0), status: 'waiting', game_state: {} })).toBe(false);
+    expect(shouldAcceptRoomSnapshot(snapshot(4), snapshot(5))).toBe(true);
+  });
+  it('accepts a real lobby reset and rejects snapshots from before that reset', () => {
+    const reset: RoomState = { ...snapshot(0, 1), status: 'waiting', game_state: {} };
+    expect(shouldAcceptRoomSnapshot(snapshot(4), reset)).toBe(true);
+    expect(shouldAcceptRoomSnapshot(reset, snapshot(4))).toBe(false);
+  });
+});
